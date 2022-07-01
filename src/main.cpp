@@ -6,7 +6,7 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/07/01 11:23:10 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/07/01 14:04:22 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,8 @@ int	delete_connection(int client_socket)
 	return (close(client_socket));
 }
 
+//maybe need to check incase of client_body_size
+// for the bytes read?
 void	receive_msg(int client_socket)
 {
 	char	buf[MAX_MSG_SIZE];
@@ -74,6 +76,7 @@ void	receive_msg(int client_socket)
 	bytes_read = recv(client_socket, buf, sizeof(buf) - 1, 0);
 	buf[bytes_read] = 0;
 	printf("client #%d: %s", get_connection(client_socket), buf);
+	fprintf(stderr, "bytes read: %d\n", bytes_read);
 	fflush(stdout);
 }
 
