@@ -6,7 +6,7 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/07/01 14:04:22 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/07/01 14:27:03 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 #include <string.h>
 #include <sys/event.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -63,6 +65,7 @@ int	delete_connection(int client_socket)
 	if (i == -1)
 		return (-1);
 	clients[i].fd = 0;
+	shutdown(clients[i].fd, 0);
 	return (close(client_socket));
 }
 
@@ -75,8 +78,8 @@ void	receive_msg(int client_socket)
 
 	bytes_read = recv(client_socket, buf, sizeof(buf) - 1, 0);
 	buf[bytes_read] = 0;
-	printf("client #%d: %s", get_connection(client_socket), buf);
-	fprintf(stderr, "bytes read: %d\n", bytes_read);
+	printf("%s", buf);
+	// fprintf(stderr, "bytes read: %d\n", bytes_read);
 	fflush(stdout);
 }
 
@@ -134,6 +137,7 @@ void	run_event_loop(int kq, int server_socket)
 
 
 //TODO:address and port need to be parsed from the config
+//inet_aton can accept a ascii string and converts it to address
 int	create_socket_and_listen(void)
 {
 	struct sockaddr_in	address;
@@ -142,7 +146,7 @@ int	create_socket_and_listen(void)
 
 	memset((char *)&address, 0, sizeof(address));
 	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = htonl(0x7f000001);
+	inet_aton("127.0.0.1", &address.sin_addr);
 	address.sin_port = htons(port);
 	local_socket = socket(AF_INET, SOCK_STREAM, 0);
 	bind(local_socket, (struct sockaddr *)&address, sizeof(address));
