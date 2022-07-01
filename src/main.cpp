@@ -6,7 +6,7 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/07/01 09:49:46 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/07/01 11:23:10 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,6 @@ void	run_event_loop(int kq, int server_socket)
 		{
 			if (ev_lst[i].ident == (uintptr_t)server_socket) //Client connects
 			{
-				fcntl(clnt_sckt, F_SETFL, O_NONBLOCK);
 				clnt_sckt = accept
 					(ev_lst[i].ident, (struct sockaddr *)&addr, &socklen);
 				if (add_connection(clnt_sckt) == 0)
@@ -150,14 +149,15 @@ int	create_socket_and_listen(void)
 
 int	main(void)
 {
-	int				local_s;
+	int				srvr_sckt;
 	int				kq;
 	struct kevent	ev_set;
 
-	local_s = create_socket_and_listen();
+	srvr_sckt = create_socket_and_listen();
+	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
 	kq = kqueue();
-	EV_SET(&ev_set, local_s, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	EV_SET(&ev_set, srvr_sckt, EVFILT_READ, EV_ADD, 0, 0, NULL);
 	kevent(kq, &ev_set, 1, NULL, 0, NULL);
-	run_event_loop(kq, local_s);
+	run_event_loop(kq, srvr_sckt);
 	return (EXIT_SUCCESS);
 }
