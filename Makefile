@@ -8,6 +8,7 @@ OBJ_DIR = obj
 INC_DIR = includes
 
 SRC =	main.cpp \
+        WebServ.cpp \
 
 SRC_EXT = cpp
 
