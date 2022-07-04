@@ -53,7 +53,7 @@ int	WebServ::deleteConnection(int client_socket)
 {
 	int	i;
 
-	eventHandler(1);
+	eventHandler(DELETE);
 	if (client_socket < 1)
 		return (-1);
 	i = this->getConnectionId(client_socket);
@@ -102,10 +102,10 @@ void	WebServ::eventHandler(int event_type)
 {
 	switch (event_type)
 	{
-	case 0:
+	case ADD:
 		EV_SET(&_ev_set_run, _clnt_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 		break;
-	case 1:
+	case DELETE:
 		EV_SET(&_ev_set_run, _clnt_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 		break;
 	default:
@@ -123,7 +123,7 @@ void	WebServ::runServer()
 		{
 			_clnt_fd = accept(_ev_lst[i].ident, (struct sockaddr *)&_addr, &_socklen);
 			if (addConnection(_clnt_fd) == 0)
-				eventHandler(0);
+				eventHandler(ADD);
 			else
 				refuseConnection(_clnt_fd);
 		}

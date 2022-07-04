@@ -16,6 +16,12 @@
 # define NUM_CLIENTS 10
 # define MAX_MSG_SIZE 256
 
+enum	event_types
+{
+	ADD,
+	DELETE
+};
+
 class WebServ
 {
 	public:
