@@ -10,6 +10,7 @@
 # include <arpa/inet.h>
 # include <netdb.h>
 # include <unistd.h>
+# include <vector>
 
 # define BACKLOG 5
 # define MAX_EVENTS 32
@@ -21,6 +22,9 @@ enum	event_types
 	ADD,
 	DELETE
 };
+
+typedef struct sockaddr 		*sckadr;
+typedef struct sockaddr_storage	t_sckadr_strg;
 
 class WebServ
 {
@@ -43,27 +47,18 @@ class WebServ
 		int		deleteConnection(int client_socket);
 		void	refuseConnection(int client_socket);
 		int		addConnection(int client_socket);
-		void	receiveMsg(int client_socket);
+		void	receiveRequest(int client_socket);
 		void	runServer();
 		void	stopServer();
-		void	eventHandler(int event_type);
+		void	eventHandler(int event_type, int client_socket);
 		
 	private:
 		
-		int						_srv_fd;
-		int						_kqueue;
-		int						_n_events;
-		struct kevent			_ev_set;
-		struct kevent			_ev_set_run;
-		struct kevent			_ev_lst[MAX_EVENTS];
-		struct sockaddr_in		_address;
-		struct sockaddr_storage	_addr;
-		socklen_t				_socklen;
-		int						_clnt_fd;
-		struct s_client_data
-		{
-			int	fd;
-		} clients[NUM_CLIENTS];
+		int					_srv_fd;
+		int					_kqueue;
+		struct kevent		_ev_lst[MAX_EVENTS];
+		struct sockaddr_in	_address;
+		std::vector<int>	_clients;
 };
 
 #endif

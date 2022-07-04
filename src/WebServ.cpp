@@ -3,6 +3,8 @@
 // Constructors
 WebServ::WebServ(int port, char *address)
 {
+	struct kevent	ev_set;
+
 	memset((char *)&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
 	_address.sin_addr.s_addr = inet_addr(address);
@@ -12,9 +14,8 @@ WebServ::WebServ(int port, char *address)
 	listen(_srv_fd, BACKLOG);
 	fcntl(_srv_fd, F_SETFL, O_NONBLOCK);
 	_kqueue = kqueue();
-	EV_SET(&_ev_set, _srv_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	kevent(_kqueue, &_ev_set, 1, NULL, 0, NULL);
-	_socklen = sizeof(_addr);
+	EV_SET(&ev_set, _srv_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	kevent(_kqueue, &ev_set, 1, NULL, 0, NULL);
 }
 
 WebServ::WebServ(const WebServ &copy)
@@ -39,12 +40,11 @@ WebServ & WebServ::operator=(const WebServ &assign)
 // Getters
 int	WebServ::getConnectionId(int client_socket) const
 {
-	int	i;
-
-	i = -1;
-	while (++i < NUM_CLIENTS)
-		if (clients[i].fd == client_socket)
+	for (size_t i = 0; i < _clients.size(); i++)
+	{
+		if (_clients[i] == client_socket)
 			return (i);
+	}
 	return (-1);
 }
 
@@ -53,33 +53,28 @@ int	WebServ::deleteConnection(int client_socket)
 {
 	int	i;
 
-	eventHandler(DELETE);
+	eventHandler(DELETE, client_socket);
 	if (client_socket < 1)
 		return (-1);
 	i = this->getConnectionId(client_socket);
 	if (i == -1)
 		return (-1);
-	clients[i].fd = 0;
-	shutdown(clients[i].fd, 0);
-	std::cout << "Client #"<< i << "disconnected." << std::endl;
-	
+	shutdown(_clients[i], 0);
+	_clients.erase(_clients.begin() + i);
+	std::cout << "Client #"<< i << " disconnected." << std::endl;
 	return (close(client_socket));
 }
 
 int	WebServ::addConnection(int client_socket)
 {
-	int	i;
-
 	if (client_socket < 1)
 		return (-1);
-	i = this->getConnectionId(0);
-	if (i == -1)
-		return (-1);
-	clients[i].fd = client_socket;
+	_clients.push_back(client_socket);
+	std::cout << "Client #" << _clients.size() - 1 << " connected" << std::endl;
 	return (0);
 }
 
-void	WebServ::receiveMsg(int client_socket)
+void	WebServ::receiveRequest(int client_socket)
 {
 	char	buf[MAX_MSG_SIZE];
 	int		bytes_read;
@@ -88,7 +83,8 @@ void	WebServ::receiveMsg(int client_socket)
 	buf[bytes_read] = 0;
 	if (strnstr(buf, "GET / HTTP/1.1", MAX_MSG_SIZE))
 		send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!", 74, 0);
-	std::cout << buf;
+	else
+		std::cout << buf;
 	fflush(stdout);
 }
 
@@ -98,38 +94,49 @@ void	WebServ::refuseConnection(int client_socket)
 	close(client_socket);
 }
 
-void	WebServ::eventHandler(int event_type)
+void	WebServ::eventHandler(int event_type, int client_socket)
 {
+	struct kevent	ev_set;
 	switch (event_type)
 	{
 	case ADD:
-		EV_SET(&_ev_set_run, _clnt_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+		EV_SET(&ev_set, client_socket, EVFILT_READ, EV_ADD, 0, 0, NULL);
 		break;
 	case DELETE:
-		EV_SET(&_ev_set_run, _clnt_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		EV_SET(&ev_set, client_socket, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 		break;
 	default:
 		break;
 	}
-	kevent(_kqueue, &_ev_set_run, 1, NULL, 0, NULL);
+	kevent(_kqueue, &ev_set, 1, NULL, 0, NULL);
 }
 
+//Needs some changes now it only runs one of the servers
 void	WebServ::runServer()
 {
-	_n_events = kevent(_kqueue, NULL, 0, _ev_lst, MAX_EVENTS, NULL);
-	for (int i = 0; i < _n_events; i++)
+	int				n_events;
+	int				clnt_fd;
+	t_sckadr_strg	addr_strg;
+	socklen_t		socklen;
+
+	socklen = sizeof(addr_strg);
+	while (true)
 	{
-		if (_ev_lst[i].ident == (uintptr_t)_srv_fd)
+		n_events = kevent(_kqueue, NULL, 0, _ev_lst, MAX_EVENTS, NULL);
+		for (int i = 0; i < n_events; i++)
 		{
-			_clnt_fd = accept(_ev_lst[i].ident, (struct sockaddr *)&_addr, &_socklen);
-			if (addConnection(_clnt_fd) == 0)
-				eventHandler(ADD);
-			else
-				refuseConnection(_clnt_fd);
+			if (_ev_lst[i].ident == (uintptr_t)_srv_fd)
+			{
+				clnt_fd = accept(_ev_lst[i].ident, (sckadr)&addr_strg, &socklen);
+				if (addConnection(clnt_fd) == 0)
+					eventHandler(ADD, clnt_fd);
+				else
+					refuseConnection(clnt_fd);
+			}
+			else if (_ev_lst[i].flags & EV_EOF)
+				deleteConnection(_ev_lst[i].ident);
+			else if (_ev_lst[i].filter == EVFILT_READ)
+				receiveRequest(_ev_lst[i].ident);
 		}
-		else if (_ev_lst[i].flags & EV_EOF)
-			deleteConnection(_ev_lst[i].ident);
-		else if (_ev_lst[i].filter == EVFILT_READ)
-			receiveMsg(_ev_lst[i].ident);
 	}
 }
