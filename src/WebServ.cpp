@@ -1,14 +1,17 @@
 #include "WebServ.hpp"
 
 // Constructors
-WebServ::WebServ(int port, char *address)
+
+//TODO make this properly work with the config class
+WebServ::WebServ(Config *config)
 {
 	struct kevent	ev_set;
 
 	memset((char *)&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
-	_address.sin_addr.s_addr = inet_addr(address);
-	_address.sin_port = htons(port);
+	std::cout << "ip: " << config->getServerMap().at("127.0.0.1:8080")->getServerIp() << std::endl;
+	_address.sin_addr.s_addr = inet_addr(config->getServerMap().at("127.0.0.1:8080")->getServerIp().c_str());
+	_address.sin_port = htons(8080);
 	_srv_fd = socket(AF_INET, SOCK_STREAM, 0);
 	bind(_srv_fd, (struct sockaddr *)&_address, sizeof(_address));
 	listen(_srv_fd, BACKLOG);
@@ -16,6 +19,7 @@ WebServ::WebServ(int port, char *address)
 	_kqueue = kqueue();
 	EV_SET(&ev_set, _srv_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 	kevent(_kqueue, &ev_set, 1, NULL, 0, NULL);
+	(void)config;
 }
 
 WebServ::WebServ(const WebServ &copy)

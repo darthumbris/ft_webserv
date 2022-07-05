@@ -33,4 +33,50 @@ Server & Server::operator=(const Server &assign)
 	return *this;
 }
 
+// Getters
+std::string	Server::getServerIp() const
+{
+	std::cout << "returning this->server_ip: " << this->_server_ip << std::endl;
+	return this->_server_ip;
+}
+
+int			Server::getServerPort() const
+{
+	return this->_server_port;
+}
+
+std::vector<std::string>	Server::getServerNames() const
+{
+	return this->_server_name;
+}
+
+std::string	Server::getServerRoot() const
+{
+	return this->_root;
+}
+
+// Setters
+void	Server::setServerIp(std::string ip)
+{
+	this->_server_ip = ip;
+	std::cout << "set server ip to " << ip << std::endl;
+	std::cout << "this->_server_ip is: " << this->_server_ip << std::endl;
+}
+
+void	Server::setServerPort(int port)
+{
+	this->_server_port = port;
+}
+
+void	Server::setServerName(std::string server_name)
+{
+	this->_server_name.push_back(server_name);
+}
+
+void	Server::setServerRoot(std::string root)
+{
+	this->_root = root;
+}
+
+
 //TODO make getter and setter etc functions for server class

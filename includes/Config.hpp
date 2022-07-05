@@ -20,9 +20,14 @@ class Config
 		
 		// Operators
 		Config & operator=(const Config &assign);
-		
+
+		// Getters
+		std::map<std::string, Server*>	getServerMap() const;
+
+		// Member Functions
+
 	private:
-		std::map<int, Server>	_server;
+		std::map<std::string, Server*>	_server;
 };
 
 #endif

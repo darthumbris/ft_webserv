@@ -21,6 +21,21 @@ class Server
 		
 		// Operators
 		Server & operator=(const Server &assign);
+
+		// Getters
+		std::string					getServerIp() const;
+		int							getServerPort() const;
+		std::vector<std::string>	getServerNames() const;
+		std::string					getServerRoot() const;
+
+		// Setters
+		void	setServerIp(std::string ip);
+		void	setServerPort(int port);
+		void	setServerName(std::string server_name);
+		void	setServerRoot(std::string root);
+
+		// Member Functions
+		
 		
 	private:
 		int								_client_body_size;

@@ -11,6 +11,7 @@
 # include <netdb.h>
 # include <unistd.h>
 # include <vector>
+# include "Config.hpp"
 
 # define BACKLOG 5
 # define MAX_EVENTS 32
