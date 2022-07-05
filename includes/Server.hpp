@@ -28,6 +28,7 @@ class Server
 		std::string						_server_port;
 		std::string						_root;
 		std::string						_error_page;
+		std::string						_return_url;
 		std::map<std::string, Location>	_location;
 };
 
