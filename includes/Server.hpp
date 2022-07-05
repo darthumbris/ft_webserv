@@ -43,7 +43,6 @@ class Server
 		int								_server_port;
 		std::vector<std::string>		_server_name;
 		std::string						_server_ip;
-		std::string						_root;
 		std::string						_error_page;
 		std::map<std::string, Location>	_location;
 };
