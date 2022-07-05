@@ -118,11 +118,13 @@ void	WebServ::runServer()
 	int				clnt_fd;
 	t_sckadr_strg	addr_strg;
 	socklen_t		socklen;
+	struct timespec	timeout = {5, 0};
+	
 
 	socklen = sizeof(addr_strg);
 	while (true)
 	{
-		n_events = kevent(_kqueue, NULL, 0, _ev_lst, MAX_EVENTS, NULL);
+		n_events = kevent(_kqueue, NULL, 0, _ev_lst, MAX_EVENTS, &timeout);
 		for (int i = 0; i < n_events; i++)
 		{
 			if (_ev_lst[i].ident == (uintptr_t)_srv_fd)

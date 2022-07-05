@@ -6,13 +6,18 @@
 # include <fcntl.h>
 # include <sys/event.h>
 # include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
 # include <netdb.h>
+# include <unistd.h>
+# include <vector>
 
 class Config
 {
 	public:
 		// Constructors
-		Config();
+		Config(std::string config_path);
+		// Config();
 		Config(const Config &copy);
 		
 		// Destructor
@@ -22,7 +27,7 @@ class Config
 		Config & operator=(const Config &assign);
 		
 	private:
-		struct sockaddr_in	address;
+		struct sockaddr_in	_address;
 		int					_port;
 		std::string			_host_name;
 		std::string			_root;

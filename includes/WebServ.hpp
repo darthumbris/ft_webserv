@@ -26,10 +26,13 @@ enum	event_types
 typedef struct sockaddr 		*sckadr;
 typedef struct sockaddr_storage	t_sckadr_strg;
 
+class Config;
+
 class WebServ
 {
 	public:
 		// Constructors
+		WebServ(Config *config);
 		WebServ(int port, char *address);
 		WebServ(const WebServ &copy);
 		
@@ -59,6 +62,7 @@ class WebServ
 		struct kevent		_ev_lst[MAX_EVENTS];
 		struct sockaddr_in	_address;
 		std::vector<int>	_clients;
+		Config				*config;
 };
 
 #endif
