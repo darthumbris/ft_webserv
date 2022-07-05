@@ -25,7 +25,7 @@ class Config
 		std::map<std::string, Server*>	getServerMap() const;
 
 		// Member Functions
-
+		
 	private:
 		std::map<std::string, Server*>	_server;
 };

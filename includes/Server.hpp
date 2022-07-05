@@ -23,10 +23,10 @@ class Server
 		Server & operator=(const Server &assign);
 
 		// Getters
-		std::string					getServerIp() const;
-		int							getServerPort() const;
-		std::vector<std::string>	getServerNames() const;
-		std::string					getServerRoot() const;
+		std::string							getServerIp() const;
+		int									getServerPort() const;
+		std::vector<std::string>			getServerNames() const;
+		std::map<std::string, Location*>	getLocationMap() const;
 
 		// Setters
 		void	setServerIp(std::string ip);
@@ -35,16 +35,16 @@ class Server
 		void	setServerRoot(std::string root);
 
 		// Member Functions
-		
+		void	addLocationToServer(std::string location_dir);
 		
 	private:
-		int								_client_body_size;
-		int								_server_fd;
-		int								_server_port;
-		std::vector<std::string>		_server_name;
-		std::string						_server_ip;
-		std::string						_error_page;
-		std::map<std::string, Location>	_location;
+		int									_client_body_size;
+		int									_server_fd;
+		int									_server_port;
+		std::vector<std::string>			_server_name;
+		std::string							_server_ip;
+		std::string							_error_page;
+		std::map<std::string, Location*>	_location;
 };
 
 #endif

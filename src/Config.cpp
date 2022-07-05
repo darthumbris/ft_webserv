@@ -8,11 +8,15 @@ Config::Config(std::string config_path)
 {
 	std::cout << "config path: " << config_path << std::endl;
 	//This to add new server to the server map
+	if (_server.find("127.0.0.1:8080") != _server.end())
+		std::cout << "Error: duplicate server in config" << std::endl;
 	_server.insert(std::make_pair("127.0.0.1:8080", new Server()));
 	_server.at("127.0.0.1:8080")->setServerIp("127.0.0.1");
 	_server.at("127.0.0.1:8080")->setServerPort(8080);
 	_server.at("127.0.0.1:8080")->setServerName("testserver");
-	_server.at("127.0.0.1:8080")->setServerRoot("var/html/www");
+	if (_server.at("127.0.0.1:8080")->getLocationMap().size() && _server.at("127.0.0.1:8080")->getLocationMap().find("fsda/dsafasa") != _server.at("127.0.0.1:8080")->getLocationMap().end())
+		std::cout << "Error: duplicate location in config" << std::endl;
+	_server.at("127.0.0.1:8080")->addLocationToServer("/");
 }
 
 Config::Config(const Config &copy)

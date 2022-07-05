@@ -9,7 +9,6 @@ WebServ::WebServ(Config *config)
 
 	memset((char *)&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
-	std::cout << "ip: " << config->getServerMap().at("127.0.0.1:8080")->getServerIp() << std::endl;
 	_address.sin_addr.s_addr = inet_addr(config->getServerMap().at("127.0.0.1:8080")->getServerIp().c_str());
 	_address.sin_port = htons(8080);
 	_srv_fd = socket(AF_INET, SOCK_STREAM, 0);

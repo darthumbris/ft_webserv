@@ -9,9 +9,8 @@ Server::Server()
 	_server_port = 8080;
 	_server_name.push_back("test_server");
 	_server_ip = "127.0.0.1";
-	_root = "var/html/www";
 	_error_page = "404.html";
-	// _location.insert_or_assign("/", Location());
+
 }
 
 Server::Server(const Server &copy)
@@ -36,7 +35,6 @@ Server & Server::operator=(const Server &assign)
 // Getters
 std::string	Server::getServerIp() const
 {
-	std::cout << "returning this->server_ip: " << this->_server_ip << std::endl;
 	return this->_server_ip;
 }
 
@@ -50,17 +48,15 @@ std::vector<std::string>	Server::getServerNames() const
 	return this->_server_name;
 }
 
-std::string	Server::getServerRoot() const
+std::map<std::string, Location*>	Server::getLocationMap() const
 {
-	return this->_root;
+	return this->_location;
 }
 
 // Setters
 void	Server::setServerIp(std::string ip)
 {
 	this->_server_ip = ip;
-	std::cout << "set server ip to " << ip << std::endl;
-	std::cout << "this->_server_ip is: " << this->_server_ip << std::endl;
 }
 
 void	Server::setServerPort(int port)
@@ -73,10 +69,10 @@ void	Server::setServerName(std::string server_name)
 	this->_server_name.push_back(server_name);
 }
 
-void	Server::setServerRoot(std::string root)
+// Member Functions
+void	Server::addLocationToServer(std::string location_dir)
 {
-	this->_root = root;
+	this->_location.insert(std::make_pair(location_dir, new Location()));
 }
-
 
 //TODO make getter and setter etc functions for server class
