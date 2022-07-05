@@ -13,6 +13,7 @@ struct accepted_methods
 };
 
 
+//TODO add setter and getter functions
 class Location
 {
 	public:

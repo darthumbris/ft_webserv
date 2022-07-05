@@ -12,8 +12,9 @@
 # include <unistd.h>
 # include <vector>
 # include "Config.hpp"
+# include <map>
 
-# define BACKLOG 5
+# define BACKLOG 10000
 # define MAX_EVENTS 32
 # define NUM_CLIENTS 10
 # define MAX_MSG_SIZE 256
@@ -41,11 +42,13 @@ class WebServ
 		~WebServ();
 		
 		// Operators
-		WebServ & operator=(const WebServ &assign);
+		WebServ &operator=(const WebServ &assign);
 
 		// Getters
 		int		getConnectionId(int client_socket) const;
 
+		// Setters
+		void	setNewServerSocket(Server *server);
 
 		// Member functions
 		int		deleteConnection(int client_socket);
@@ -58,12 +61,12 @@ class WebServ
 		
 	private:
 		
-		int					_srv_fd;
-		int					_kqueue;
-		struct kevent		_ev_lst[MAX_EVENTS];
-		struct sockaddr_in	_address;
-		std::vector<int>	_clients;
-		Config				*config;
+		int							_kqueue;
+		struct kevent				_ev_lst[MAX_EVENTS];
+		std::vector<int>			_clients;
+		Config						*config;
+		std::vector<struct kevent> _change_ev;
+		std::vector<int>			_server_fd;
 };
 
 #endif

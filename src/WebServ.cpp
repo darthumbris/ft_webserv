@@ -5,20 +5,16 @@
 //TODO make this properly work with the config class
 WebServ::WebServ(Config *config)
 {
-	struct kevent	ev_set;
+	std::map<std::string, Server*>	server;
 
-	memset((char *)&_address, 0, sizeof(_address));
-	_address.sin_family = AF_INET;
-	_address.sin_addr.s_addr = inet_addr(config->getServerMap().at("127.0.0.1:8080")->getServerIp().c_str());
-	_address.sin_port = htons(8080);
-	_srv_fd = socket(AF_INET, SOCK_STREAM, 0);
-	bind(_srv_fd, (struct sockaddr *)&_address, sizeof(_address));
-	listen(_srv_fd, BACKLOG);
-	fcntl(_srv_fd, F_SETFL, O_NONBLOCK);
-	_kqueue = kqueue();
-	EV_SET(&ev_set, _srv_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	kevent(_kqueue, &ev_set, 1, NULL, 0, NULL);
-	(void)config;
+	if ((_kqueue = kqueue()) == -1)
+		std::cout << "Error: kqueue failed" << std::endl;
+	server = config->getServerMap();
+	for (std::map<std::string, Server*>::iterator it = server.begin(); it != server.end(); it++)
+	{
+		std::cout << "setting socket for: " << it->first << std::endl;
+		setNewServerSocket(it->second);
+	}
 }
 
 WebServ::WebServ(const WebServ &copy)
@@ -49,6 +45,31 @@ int	WebServ::getConnectionId(int client_socket) const
 			return (i);
 	}
 	return (-1);
+}
+
+// Setters
+
+//TODO doesn't properly set the srvr_fds for now
+void	WebServ::setNewServerSocket(Server *server)
+{
+	int					srvr_sckt;
+	struct sockaddr_in	srvr_addr;
+	struct kevent		event;
+	
+	memset((char *)&srvr_addr, 0, sizeof(srvr_addr));
+	srvr_sckt = socket(AF_INET, SOCK_STREAM, 0);
+	if (srvr_sckt == -1)
+		std::cout << "Error: socket failed" << std::endl;
+	server->setServerSocket(srvr_sckt);
+	srvr_addr.sin_family = AF_INET;
+	srvr_addr.sin_addr.s_addr = inet_addr(server->getServerIp().c_str());
+	srvr_addr.sin_port = htons(server->getServerPort());
+	if (bind(srvr_sckt, (sckadr)&srvr_addr, sizeof(srvr_addr)) == -1)
+		std::cout << "Error: bind failed" << std::endl;
+	if (listen(srvr_sckt, BACKLOG) == -1)
+		std::cout << "Error: listen() failed" << std::endl;
+	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
+	EV_SET(&event, srvr_sckt, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 }
 
 // Member Functions
@@ -114,34 +135,46 @@ void	WebServ::eventHandler(int event_type, int client_socket)
 	kevent(_kqueue, &ev_set, 1, NULL, 0, NULL);
 }
 
-//Needs some changes now it only runs one of the servers
+//TODO make it work with the current setup
 void	WebServ::runServer()
 {
-	int				n_events;
+	int				new_evnt;
+	struct kevent	*curr_evnt;
 	int				clnt_fd;
 	t_sckadr_strg	addr_strg;
 	socklen_t		socklen;
-	struct timespec	timeout = {5, 0};
 	
 
 	socklen = sizeof(addr_strg);
 	while (true)
 	{
-		n_events = kevent(_kqueue, NULL, 0, _ev_lst, MAX_EVENTS, &timeout);
-		for (int i = 0; i < n_events; i++)
+		new_evnt = kevent(_kqueue, &_change_ev[0], _change_ev.size(), _ev_lst, MAX_EVENTS, NULL);
+		if (new_evnt == -1)
+			std::cout << "Error: kevent failure" << std::endl;
+		_change_ev.clear();
+		for (int i = 0; i < new_evnt; i++)
 		{
-			if (_ev_lst[i].ident == (uintptr_t)_srv_fd)
+			curr_evnt = &_ev_lst[i];
+			if (curr_evnt->flags & EV_ERROR)
+				std::cout << "Error: Socket got deleted" << std::endl;
+			else if (curr_evnt->filter == EVFILT_READ)
 			{
-				clnt_fd = accept(_ev_lst[i].ident, (sckadr)&addr_strg, &socklen);
+				receiveRequest(_ev_lst[i].ident);
+			}
+			else if (curr_evnt->filter == EVFILT_WRITE)
+			{
+
+			}
+			if (curr_evnt->ident == (uintptr_t)_server_fd[curr_evnt->ident])
+			{
+				clnt_fd = accept(curr_evnt->ident, (sckadr)&addr_strg, &socklen);
 				if (addConnection(clnt_fd) == 0)
 					eventHandler(ADD, clnt_fd);
 				else
 					refuseConnection(clnt_fd);
 			}
-			else if (_ev_lst[i].flags & EV_EOF)
-				deleteConnection(_ev_lst[i].ident);
-			else if (_ev_lst[i].filter == EVFILT_READ)
-				receiveRequest(_ev_lst[i].ident);
+			else if (curr_evnt->flags & EV_EOF)
+				deleteConnection(_ev_lst[i].ident);				
 		}
 	}
 }

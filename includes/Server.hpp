@@ -33,6 +33,7 @@ class Server
 		void	setServerPort(int port);
 		void	setServerName(std::string server_name);
 		void	setServerRoot(std::string root);
+		void	setServerSocket(int server_socket);
 
 		// Member Functions
 		void	addLocationToServer(std::string location_dir);

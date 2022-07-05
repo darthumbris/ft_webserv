@@ -23,9 +23,11 @@ class Config
 
 		// Getters
 		std::map<std::string, Server*>	getServerMap() const;
+		Server	*getLastServer();
 
 		// Member Functions
-		
+		void	addServer(std::string ip, std::string port);
+		void	addLocation(std::string location_dir);
 	private:
 		std::map<std::string, Server*>	_server;
 };

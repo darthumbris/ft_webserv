@@ -69,6 +69,11 @@ void	Server::setServerName(std::string server_name)
 	this->_server_name.push_back(server_name);
 }
 
+void	Server::setServerSocket(int server_socket)
+{
+	this->_server_fd = server_socket;
+}
+
 // Member Functions
 void	Server::addLocationToServer(std::string location_dir)
 {
