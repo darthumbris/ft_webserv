@@ -3,14 +3,8 @@
 
 # include <iostream>
 # include <string>
-# include <fcntl.h>
-# include <sys/event.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <netdb.h>
-# include <unistd.h>
-# include <vector>
+# include <map>
+# include "Server.hpp"
 
 class Server;
 
@@ -28,7 +22,7 @@ class Config
 		Config & operator=(const Config &assign);
 		
 	private:
-		std::vector<Server>	_server;
+		std::map<int, Server>	_server;
 };
 
 #endif

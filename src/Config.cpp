@@ -4,7 +4,7 @@
 Config::Config(std::string config_path)
 {
 	(void)config_path;
-	(void)_server;
+	// _server.;
 }
 
 Config::Config(const Config &copy)

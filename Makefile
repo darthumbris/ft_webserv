@@ -10,6 +10,8 @@ INC_DIR = includes
 SRC =	main.cpp \
         WebServ.cpp \
         Config.cpp \
+        Server.cpp \
+        Location.cpp \
 
 SRC_EXT = cpp
 

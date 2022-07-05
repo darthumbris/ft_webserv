@@ -3,6 +3,12 @@
 // Constructors
 Location::Location()
 {
+	_auto_index = true;
+	_upload_path = "/upload";
+	_return_url = "google.com";
+	_allowed_methods.del = true;
+	_allowed_methods.get = true;
+	_allowed_methods.post = true;
 }
 
 Location::Location(const Location &copy)
