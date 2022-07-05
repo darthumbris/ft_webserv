@@ -12,12 +12,13 @@
 # include <unistd.h>
 # include <vector>
 
+class Server;
+
 class Config
 {
 	public:
 		// Constructors
 		Config(std::string config_path);
-		// Config();
 		Config(const Config &copy);
 		
 		// Destructor
@@ -27,10 +28,7 @@ class Config
 		Config & operator=(const Config &assign);
 		
 	private:
-		struct sockaddr_in	_address;
-		int					_port;
-		std::string			_host_name;
-		std::string			_root;
+		std::vector<Server>	_server;
 };
 
 #endif
