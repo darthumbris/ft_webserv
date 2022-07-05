@@ -30,6 +30,7 @@ class Location
 		bool						_auto_index;
 		std::string					_upload_path;
 		struct accepted_methods		_allowed_methods;
+		std::string					_return_url;
 };
 
 #endif

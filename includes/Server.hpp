@@ -4,6 +4,7 @@
 # include <iostream>
 # include <string>
 # include <map>
+# include <vector>
 
 class Location;
 
@@ -23,12 +24,11 @@ class Server
 	private:
 		int								_client_body_size;
 		int								_server_fd;
-		std::string						_server_name;
+		int								_server_port;
+		std::vector<std::string>		_server_name;
 		std::string						_server_ip;
-		std::string						_server_port;
 		std::string						_root;
 		std::string						_error_page;
-		std::string						_return_url;
 		std::map<std::string, Location>	_location;
 };
 
