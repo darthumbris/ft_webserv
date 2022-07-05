@@ -1,6 +1,7 @@
 #include "Server.hpp"
 
 // Constructors
+//TODO make a proper constructor for server
 Server::Server()
 {
 	_client_body_size = 500;
@@ -32,3 +33,4 @@ Server & Server::operator=(const Server &assign)
 	return *this;
 }
 
+//TODO make getter and setter etc functions for server class

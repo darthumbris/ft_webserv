@@ -1,6 +1,9 @@
 #include "Location.hpp"
 
 // Constructors
+//For now it does this.
+//TODO make a proper constructor and setter and 
+// getter functions for this
 Location::Location()
 {
 	_auto_index = true;
