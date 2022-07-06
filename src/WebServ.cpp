@@ -6,17 +6,19 @@ WebServ::WebServ(Config *config) : _config(config)
 {
 	std::map<std::string, Server*>	server;
 
+	// Starting the kqueue
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
 	server = _config->getServerMap();
 	_n_servers = 0;
+	// Going through the config and making a socket and event for all servers in it.
 	for (std::map<std::string, Server*>::iterator it = server.begin(); it != server.end(); it++)
 	{
 		std::cout << "setting socket for: " << it->first << std::endl;
 		setNewServerSocket(it->second);
 		_n_servers++;
 	}
-	//This will make an event list for all the servers
+	//This will make it so that kqueue will look for changes to the server events
 	kevent(_kqueue, &_change_ev[0], _change_ev.size(), NULL, 0, NULL);
 }
 
@@ -54,20 +56,29 @@ void	WebServ::setNewServerSocket(Server *server)
 	t_evudat	*ev_udat = new t_evudat;
 	t_addr_in	srvr_addr;
 	
-	memset((char *)&srvr_addr, 0, sizeof(srvr_addr));
+	// Creating the socket
 	srvr_sckt = socket(AF_INET, SOCK_STREAM, 0);
 	if (srvr_sckt == -1)
 		std::cout << "Error: socket failed" << std::endl;
 	server->setServerSocket(srvr_sckt);
 	setsockopt(srvr_sckt, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+
+	// Setting the address struct
+	memset((char *)&srvr_addr, 0, sizeof(srvr_addr));
 	srvr_addr.sin_family = AF_INET;
 	srvr_addr.sin_addr.s_addr = inet_addr(server->getServerIp().c_str());
 	srvr_addr.sin_port = htons(server->getServerPort());
+
+	// Binding and listening to the new socket using the address struct data
 	if (bind(srvr_sckt, (sckadr)&srvr_addr, sizeof(srvr_addr)) == -1)
 		std::cout << "Error: bind failed" << std::endl;
 	if (listen(srvr_sckt, BACKLOG) == -1)
 		std::cout << "Error: listen() failed" << std::endl;
+	
+	// Setting the server socket as nonblocking
 	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
+
+	//Setting the udata for the event and adding it to the changelst.
 	ev_udat->ip = server->getServerIp();
 	ev_udat->port = server->getServerPort();
 	ev_udat->key = server->getServerIp() + ":" + std::to_string(server->getServerPort());
@@ -134,12 +145,12 @@ void	WebServ::receiveRequest(t_event &event)
 	evudat->req->addRequestMsg(buf);
 	fflush(stdout);
 
-	// This is just for a simple test for now
-	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf)))
-	{
-		send(event.ident, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
-		send(event.ident, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
-	}
+	// // This is just for a simple test for now
+	// if (strnstr(buf, "GET / HTTP/1.1", strlen(buf)))
+	// {
+	// 	send(event.ident, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
+	// 	send(event.ident, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
+	// }
 }
 
 void	WebServ::sendResponse(t_event &event)
@@ -148,6 +159,7 @@ void	WebServ::sendResponse(t_event &event)
 
 	delete evudat->req;
 	evudat->req = new RequestHandler(getServer(evudat->key));
+
 	//TODO probably update the request in the udata of the event instead of deleting and making a new one
 	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
 	// send(client_socket, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
@@ -156,10 +168,8 @@ void	WebServ::sendResponse(t_event &event)
 bool	WebServ::isListenSocket(int fd)
 {
 	for (int i = 0; i < _n_servers; i++)
-	{
 		if (_change_ev[i].ident == (uintptr_t)fd)
 			return 1;
-	}
 	return 0;
 }
 
@@ -180,9 +190,7 @@ void	WebServ::writeToSocket(t_event &event)
 	if (event.flags & EV_EOF || evudat->flag)
 		deleteConnection(event, EVFILT_WRITE);
 	else
-	{
 		sendResponse(event);
-	}
 }
 
 void	WebServ::runServer()
