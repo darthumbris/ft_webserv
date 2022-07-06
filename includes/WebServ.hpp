@@ -38,6 +38,7 @@ typedef struct ev_data
 	int					flag;
 	int					port;
 	std::string			ip;
+	std::string			srvr_key;
 	RequestHandler		*req;
 	struct sockaddr_in	addr;
 }	t_evudat;

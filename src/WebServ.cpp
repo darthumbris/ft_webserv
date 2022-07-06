@@ -69,8 +69,8 @@ void	WebServ::setNewServerSocket(Server *server)
 	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
 	ev_udat->ip = server->getServerIp();
 	ev_udat->port = server->getServerPort();
+	ev_udat->srvr_key = server->getServerIp() + ":" + std::to_string(server->getServerPort());
 	EV_SET(&event, srvr_sckt, EVFILT_READ, EV_ADD, 0, 0, ev_udat);
-	std::cout << "server socket: " << srvr_sckt << std::endl;
 	_change_ev.push_back(event);
 }
 
@@ -108,7 +108,8 @@ void	WebServ::addConnection(struct kevent event)
 	new_data->addr = newaddr;
 	new_data->ip = old_data->ip;
 	new_data->port = old_data->port;
-	new_data->req = new RequestHandler(_config->getServerMap().find("127.0.0.1:8080")->second); //TODO make sure this works
+	new_data->srvr_key = old_data->srvr_key;
+	new_data->req = new RequestHandler(_config->getServerMap().find(new_data->srvr_key)->second); //TODO make sure this works
 	EV_SET(&new_event[0], client_socket, EVFILT_READ, EV_ADD, 0, 0, new_data);
 	EV_SET(&new_event[1], client_socket, EVFILT_WRITE, EV_ADD, 0, 0, new_data);
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
@@ -140,7 +141,7 @@ void	WebServ::sendResponse(struct kevent &event)
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
 	delete evudat->req;
-	evudat->req = new RequestHandler(_config->getServerMap().find("127.0.0.1:8080")->second);
+	evudat->req = new RequestHandler(_config->getServerMap().find(evudat->srvr_key)->second);
 	//TODO probably update the request in the udata of the event
 	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
 	// send(client_socket, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
