@@ -67,7 +67,7 @@ void	Config::addServer(std::string ip, std::string port)
 {
 	std::string	new_server_key = ip + ":" +  port;
 	if (_server.find(new_server_key) != _server.end())
-		std::cout << "Error: duplicate server in config" << std::endl; //Should be a throw
+		std::cout << "Error: duplicate server in config" << std::endl; //Should throw ?
 	_server.insert(std::make_pair(new_server_key, new Server()));
 	_server.at(new_server_key)->setServerIp(ip);
 	_server.at(new_server_key)->setServerPort(std::stoi(port));
@@ -81,6 +81,6 @@ void	Config::addLocation(std::string location_dir)
 	server = getLastServer();
 	location = server->getLocationMap();
 	if (location.size() && location.find(location_dir) != location.end())
-		std::cout << "Error: duplicate location in config" << std::endl; // Should throw
+		std::cout << "Error: duplicate location in config" << std::endl; // Should throw ?
 	server->addLocationToServer(location_dir);
 }
