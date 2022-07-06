@@ -36,12 +36,12 @@ typedef struct kevent			t_event;
 
 typedef struct ev_data
 {
-	int					flag;
-	int					port;
-	std::string			ip;
-	std::string			key;
-	RequestHandler		*req;
-	struct sockaddr_in	addr;
+	int				flag;
+	int				port;
+	std::string		ip;
+	std::string		key;
+	RequestHandler	*req;
+	t_addr_in		addr;
 }	t_evudat;
 
 class WebServ
@@ -65,12 +65,12 @@ class WebServ
 		// Member functions
 		void	setNewServerSocket(Server *server);
 		bool	isListenSocket(int fd);
-		void	addConnection(struct kevent event, t_evudat *old_udat);
-		void	readFromSocket(struct kevent &event);
-		void	writeToSocket(struct kevent &event);
-		void	deleteConnection(struct kevent event, int16_t	filter);
-		void	receiveRequest(struct kevent &event);
-		void	sendResponse(struct kevent &event);
+		void	addConnection(t_event event, t_evudat *old_udat);
+		void	readFromSocket(t_event &event);
+		void	writeToSocket(t_event &event);
+		void	deleteConnection(t_event event, int16_t	filter);
+		void	receiveRequest(t_event &event);
+		void	sendResponse(t_event &event);
 		void	runServer();
 		
 	private:
@@ -78,7 +78,7 @@ class WebServ
 		int							_kqueue;
 		int							_n_servers;
 		Config						*_config;
-		std::vector<struct kevent> _change_ev;
+		std::vector<t_event> _change_ev;
 };
 
 #endif

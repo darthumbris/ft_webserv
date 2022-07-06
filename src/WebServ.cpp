@@ -46,7 +46,6 @@ Server *WebServ::getServer(std::string key) const
 }
 
 // Member Functions
-//TODO doesn't properly set the srvr_fds for now
 void	WebServ::setNewServerSocket(Server *server)
 {
 	int			srvr_sckt;
