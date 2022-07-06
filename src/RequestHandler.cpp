@@ -25,3 +25,12 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 	return *this;
 }
 
+
+// Member Functions
+void	RequestHandler::addRequestMsg(std::string msg) 
+{
+	_msg = msg;
+	std::cout << msg;
+	//TODO make sure to parse this message. 
+	//TODO might need a need to see if the msg is done being received?
+}

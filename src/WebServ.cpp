@@ -41,8 +41,7 @@ WebServ & WebServ::operator=(const WebServ &assign)
 	return *this;
 }
 
-// Setters
-
+// Member Functions
 //TODO doesn't properly set the srvr_fds for now
 void	WebServ::setNewServerSocket(Server *server)
 {
@@ -74,14 +73,12 @@ void	WebServ::setNewServerSocket(Server *server)
 	_change_ev.push_back(event);
 }
 
-// Member Functions
 void	WebServ::deleteConnection(struct kevent event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
-	// std::cout << "deleting connection" << std::endl;
 	if (evudat->flag)
 	{
 		shutdown(event.ident, 0);
@@ -120,19 +117,20 @@ void	WebServ::addConnection(struct kevent event)
 //TODO requests need to be parsed and handled still
 void	WebServ::receiveRequest(struct kevent &event)
 {
-	char	buf[MAX_MSG_SIZE];
-	int		bytes_read;
+	t_evudat	*evudat = (t_evudat *)event.udata;
+	char		buf[MAX_MSG_SIZE];
+	int			bytes_read;
 
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	if (bytes_read < 0)
 		return ;
 	buf[bytes_read] = 0;
+	evudat->req->addRequestMsg(buf);
 	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf))) //just for testing stuff
 	{
 		send(event.ident, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
 		send(event.ident, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
 	}
-	std::cout << buf; //for debug and understanding http headers
 	fflush(stdout);
 }
 
@@ -179,7 +177,6 @@ void	WebServ::writeToSocket(struct kevent &event)
 	}
 }
 
-//TODO make it work with the current setup
 void	WebServ::runServer()
 {
 	int				new_evnt;

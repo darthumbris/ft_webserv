@@ -60,9 +60,9 @@ class WebServ
 		// Getters
 
 		// Setters
-		void	setNewServerSocket(Server *server);
 
 		// Member functions
+		void	setNewServerSocket(Server *server);
 		bool	isListenSocket(int fd);
 		void	addConnection(struct kevent event);
 		void	readFromSocket(struct kevent &event);
