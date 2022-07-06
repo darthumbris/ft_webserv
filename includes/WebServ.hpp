@@ -11,14 +11,18 @@
 # include <netdb.h>
 # include <unistd.h>
 # include <vector>
-# include "Config.hpp"
 # include <map>
+# include "Config.hpp"
+# include "RequestHandler.hpp"
 
 # define BACKLOG 		10000
 # define MAX_EVENTS 	32
 # define NUM_CLIENTS 	10
 # define MAX_MSG_SIZE 	256
 # define MAX_FD			1024
+
+class Config;
+class RequestHandler;
 
 enum	event_types
 {
@@ -32,12 +36,11 @@ typedef struct sockaddr_storage	t_sckadr_strg;
 typedef struct ev_data
 {
 	int					flag;
-	struct sockaddr_in	addr;
-	std::string			ip;
 	int					port;
+	std::string			ip;
+	RequestHandler		*req;
+	struct sockaddr_in	addr;
 }	t_evudat;
-
-class Config;
 
 class WebServ
 {
@@ -61,16 +64,18 @@ class WebServ
 		// Member functions
 		bool	isListenSocket(int fd);
 		void	addConnection(struct kevent event);
-		void	readSocket(struct kevent &event);
-		void	deleteConnection(struct kevent event);
-		void	receiveRequest(int client_socket);
+		void	readFromSocket(struct kevent &event);
+		void	writeToSocket(struct kevent &event);
+		void	deleteConnection(struct kevent event, int16_t	filter);
+		void	receiveRequest(struct kevent &event);
+		void	sendResponse(struct kevent &event);
 		void	runServer();
 		
 	private:
 		
 		int							_kqueue;
 		int							_n_servers;
-		Config						*config;
+		Config						*_config;
 		std::vector<struct kevent> _change_ev;
 };
 

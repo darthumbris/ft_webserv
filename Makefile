@@ -12,6 +12,7 @@ SRC =	main.cpp \
         Config.cpp \
         Server.cpp \
         Location.cpp \
+        RequestHandler.cpp \
 
 SRC_EXT = cpp
 

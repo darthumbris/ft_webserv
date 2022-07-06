@@ -3,7 +3,7 @@
 // Constructors
 
 //TODO make this properly work with the config class
-WebServ::WebServ(Config *config)
+WebServ::WebServ(Config *config) : _config(config)
 {
 	std::map<std::string, Server*>	server;
 
@@ -11,7 +11,7 @@ WebServ::WebServ(Config *config)
 	// _server_fd.resize(MAX_FD);
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
-	server = config->getServerMap();
+	server = _config->getServerMap();
 	_n_servers = 0;
 	for (std::map<std::string, Server*>::iterator it = server.begin(); it != server.end(); it++)
 	{
@@ -75,13 +75,13 @@ void	WebServ::setNewServerSocket(Server *server)
 }
 
 // Member Functions
-void	WebServ::deleteConnection(struct kevent event)
+void	WebServ::deleteConnection(struct kevent event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
-	EV_SET(&event, event.ident, EVFILT_READ, EV_DELETE, 0, 0, evudat);
+	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
-	std::cout << "deleting connection" << std::endl;
+	// std::cout << "deleting connection" << std::endl;
 	if (evudat->flag)
 	{
 		shutdown(event.ident, 0);
@@ -108,27 +108,42 @@ void	WebServ::addConnection(struct kevent event)
 	new_data->addr = newaddr;
 	new_data->ip = old_data->ip;
 	new_data->port = old_data->port;
+	new_data->req = new RequestHandler(_config->getServerMap().find("127.0.0.1:8080")->second); //TODO make sure this works
 	EV_SET(&new_event[0], client_socket, EVFILT_READ, EV_ADD, 0, 0, new_data);
 	EV_SET(&new_event[1], client_socket, EVFILT_WRITE, EV_ADD, 0, 0, new_data);
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
-	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr) << std::endl;
-	std::cout << "Client connected to server with ip: " << old_data->ip << " and port: " << old_data->port << std::endl;
+	// std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr) << std::endl;
+	// std::cout << "Client connected to server with ip: " << old_data->ip << " and port: " << old_data->port << std::endl;
 }
 
-void	WebServ::receiveRequest(int client_socket)
+//TODO requests need to be parsed and handled still
+void	WebServ::receiveRequest(struct kevent &event)
 {
 	char	buf[MAX_MSG_SIZE];
 	int		bytes_read;
 
-	bytes_read = recv(client_socket, buf, sizeof(buf) - 1, 0);
+	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	if (bytes_read < 0)
 		return ;
 	buf[bytes_read] = 0;
-	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf)))
-		send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!", 74, 0);
-	else
-		std::cout << buf;
+	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf))) //just for testing stuff
+	{
+		send(event.ident, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
+		send(event.ident, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
+	}
+	std::cout << buf; //for debug and understanding http headers
 	fflush(stdout);
+}
+
+void	WebServ::sendResponse(struct kevent &event)
+{
+	t_evudat	*evudat = (t_evudat *)event.udata;
+
+	delete evudat->req;
+	evudat->req = new RequestHandler(_config->getServerMap().find("127.0.0.1:8080")->second);
+	//TODO probably update the request in the udata of the event
+	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
+	// send(client_socket, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
 }
 
 bool	WebServ::isListenSocket(int fd)
@@ -141,14 +156,26 @@ bool	WebServ::isListenSocket(int fd)
 	return 0;
 }
 
-void	WebServ::readSocket(struct kevent &event)
+void	WebServ::readFromSocket(struct kevent &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
 	if (event.flags & EV_EOF || evudat->flag)
-		deleteConnection(event);
+		deleteConnection(event, EVFILT_READ);
 	else
-		receiveRequest(event.ident);
+		receiveRequest(event);
+}
+
+void	WebServ::writeToSocket(struct kevent &event)
+{
+	t_evudat	*evudat = (t_evudat *)event.udata;
+
+	if (event.flags & EV_EOF || evudat->flag)
+		deleteConnection(event, EVFILT_WRITE);
+	else
+	{
+		sendResponse(event);
+	}
 }
 
 //TODO make it work with the current setup
@@ -169,11 +196,9 @@ void	WebServ::runServer()
 			if (isListenSocket(events[i].ident))
 				addConnection(events[i]);
 			else if (events[i].filter == EVFILT_READ)
-				readSocket(events[i]);
+				readFromSocket(events[i]);
 			else if (events[i].filter == EVFILT_WRITE)
-			{
-				// writeSocket();
-			}			
+				writeToSocket(events[i]);	
 		}
 	}
 }
