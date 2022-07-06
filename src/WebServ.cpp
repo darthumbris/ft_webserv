@@ -7,14 +7,19 @@ WebServ::WebServ(Config *config)
 {
 	std::map<std::string, Server*>	server;
 
+	// _clients.resize(MAX_FD);
+	// _server_fd.resize(MAX_FD);
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
 	server = config->getServerMap();
+	_n_servers = 0;
 	for (std::map<std::string, Server*>::iterator it = server.begin(); it != server.end(); it++)
 	{
 		std::cout << "setting socket for: " << it->first << std::endl;
 		setNewServerSocket(it->second);
+		_n_servers++;
 	}
+	kevent(_kqueue, &_change_ev[0], _change_ev.size(), NULL, 0, NULL);
 }
 
 WebServ::WebServ(const WebServ &copy)
@@ -36,17 +41,6 @@ WebServ & WebServ::operator=(const WebServ &assign)
 	return *this;
 }
 
-// Getters
-int	WebServ::getConnectionId(int client_socket) const
-{
-	for (size_t i = 0; i < _clients.size(); i++)
-	{
-		if (_clients[i] == client_socket)
-			return (i);
-	}
-	return (-1);
-}
-
 // Setters
 
 //TODO doesn't properly set the srvr_fds for now
@@ -55,12 +49,16 @@ void	WebServ::setNewServerSocket(Server *server)
 	int					srvr_sckt;
 	struct sockaddr_in	srvr_addr;
 	struct kevent		event;
+	int					option;
+	t_evudat			*ev_udat = new t_evudat;
 	
 	memset((char *)&srvr_addr, 0, sizeof(srvr_addr));
 	srvr_sckt = socket(AF_INET, SOCK_STREAM, 0);
 	if (srvr_sckt == -1)
 		std::cout << "Error: socket failed" << std::endl;
 	server->setServerSocket(srvr_sckt);
+	option = 1;
+	setsockopt(srvr_sckt, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 	srvr_addr.sin_family = AF_INET;
 	srvr_addr.sin_addr.s_addr = inet_addr(server->getServerIp().c_str());
 	srvr_addr.sin_port = htons(server->getServerPort());
@@ -69,33 +67,52 @@ void	WebServ::setNewServerSocket(Server *server)
 	if (listen(srvr_sckt, BACKLOG) == -1)
 		std::cout << "Error: listen() failed" << std::endl;
 	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
-	EV_SET(&event, srvr_sckt, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	ev_udat->ip = server->getServerIp();
+	ev_udat->port = server->getServerPort();
+	EV_SET(&event, srvr_sckt, EVFILT_READ, EV_ADD, 0, 0, ev_udat);
+	std::cout << "server socket: " << srvr_sckt << std::endl;
+	_change_ev.push_back(event);
 }
 
 // Member Functions
-int	WebServ::deleteConnection(int client_socket)
+void	WebServ::deleteConnection(struct kevent event)
 {
-	int	i;
+	t_evudat	*evudat = (t_evudat *)event.udata;
 
-	eventHandler(DELETE, client_socket);
-	if (client_socket < 1)
-		return (-1);
-	i = this->getConnectionId(client_socket);
-	if (i == -1)
-		return (-1);
-	shutdown(_clients[i], 0);
-	_clients.erase(_clients.begin() + i);
-	std::cout << "Client #"<< i << " disconnected." << std::endl;
-	return (close(client_socket));
+	EV_SET(&event, event.ident, EVFILT_READ, EV_DELETE, 0, 0, evudat);
+	kevent(_kqueue, &event, 1, NULL, 0, NULL);
+	std::cout << "deleting connection" << std::endl;
+	if (evudat->flag)
+	{
+		shutdown(event.ident, 0);
+		close(event.ident);
+	}
+	else
+		evudat->flag = 1;
 }
 
-int	WebServ::addConnection(int client_socket)
+void	WebServ::addConnection(struct kevent event)
 {
-	if (client_socket < 1)
-		return (-1);
-	_clients.push_back(client_socket);
-	std::cout << "Client #" << _clients.size() - 1 << " connected" << std::endl;
-	return (0);
+	struct sockaddr_in	newaddr;
+	socklen_t			socklen = sizeof(newaddr);
+	int					client_socket;
+	int					opt;
+	struct kevent		new_event[2];
+	t_evudat			*old_data = (t_evudat *)(event.udata);
+	t_evudat			*new_data = new t_evudat;
+
+	client_socket = accept(event.ident, (sckadr)(&newaddr), &socklen);
+	opt = 1;
+	setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	new_data->flag = 0;
+	new_data->addr = newaddr;
+	new_data->ip = old_data->ip;
+	new_data->port = old_data->port;
+	EV_SET(&new_event[0], client_socket, EVFILT_READ, EV_ADD, 0, 0, new_data);
+	EV_SET(&new_event[1], client_socket, EVFILT_WRITE, EV_ADD, 0, 0, new_data);
+	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
+	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr) << std::endl;
+	std::cout << "Client connected to server with ip: " << old_data->ip << " and port: " << old_data->port << std::endl;
 }
 
 void	WebServ::receiveRequest(int client_socket)
@@ -104,77 +121,59 @@ void	WebServ::receiveRequest(int client_socket)
 	int		bytes_read;
 
 	bytes_read = recv(client_socket, buf, sizeof(buf) - 1, 0);
+	if (bytes_read < 0)
+		return ;
 	buf[bytes_read] = 0;
-	if (strnstr(buf, "GET / HTTP/1.1", MAX_MSG_SIZE))
+	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf)))
 		send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!", 74, 0);
 	else
 		std::cout << buf;
 	fflush(stdout);
 }
 
-void	WebServ::refuseConnection(int client_socket)
+bool	WebServ::isListenSocket(int fd)
 {
-	std::cout << "connection refused." << std::endl;
-	close(client_socket);
+	for (int i = 0; i < _n_servers; i++)
+	{
+		if (_change_ev[i].ident == (uintptr_t)fd)
+			return 1;
+	}
+	return 0;
 }
 
-void	WebServ::eventHandler(int event_type, int client_socket)
+void	WebServ::readSocket(struct kevent &event)
 {
-	struct kevent	ev_set;
-	switch (event_type)
-	{
-	case ADD:
-		EV_SET(&ev_set, client_socket, EVFILT_READ, EV_ADD, 0, 0, NULL);
-		break;
-	case DELETE:
-		EV_SET(&ev_set, client_socket, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		break;
-	default:
-		break;
-	}
-	kevent(_kqueue, &ev_set, 1, NULL, 0, NULL);
+	t_evudat	*evudat = (t_evudat *)event.udata;
+
+	if (event.flags & EV_EOF || evudat->flag)
+		deleteConnection(event);
+	else
+		receiveRequest(event.ident);
 }
 
 //TODO make it work with the current setup
 void	WebServ::runServer()
 {
 	int				new_evnt;
-	struct kevent	*curr_evnt;
-	int				clnt_fd;
-	t_sckadr_strg	addr_strg;
-	socklen_t		socklen;
-	
+	struct kevent	events[MAX_EVENTS];
 
-	socklen = sizeof(addr_strg);
 	while (true)
 	{
-		new_evnt = kevent(_kqueue, &_change_ev[0], _change_ev.size(), _ev_lst, MAX_EVENTS, NULL);
+		new_evnt = kevent(_kqueue, NULL, 0, events, _n_servers, NULL);
 		if (new_evnt == -1)
 			std::cout << "Error: kevent failure" << std::endl;
-		_change_ev.clear();
 		for (int i = 0; i < new_evnt; i++)
 		{
-			curr_evnt = &_ev_lst[i];
-			if (curr_evnt->flags & EV_ERROR)
+			if (events[i].flags & EV_ERROR)
 				std::cout << "Error: Socket got deleted" << std::endl;
-			else if (curr_evnt->filter == EVFILT_READ)
+			if (isListenSocket(events[i].ident))
+				addConnection(events[i]);
+			else if (events[i].filter == EVFILT_READ)
+				readSocket(events[i]);
+			else if (events[i].filter == EVFILT_WRITE)
 			{
-				receiveRequest(_ev_lst[i].ident);
-			}
-			else if (curr_evnt->filter == EVFILT_WRITE)
-			{
-
-			}
-			if (curr_evnt->ident == (uintptr_t)_server_fd[curr_evnt->ident])
-			{
-				clnt_fd = accept(curr_evnt->ident, (sckadr)&addr_strg, &socklen);
-				if (addConnection(clnt_fd) == 0)
-					eventHandler(ADD, clnt_fd);
-				else
-					refuseConnection(clnt_fd);
-			}
-			else if (curr_evnt->flags & EV_EOF)
-				deleteConnection(_ev_lst[i].ident);				
+				// writeSocket();
+			}			
 		}
 	}
 }
