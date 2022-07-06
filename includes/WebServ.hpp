@@ -75,10 +75,10 @@ class WebServ
 		
 	private:
 		
-		int							_kqueue;
-		int							_n_servers;
-		Config						*_config;
-		std::vector<t_event> _change_ev;
+		int						_kqueue;
+		int						_n_servers;
+		Config					*_config;
+		std::vector<t_event> 	_change_ev;
 };
 
 #endif

@@ -53,6 +53,21 @@ std::map<std::string, Location*>	Server::getLocationMap() const
 	return this->_location;
 }
 
+std::string	Server::getErrorPage() const
+{
+	return this->_error_page;
+}
+
+int	Server::getClientBodySize() const
+{
+	return this->_client_body_size;
+}
+
+int	Server::getServerSocket() const
+{
+	return this->_server_fd;
+}
+
 // Setters
 void	Server::setServerIp(std::string ip)
 {
@@ -72,6 +87,16 @@ void	Server::setServerName(std::string server_name)
 void	Server::setServerSocket(int server_socket)
 {
 	this->_server_fd = server_socket;
+}
+
+void	Server::setServerClientBodySize(int size)
+{
+	this->_client_body_size = size;
+}
+
+void	Server::setServerErrorPage(std::string error_page)
+{
+	this->_error_page = error_page;
 }
 
 // Member Functions

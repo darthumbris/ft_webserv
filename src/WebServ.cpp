@@ -16,6 +16,7 @@ WebServ::WebServ(Config *config) : _config(config)
 		setNewServerSocket(it->second);
 		_n_servers++;
 	}
+	//This will make an event list for all the servers
 	kevent(_kqueue, &_change_ev[0], _change_ev.size(), NULL, 0, NULL);
 }
 

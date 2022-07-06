@@ -27,6 +27,9 @@ class Server
 		int									getServerPort() const;
 		std::vector<std::string>			getServerNames() const;
 		std::map<std::string, Location*>	getLocationMap() const;
+		std::string							getErrorPage() const;
+		int									getClientBodySize() const;
+		int									getServerSocket() const;
 
 		// Setters
 		void	setServerIp(std::string ip);
@@ -34,6 +37,8 @@ class Server
 		void	setServerName(std::string server_name);
 		void	setServerRoot(std::string root);
 		void	setServerSocket(int server_socket);
+		void	setServerClientBodySize(int size);
+		void	setServerErrorPage(std::string error_page);
 
 		// Member Functions
 		void	addLocationToServer(std::string location_dir);
