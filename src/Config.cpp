@@ -6,7 +6,7 @@
 // for duplicates etc.
 Config::Config(std::string config_path)
 {
-	std::cout << "config path: " << config_path << std::endl;
+	std::cout << "config filename: " << config_path << std::endl;
 	//After this should parse the config
 
 

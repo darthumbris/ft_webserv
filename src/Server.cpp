@@ -1,7 +1,7 @@
 #include "Server.hpp"
 
 // Constructors
-//TODO make a proper constructor for server
+//TODO make a proper constructor for server instead this hardcoded stuff
 Server::Server()
 {
 	_client_body_size = 500;
@@ -38,7 +38,7 @@ std::string	Server::getServerIp() const
 	return this->_server_ip;
 }
 
-int			Server::getServerPort() const
+int	Server::getServerPort() const
 {
 	return this->_server_port;
 }
@@ -79,5 +79,3 @@ void	Server::addLocationToServer(std::string location_dir)
 {
 	this->_location.insert(std::make_pair(location_dir, new Location()));
 }
-
-//TODO make getter and setter etc functions for server class

@@ -2,7 +2,6 @@
 
 // Constructors
 
-//TODO make this properly work with the config class
 WebServ::WebServ(Config *config) : _config(config)
 {
 	std::map<std::string, Server*>	server;
@@ -148,7 +147,7 @@ void	WebServ::sendResponse(t_event &event)
 
 	delete evudat->req;
 	evudat->req = new RequestHandler(getServer(evudat->key));
-	//TODO probably update the request in the udata of the event
+	//TODO probably update the request in the udata of the event instead of deleting and making a new one
 	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
 	// send(client_socket, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
 }
