@@ -4,6 +4,7 @@
 # include <iostream>
 # include <string>
 # include <map>
+# include <fstream>
 # include "Server.hpp"
 
 class Server;

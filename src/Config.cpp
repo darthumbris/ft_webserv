@@ -8,19 +8,25 @@ Config::Config(std::string config_path)
 {
 	std::cout << "config path: " << config_path << std::endl;
 	//After this should parse the config
-
+	std::ifstream file(config_path, std::ifstream::binary);
+	if (!file)
+	{
+		std::cout << "wrong file" << std::endl;
+		exit(1);
+	}
+	std::string line;
 
 	//Examples for the parsing:
 	// Config parsed new server with listen 127.0.0.1 8080
-	addServer("127.0.0.1", "8080");
-	// Config sees server_name test.com
-	getLastServer()->setServerName("test.com");
-
-	// Config parsed new location with dir: "/images"
-	addLocation("/images");
-
-	// Config parsed new server with listen 0.0.0.0 80
-	addServer("0.0.0.0", "80");
+//	addServer("127.0.0.1", "8080");
+//	// Config sees server_name test.com
+//	getLastServer()->setServerName("test.com");
+//
+//	// Config parsed new location with dir: "/images"
+//	addLocation("/images");
+//
+//	// Config parsed new server with listen 0.0.0.0 80
+//	addServer("0.0.0.0", "80");
 }
 
 Config::Config(const Config &copy)
