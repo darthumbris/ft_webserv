@@ -7,8 +7,6 @@ WebServ::WebServ(Config *config) : _config(config)
 {
 	std::map<std::string, Server*>	server;
 
-	// _clients.resize(MAX_FD);
-	// _server_fd.resize(MAX_FD);
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
 	server = _config->getServerMap();
@@ -41,22 +39,27 @@ WebServ & WebServ::operator=(const WebServ &assign)
 	return *this;
 }
 
+// Getters
+Server *WebServ::getServer(std::string key) const
+{
+	return _config->getServerMap().find(key)->second;
+}
+
 // Member Functions
 //TODO doesn't properly set the srvr_fds for now
 void	WebServ::setNewServerSocket(Server *server)
 {
-	int					srvr_sckt;
-	struct sockaddr_in	srvr_addr;
-	struct kevent		event;
-	int					option;
-	t_evudat			*ev_udat = new t_evudat;
+	int			srvr_sckt;
+	int			option = 1;
+	t_event		event;
+	t_evudat	*ev_udat = new t_evudat;
+	t_addr_in	srvr_addr;
 	
 	memset((char *)&srvr_addr, 0, sizeof(srvr_addr));
 	srvr_sckt = socket(AF_INET, SOCK_STREAM, 0);
 	if (srvr_sckt == -1)
 		std::cout << "Error: socket failed" << std::endl;
 	server->setServerSocket(srvr_sckt);
-	option = 1;
 	setsockopt(srvr_sckt, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 	srvr_addr.sin_family = AF_INET;
 	srvr_addr.sin_addr.s_addr = inet_addr(server->getServerIp().c_str());
@@ -68,12 +71,12 @@ void	WebServ::setNewServerSocket(Server *server)
 	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
 	ev_udat->ip = server->getServerIp();
 	ev_udat->port = server->getServerPort();
-	ev_udat->srvr_key = server->getServerIp() + ":" + std::to_string(server->getServerPort());
+	ev_udat->key = server->getServerIp() + ":" + std::to_string(server->getServerPort());
 	EV_SET(&event, srvr_sckt, EVFILT_READ, EV_ADD, 0, 0, ev_udat);
 	_change_ev.push_back(event);
 }
 
-void	WebServ::deleteConnection(struct kevent event, int16_t	filter)
+void	WebServ::deleteConnection(t_event event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
@@ -88,34 +91,38 @@ void	WebServ::deleteConnection(struct kevent event, int16_t	filter)
 		evudat->flag = 1;
 }
 
-void	WebServ::addConnection(struct kevent event)
+void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 {
-	struct sockaddr_in	newaddr;
-	socklen_t			socklen = sizeof(newaddr);
-	int					client_socket;
-	int					opt;
-	struct kevent		new_event[2];
-	t_evudat			*old_data = (t_evudat *)(event.udata);
-	t_evudat			*new_data = new t_evudat;
+	int			clnt_sckt;
+	int			opt_value = 1;
+	t_addr_in	newaddr;
+	socklen_t	socklen = sizeof(newaddr);
 
-	client_socket = accept(event.ident, (sckadr)(&newaddr), &socklen);
-	opt = 1;
-	setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	new_data->flag = 0;
-	new_data->addr = newaddr;
-	new_data->ip = old_data->ip;
-	new_data->port = old_data->port;
-	new_data->srvr_key = old_data->srvr_key;
-	new_data->req = new RequestHandler(_config->getServerMap().find(new_data->srvr_key)->second); //TODO make sure this works
-	EV_SET(&new_event[0], client_socket, EVFILT_READ, EV_ADD, 0, 0, new_data);
-	EV_SET(&new_event[1], client_socket, EVFILT_WRITE, EV_ADD, 0, 0, new_data);
+	clnt_sckt = accept(event.ident, (sckadr)(&newaddr), &socklen);
+	setsockopt(clnt_sckt, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(opt_value));
+
+	//setting initial values for the new_udat
+	t_evudat	*new_udat = new t_evudat;
+	new_udat->flag = 0;
+	new_udat->addr = newaddr;
+	new_udat->ip = old_udat->ip;
+	new_udat->port = old_udat->port;
+	new_udat->key = old_udat->key;
+	new_udat->req = new RequestHandler(getServer(new_udat->key));
+
+	//putting the read and write event for the new client in the kqueue
+	t_event		new_event[2];
+	EV_SET(&new_event[0], clnt_sckt, EVFILT_READ, EV_ADD, 0, 0, new_udat);
+	EV_SET(&new_event[1], clnt_sckt, EVFILT_WRITE, EV_ADD, 0, 0, new_udat);
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
+
+	//Debug messages
 	// std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr) << std::endl;
 	// std::cout << "Client connected to server with ip: " << old_data->ip << " and port: " << old_data->port << std::endl;
 }
 
 //TODO requests need to be parsed and handled still
-void	WebServ::receiveRequest(struct kevent &event)
+void	WebServ::receiveRequest(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 	char		buf[MAX_MSG_SIZE];
@@ -126,20 +133,22 @@ void	WebServ::receiveRequest(struct kevent &event)
 		return ;
 	buf[bytes_read] = 0;
 	evudat->req->addRequestMsg(buf);
-	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf))) //just for testing stuff
+	fflush(stdout);
+
+	// This is just for a simple test for now
+	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf)))
 	{
 		send(event.ident, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
 		send(event.ident, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
 	}
-	fflush(stdout);
 }
 
-void	WebServ::sendResponse(struct kevent &event)
+void	WebServ::sendResponse(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
 	delete evudat->req;
-	evudat->req = new RequestHandler(_config->getServerMap().find(evudat->srvr_key)->second);
+	evudat->req = new RequestHandler(getServer(evudat->key));
 	//TODO probably update the request in the udata of the event
 	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
 	// send(client_socket, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
@@ -155,7 +164,7 @@ bool	WebServ::isListenSocket(int fd)
 	return 0;
 }
 
-void	WebServ::readFromSocket(struct kevent &event)
+void	WebServ::readFromSocket(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
@@ -165,7 +174,7 @@ void	WebServ::readFromSocket(struct kevent &event)
 		receiveRequest(event);
 }
 
-void	WebServ::writeToSocket(struct kevent &event)
+void	WebServ::writeToSocket(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
@@ -179,8 +188,8 @@ void	WebServ::writeToSocket(struct kevent &event)
 
 void	WebServ::runServer()
 {
-	int				new_evnt;
-	struct kevent	events[MAX_EVENTS];
+	int		new_evnt;
+	t_event	events[MAX_EVENTS];
 
 	while (true)
 	{
@@ -192,7 +201,7 @@ void	WebServ::runServer()
 			if (events[i].flags & EV_ERROR)
 				std::cout << "Error: Socket got deleted" << std::endl;
 			if (isListenSocket(events[i].ident))
-				addConnection(events[i]);
+				addConnection(events[i], (t_evudat *)(events[i].udata));
 			else if (events[i].filter == EVFILT_READ)
 				readFromSocket(events[i]);
 			else if (events[i].filter == EVFILT_WRITE)

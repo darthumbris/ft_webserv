@@ -31,14 +31,15 @@ enum	event_types
 };
 
 typedef struct sockaddr 		*sckadr;
-typedef struct sockaddr_storage	t_sckadr_strg;
+typedef struct sockaddr_in		t_addr_in;
+typedef struct kevent			t_event;
 
 typedef struct ev_data
 {
 	int					flag;
 	int					port;
 	std::string			ip;
-	std::string			srvr_key;
+	std::string			key;
 	RequestHandler		*req;
 	struct sockaddr_in	addr;
 }	t_evudat;
@@ -58,13 +59,13 @@ class WebServ
 		WebServ &operator=(const WebServ &assign);
 
 		// Getters
-
+		Server	*getServer(std::string key) const;
 		// Setters
 
 		// Member functions
 		void	setNewServerSocket(Server *server);
 		bool	isListenSocket(int fd);
-		void	addConnection(struct kevent event);
+		void	addConnection(struct kevent event, t_evudat *old_udat);
 		void	readFromSocket(struct kevent &event);
 		void	writeToSocket(struct kevent &event);
 		void	deleteConnection(struct kevent event, int16_t	filter);
