@@ -23,7 +23,25 @@ class Location
 		
 		// Destructor
 		~Location();
-		
+
+		// Getters
+		bool		getAutoIndex() const;
+		std::string	getUploadPath() const;
+		std::string	getReturnUrl() const;
+		std::string	getRootPath() const;
+		bool		getMethodGet() const;
+		bool		getMethodPost() const;
+		bool		getMethodDel() const;
+
+		// Setters
+		void	setAutoIndex(bool auto_index);
+		void	setUploadPath(std::string upload_path);
+		void	setReturnUrl(std::string return_url);
+		void	setRootFolder(std::string root);
+		void	setGetMethod(bool get);
+		void	setPostMethod(bool post);
+		void	setDeleteMethod(bool del);
+
 		// Operators
 		Location & operator=(const Location &assign);
 		

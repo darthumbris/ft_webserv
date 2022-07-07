@@ -1,5 +1,9 @@
 #include "RequestHandler.hpp"
 
+/*TODO need to have a check here for post to check how big the upload is
+// and compare it to the client_body_size variable of the server
+*/
+
 // Constructors
 RequestHandler::RequestHandler(Server *server) : _server(server)
 {
