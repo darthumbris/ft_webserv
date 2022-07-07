@@ -1,6 +1,7 @@
 #include "WebServ.hpp"
 
 //TODO cleanup some of the functions (maybe add some smaller functions)
+//TODO throw for somethings and make a error handler for those
 
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
