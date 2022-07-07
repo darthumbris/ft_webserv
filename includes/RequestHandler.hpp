@@ -25,6 +25,7 @@ class RequestHandler
 	private:
 		Server		*_server;
 		std::string	_msg;
+		std::string	_response;
 };
 
 #endif

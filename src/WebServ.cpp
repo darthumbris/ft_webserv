@@ -98,7 +98,7 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 		close(event.ident);
 	}
 	else
-		evudat->flag = 1;
+		evudat->flag = true;
 }
 
 void	WebServ::addConnection(t_event event, t_evudat *old_udat)
@@ -113,7 +113,7 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 
 	//setting initial values for the new_udat
 	t_evudat	*new_udat = new t_evudat;
-	new_udat->flag = 0;
+	new_udat->flag = false;
 	new_udat->addr = newaddr;
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;

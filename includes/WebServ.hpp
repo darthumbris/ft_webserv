@@ -36,12 +36,12 @@ typedef struct kevent			t_event;
 
 typedef struct ev_data
 {
-	int				flag;
-	int				port;
-	std::string		ip;
-	std::string		key;
-	RequestHandler	*req;
-	t_addr_in		addr;
+	bool			flag; // flag for deleting connection
+	int				port; // port of the server
+	std::string		ip; //Ip of the server
+	std::string		key; // ip:port of the server
+	RequestHandler	*req; // request of the client
+	t_addr_in		addr; // address of the client
 }	t_evudat;
 
 class WebServ
