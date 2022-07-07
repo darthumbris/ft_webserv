@@ -5,12 +5,12 @@
 # include <string>
 # include <vector>
 
-struct accepted_methods
+typedef struct accepted_methods
 {
 	bool	get;
 	bool	post;
 	bool	del;
-};
+}	t_methods;
 
 
 //TODO add setter and getter functions
@@ -33,7 +33,7 @@ class Location
 		std::string					_return_url;
 		std::string					_root;
 		std::vector<std::string>	_index_file;
-		struct accepted_methods		_allowed_methods;
+		t_methods					_allowed_methods;
 };
 
 #endif

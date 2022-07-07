@@ -1,10 +1,11 @@
 #include "WebServ.hpp"
 
-// Constructors
+//TODO cleanup some of the functions (maybe add some smaller functions)
 
+// Constructors
 WebServ::WebServ(Config *config) : _config(config)
 {
-	std::map<std::string, Server*>	server;
+	t_servmap	server;
 
 	// Starting the kqueue
 	if ((_kqueue = kqueue()) == -1)
@@ -12,7 +13,7 @@ WebServ::WebServ(Config *config) : _config(config)
 	server = _config->getServerMap();
 	_n_servers = 0;
 	// Going through the config and making a socket and event for all servers in it.
-	for (std::map<std::string, Server*>::iterator it = server.begin(); it != server.end(); it++)
+	for (auto it = server.begin(); it != server.end(); it++)
 	{
 		std::cout << "setting socket for: " << it->first << std::endl;
 		setNewServerSocket(it->second);
@@ -142,7 +143,7 @@ void	WebServ::receiveRequest(t_event &event)
 	if (bytes_read < 0)
 		return ;
 	buf[bytes_read] = 0;
-	evudat->req->addRequestMsg(buf);
+	evudat->req->setRequestMsg(buf);
 	fflush(stdout);
 
 	// // This is just for a simple test for now

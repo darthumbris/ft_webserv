@@ -6,7 +6,11 @@
 # include <map>
 # include "Server.hpp"
 
-class Server;
+class	Server;
+class	Location;
+
+typedef std::map<std::string, Location*>	t_locmap;
+typedef std::map<std::string, Server*>		t_servmap;
 
 class Config
 {
@@ -22,14 +26,16 @@ class Config
 		Config & operator=(const Config &assign);
 
 		// Getters
-		std::map<std::string, Server*>	getServerMap() const;
+		t_servmap	getServerMap() const;
 		Server	*getLastServer();
 
 		// Member Functions
 		void	addServer(std::string ip, std::string port);
 		void	addLocation(std::string location_dir);
+
 	private:
-		std::map<std::string, Server*>	_server;
+		t_servmap	_server;
+
 };
 
 #endif

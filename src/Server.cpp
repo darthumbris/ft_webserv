@@ -48,7 +48,7 @@ std::vector<std::string>	Server::getServerNames() const
 	return this->_server_name;
 }
 
-std::map<std::string, Location*>	Server::getLocationMap() const
+t_locmap	Server::getLocationMap() const
 {
 	return this->_location;
 }

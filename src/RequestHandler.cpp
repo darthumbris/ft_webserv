@@ -3,7 +3,6 @@
 // Constructors
 RequestHandler::RequestHandler(Server *server) : _server(server)
 {
-	(void)_server;
 }
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
@@ -25,9 +24,14 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 	return *this;
 }
 
+// Getters
+std::string	RequestHandler::getResponse() const
+{
+	return this->_response;
+}
 
-// Member Functions
-void	RequestHandler::addRequestMsg(std::string msg) 
+// Setters
+void	RequestHandler::setRequestMsg(std::string msg) 
 {
 	_msg = msg;
 	std::cout << msg;

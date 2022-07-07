@@ -5,6 +5,8 @@
 # include <string>
 # include "Server.hpp"
 
+class Server;
+
 //TODO make all the request handling stuff. (parsing etc)
 class RequestHandler
 {
@@ -19,8 +21,15 @@ class RequestHandler
 		// Operators
 		RequestHandler & operator=(const RequestHandler &assign);
 
+		// Getters
+		std::string	getResponse() const;
+
+		// Setters
+		void	setResponse();
+		void	setRequestMsg(std::string msg);
+
 		// Member Functions
-		void	addRequestMsg(std::string msg);
+		
 		
 	private:
 		Server		*_server;

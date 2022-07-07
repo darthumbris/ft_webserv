@@ -48,14 +48,14 @@ Config & Config::operator=(const Config &assign)
 // and adds new servers and locations (to the corresponding servers)
 
 // Getters
-std::map<std::string, Server*>	Config::getServerMap() const
+t_servmap	Config::getServerMap() const
 {
 	return this->_server;
 }
 
 Server	*Config::getLastServer()
 {
-	std::map<std::string, Server *>::const_iterator it = _server.end();
+	auto it = _server.end();
 	it--;
 	return (it->second);
 }
@@ -65,18 +65,18 @@ Server	*Config::getLastServer()
 // Member Functions
 void	Config::addServer(std::string ip, std::string port)
 {
-	std::string	new_server_key = ip + ":" +  port;
-	if (_server.find(new_server_key) != _server.end())
+	std::string	server_key = ip + ":" +  port;
+	if (_server.find(server_key) != _server.end())
 		std::cout << "Error: duplicate server in config" << std::endl; //Should throw ?
-	_server.insert(std::make_pair(new_server_key, new Server()));
-	_server.at(new_server_key)->setServerIp(ip);
-	_server.at(new_server_key)->setServerPort(std::stoi(port));
+	_server.insert(std::make_pair(server_key, new Server()));
+	_server.at(server_key)->setServerIp(ip);
+	_server.at(server_key)->setServerPort(std::stoi(port));
 }
 
 void	Config::addLocation(std::string location_dir)
 {
-	Server								*server;
-	std::map<std::string, Location*>	location;
+	Server		*server;
+	t_locmap	location;
 
 	server = getLastServer();
 	location = server->getLocationMap();
