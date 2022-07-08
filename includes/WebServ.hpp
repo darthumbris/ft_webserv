@@ -30,11 +30,7 @@ enum	event_types
 	DELETE
 };
 
-typedef struct sockaddr 		*sckadr;
-typedef struct sockaddr_in		t_addr_in;
-typedef struct kevent			t_event;
-
-typedef struct ev_data
+struct ev_data
 {
 	bool			flag; // flag for deleting connection
 	int				port; // port of the server
@@ -42,7 +38,13 @@ typedef struct ev_data
 	std::string		key; // ip:port of the server
 	RequestHandler	*req; // request of the client
 	t_addr_in		addr; // address of the client
-}	t_evudat;
+};
+
+typedef struct sockaddr 		*sckadr;
+using t_addr_in = struct sockaddr_in;
+using t_event = struct kevent;
+using t_evudat = struct ev_data;
+using t_ev_lst = std::vector<t_event>;
 
 class WebServ
 {
@@ -75,10 +77,10 @@ class WebServ
 		
 	private:
 		
-		int						_kqueue;
-		int						_n_servers;
-		Config					*_config;
-		std::vector<t_event> 	_change_ev;
+		int			_kqueue;
+		int			_n_servers;
+		Config		*_config;
+		t_ev_lst 	_change_ev;
 };
 
 #endif

@@ -9,7 +9,7 @@
 
 class Location;
 
-typedef std::map<std::string, Location*>	t_locmap;
+using t_locmap = std::map<std::string, Location*>;
 
 class Server
 {

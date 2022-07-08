@@ -9,8 +9,8 @@
 class	Server;
 class	Location;
 
-typedef std::map<std::string, Location*>	t_locmap;
-typedef std::map<std::string, Server*>		t_servmap;
+using t_locmap =  std::map<std::string, Location*>;
+using t_servmap =  std::map<std::string, Server*>;
 
 class Config
 {

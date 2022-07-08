@@ -6,15 +6,15 @@
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
 {
-	t_servmap	server;
+	t_servmap	server_map;
 
 	// Starting the kqueue
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
-	server = _config->getServerMap();
+	server_map = _config->getServerMap();
 	_n_servers = 0;
 	// Going through the config and making a socket and event for all servers in it.
-	for (auto it = server.begin(); it != server.end(); it++)
+	for (auto it = server_map.begin(); it != server_map.end(); it++)
 	{
 		std::cout << "setting socket for: " << it->first << std::endl;
 		setNewServerSocket(it->second);
@@ -159,10 +159,14 @@ void	WebServ::sendResponse(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
+	// Have a check for if the response is done
+
+	// Send respons
+
+	//Make a new RequestHandler
 	delete evudat->req;
 	evudat->req = new RequestHandler(getServer(evudat->key));
 
-	//TODO probably update the request in the udata of the event instead of deleting and making a new one
 	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
 	// send(client_socket, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
 }
