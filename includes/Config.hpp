@@ -3,16 +3,20 @@
 
 # include <iostream>
 # include <string>
-# include <fcntl.h>
-# include <sys/event.h>
-# include <sys/socket.h>
-# include <netdb.h>
+# include <map>
+# include "Server.hpp"
+
+class	Server;
+class	Location;
+
+typedef std::map<std::string, Location*>	t_locmap;
+typedef std::map<std::string, Server*>		t_servmap;
 
 class Config
 {
 	public:
 		// Constructors
-		Config();
+		Config(std::string config_path);
 		Config(const Config &copy);
 		
 		// Destructor
@@ -20,12 +24,18 @@ class Config
 		
 		// Operators
 		Config & operator=(const Config &assign);
-		
+
+		// Getters
+		t_servmap	getServerMap() const;
+		Server	*getLastServer();
+
+		// Member Functions
+		void	addServer(std::string ip, std::string port);
+		void	addLocation(std::string location_dir);
+
 	private:
-		struct sockaddr_in	address;
-		int					_port;
-		std::string			_host_name;
-		std::string			_root;
+		t_servmap	_server;
+
 };
 
 #endif
