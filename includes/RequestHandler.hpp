@@ -1,8 +1,7 @@
 #ifndef REQUESTHANDLER_HPP
 # define REQUESTHANDLER_HPP
 
-# include <iostream>
-# include <string>
+//includes iostream vector string map
 # include "Server.hpp"
 
 class Server;
@@ -23,18 +22,21 @@ class RequestHandler
 
 		// Getters
 		std::string	getResponse() const;
+		//std::string	make
 
 		// Setters
-		void	setResponse();
+		void	setResponse(std::string response);
 		void	setRequestMsg(std::string msg);
 
 		// Member Functions
 		
 		
 	private:
-		Server		*_server;
-		std::string	_msg;
-		std::string	_response;
+		Server					*_server;
+		const std::string		_protocol = "HTTP/1.1";
+		//const std::string[4]	_requests = "HTTP/1.1"; //maybe a map of DELETE GET POST
+		std::string				_msg;
+		std::string				_response;
 };
 
 #endif

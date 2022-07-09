@@ -1,11 +1,9 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <iostream>
-# include <string>
-# include <map>
-# include <vector>
+//includes iostream vector string
 # include "Location.hpp"
+# include <map>
 
 class Location;
 
