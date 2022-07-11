@@ -165,13 +165,15 @@ void	WebServ::receiveRequest(t_event &event)
 		return ;
 	}
 	if (bytes_read == 0)
+	{
 		evudat->flag = true;
+		// std::cout << "bytes_read is 0" << std::endl;
+	}
 	else
 	{
 		buf[bytes_read] = 0;
 		evudat->req->addToRequestMsg(buf);
 	}
-	fflush(stdout);
 
 	// Receive message might also contain part of the next packet
 	// TODO make sure this is handled in the requesthandler!.
@@ -181,9 +183,14 @@ void	WebServ::sendResponse(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 	std::string	response;
+	std::string	remaining_request;
 
 	// get response
 	response = evudat->req->getResponse();
+
+	// In case receive receives more than one packet
+	if (evudat->req->hasRemainingRequestMsg())
+		remaining_request = evudat->req->getRemainingRequestMsg();
 	// Send respons
 	if (send(event.ident, response.c_str(), response.length(), 0) == -1)
 	{
@@ -194,6 +201,11 @@ void	WebServ::sendResponse(t_event &event)
 	//Make a new RequestHandler
 	delete evudat->req;
 	evudat->req = new RequestHandler(getServer(evudat->key));
+	if (evudat->req->hasRemainingRequestMsg())
+	{
+		evudat->req->addToRequestMsg(remaining_request);
+		std::cout << "Adding remaining request to new RequestHandler" << std::endl;
+	}
 
 
 	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);

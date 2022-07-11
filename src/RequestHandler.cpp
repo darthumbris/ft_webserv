@@ -5,7 +5,7 @@
 */
 
 // Constructors
-RequestHandler::RequestHandler(Server *server) : _server(server), _is_request_complete(false)
+RequestHandler::RequestHandler(Server *server) : _server(server), _is_request_complete(false), _has_remaining_request(false)
 {
 }
 
@@ -39,14 +39,29 @@ bool	RequestHandler::isRequestComplete() const
 	return this->_is_request_complete;
 }
 
+std::string	RequestHandler::getRemainingRequestMsg() const
+{
+	return this->_remaining_request;
+}
+
+bool	RequestHandler::hasRemainingRequestMsg() const
+{
+	return this->_has_remaining_request;
+}
+
 // Setters
 void	RequestHandler::addToRequestMsg(const std::string &msg)
 {
+	size_t	clrf_pos;
+	size_t	size_req;
+
 	_complete_request += msg;
-	if (_complete_request.find("\r\n\r\n"))
+	clrf_pos = _complete_request.find("0\r\n\r\n");
+	size_req = _complete_request.size();
+	if (clrf_pos != std::string::npos)
 	{
 		_is_request_complete = true;
-		if (_complete_request.find("GET / HTTP/1.1"))
+		if (_complete_request.find("GET / HTTP/1.1") != std::string::npos) // just for testing
 		{
 			// std::cout << "Get response" << std::endl;
 			_response.append("HTTP/1.1 200 OK\nContent-Type: text/html\n");
@@ -54,15 +69,19 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			_response.append("<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n");
 			_response.append("<p>My first paragraph.</p>\n\n</body>\n</html>\r\n\r\n");
 		}
-		std::cout << _complete_request;
-		_complete_request.erase();
+		// std::cout << _complete_request;  // just for testing
+		if (size_req - clrf_pos != 5) // in case recv has gotten more than a single HTTP request
+		{
+			_has_remaining_request = true;
+			_remaining_request = _complete_request.substr(clrf_pos, size_req - clrf_pos);
+			std::cout << "More than one packet in the receive msg" << std::endl; // just for testing
+			std::cout << _remaining_request << std::endl; // just for testing
+		}
 	}
 	//TODO make sure to parse this message. 
 	//TODO might need a need to see if the msg is done being received?
 	// for request headers they always end with \r\n\r\n (section 4.1 of RFC 2616)
 	// We can use that to check if the full message has been received.
-	// if it has been fully received set a bool _is_fully_read or something to true?
+	// if it has been fully received set a bool _is_request_complete or something to true?
 	// might also work for sending the response?
-	// if (msg.find("\r\n\r\n"))
-		// std::cout << "end of request header" << std::endl;
 }
