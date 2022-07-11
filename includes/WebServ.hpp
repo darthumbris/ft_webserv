@@ -1,24 +1,21 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-# include <iostream>
-# include <string>
 # include <fcntl.h>
 # include <sys/event.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
 # include <arpa/inet.h>
 # include <netdb.h>
 # include <unistd.h>
-# include <vector>
-# include <map>
+// # include <sys/socket.h>
+// # include <netinet/in.h>
+
 # include "Config.hpp"
 # include "RequestHandler.hpp"
 
 # define BACKLOG 		20 //not sure yet what a proper value is (most systems do 20?)
 # define MAX_EVENTS 	32
 # define NUM_CLIENTS 	10
-# define MAX_MSG_SIZE 	32
+# define MAX_MSG_SIZE 	256
 # define MAX_FD			1024
 
 
@@ -33,7 +30,6 @@ using t_addr_in = struct sockaddr_in;
 using t_event = struct kevent;
 using t_ev_lst = std::vector<t_event>;
 using t_evudat = struct ev_data;
-using t_add_strg = struct sockaddr_storage;
 
 struct ev_data
 {

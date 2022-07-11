@@ -137,8 +137,6 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 
 	getnameinfo((const t_sckadr *)&newaddr, socklen, host, sizeof host, service, sizeof service, 0);
 
-	std::cout << "   host: " << host << std::endl;
-	std::cout << "service: " << service << std::endl;
 	//putting the read and write event for the new client in the kqueue
 	t_event		new_event[2];
 	EV_SET(&new_event[0], clnt_sckt, EVFILT_READ, EV_ADD, 0, 0, new_udat);
@@ -146,9 +144,11 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
 
 	//Debug messages
+	// std::cout << "   host: " << host << std::endl;
+	// std::cout << "service: " << service << std::endl;
 	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr);
 	std::cout << " and port: " << ntohs(newaddr.sin_port) << std::endl;
-	// std::cout << "Client connected to server with ip: " << old_data->ip << " and port: " << old_data->port << std::endl;
+	std::cout << "Client connected to server with ip: " << old_udat->ip << " and port: " << old_udat->port << std::endl;
 }
 
 //TODO requests need to be parsed and handled still

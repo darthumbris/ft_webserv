@@ -1,11 +1,7 @@
 #ifndef REQUESTHANDLER_HPP
 # define REQUESTHANDLER_HPP
 
-# include <iostream>
-# include <string>
 # include "Server.hpp"
-
-class Server;
 
 //TODO make all the request handling stuff. (parsing etc)
 //TODO check if remaining request stuff is actually needed

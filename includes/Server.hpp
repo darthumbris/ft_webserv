@@ -1,15 +1,13 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <iostream>
-# include <string>
 # include <map>
-# include <vector>
 # include "Location.hpp"
 
-class Location;
+class Server;
 
 using t_locmap = std::map<std::string, Location*>;
+using t_servmap =  std::map<std::string, Server*>;
 
 class Server
 {

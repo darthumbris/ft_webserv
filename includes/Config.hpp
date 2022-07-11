@@ -1,16 +1,7 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include <iostream>
-# include <string>
-# include <map>
 # include "Server.hpp"
-
-class	Server;
-class	Location;
-
-using t_locmap =  std::map<std::string, Location*>;
-using t_servmap =  std::map<std::string, Server*>;
 
 class Config
 {
