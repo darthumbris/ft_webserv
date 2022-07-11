@@ -65,9 +65,12 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 		{
 			std::cout << "Get response" << std::endl;
 			_response.append("HTTP/1.1 200 OK\nContent-Type: text/html\n");
-			_response.append("Content-Length: 100\n\n");
-			_response.append("<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n");
-			_response.append("<p>My first paragraph.</p>\n\n</body>\n</html>\r\n\r\n");
+			_response.append("Content-Length: 190\n\n");
+			_response.append("<!DOCTYPE html>\n<html>\n");
+			_response.append("<head>\n<title>My Page Title</title>\n");
+			_response.append("<link rel=\"icon\" href=\"data:;base64,=\">\n");
+			_response.append("</head>\n<body>\n\n<h1>This is a Heading</h1>\n");
+			_response.append("<p>This is a paragraph.</p>\n\n</body>\n</html>\r\n\r\n");
 		}
 		std::cout << _complete_request;  // just for testing
 		if (size_req - crlf_pos != 4) // in case recv has gotten more than a single HTTP request

@@ -174,7 +174,7 @@ void	WebServ::receiveRequest(t_event &event)
 		buf[bytes_read] = 0;
 		evudat->req->addToRequestMsg(buf);
 	}
-
+	fflush(stdout);
 	// Receive message might also contain part of the next packet
 	// TODO make sure this is handled in the requesthandler!.
 }
