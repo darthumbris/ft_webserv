@@ -45,6 +45,6 @@ void	RequestHandler::setRequestMsg(std::string msg)
 	// We can use that to check if the full message has been received.
 	// if it has been fully received set a bool _is_fully_read or something to true?
 	// might also work for sending the response?
-	if (msg.find("\r\n\r\n"))
-		std::cout << "end of request header" << std::endl;
+	// if (msg.find("\r\n\r\n"))
+		// std::cout << "end of request header" << std::endl;
 }

@@ -61,7 +61,10 @@ void	WebServ::setNewServerSocket(Server *server)
 	// Creating the socket
 	srvr_sckt = socket(AF_INET, SOCK_STREAM, 0);
 	if (srvr_sckt == -1)
+	{
 		std::cout << "Error: socket failed" << std::endl;
+		perror("socket");
+	}
 	server->setServerSocket(srvr_sckt);
 	setsockopt(srvr_sckt, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
@@ -72,10 +75,16 @@ void	WebServ::setNewServerSocket(Server *server)
 	srvr_addr.sin_port = htons(server->getServerPort());
 
 	// Binding and listening to the new socket using the address struct data
-	if (bind(srvr_sckt, (sckadr)&srvr_addr, sizeof(srvr_addr)) == -1)
+	if (bind(srvr_sckt, (t_sckadr *)&srvr_addr, sizeof(srvr_addr)) == -1)
+	{
 		std::cout << "Error: bind failed" << std::endl;
+		perror("bind");
+	}
 	if (listen(srvr_sckt, BACKLOG) == -1)
+	{
 		std::cout << "Error: listen() failed" << std::endl;
+		perror("listen");
+	}
 	
 	// Setting the server socket as nonblocking
 	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
@@ -95,10 +104,7 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
 	if (evudat->flag)
-	{
-		shutdown(event.ident, 0);
 		close(event.ident);
-	}
 	else
 		evudat->flag = true;
 }
@@ -109,8 +115,15 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	int			opt_value = 1;
 	t_addr_in	newaddr;
 	socklen_t	socklen = sizeof(newaddr);
+	char		host[1024];
+	char		service[20];
 
-	clnt_sckt = accept(event.ident, (sckadr)(&newaddr), &socklen);
+	clnt_sckt = accept(event.ident, (t_sckadr *)(&newaddr), &socklen);
+	if (clnt_sckt == -1)
+	{
+		std::cout << "accept error" << std::endl;
+		perror("accept");
+	}
 	setsockopt(clnt_sckt, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(opt_value));
 
 	//setting initial values for the new_udat
@@ -122,6 +135,10 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->key = old_udat->key;
 	new_udat->req = new RequestHandler(getServer(new_udat->key));
 
+	getnameinfo((const t_sckadr *)&newaddr, socklen, host, sizeof host, service, sizeof service, 0);
+
+	std::cout << "   host: " << host << std::endl;
+	std::cout << "service: " << service << std::endl;
 	//putting the read and write event for the new client in the kqueue
 	t_event		new_event[2];
 	EV_SET(&new_event[0], clnt_sckt, EVFILT_READ, EV_ADD, 0, 0, new_udat);
@@ -129,7 +146,8 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
 
 	//Debug messages
-	// std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr) << std::endl;
+	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr);
+	std::cout << " and port: " << ntohs(newaddr.sin_port) << std::endl;
 	// std::cout << "Client connected to server with ip: " << old_data->ip << " and port: " << old_data->port << std::endl;
 }
 
@@ -147,12 +165,16 @@ void	WebServ::receiveRequest(t_event &event)
 	evudat->req->setRequestMsg(buf);
 	fflush(stdout);
 
+	// Receive message might also contain part of the next packet
+	// TODO make sure this is handled in the requesthandler!.
+
 	// // This is just for a simple test for now
-	// if (strnstr(buf, "GET / HTTP/1.1", strlen(buf)))
-	// {
-	// 	send(event.ident, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
-	// 	send(event.ident, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
-	// }
+	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf)))
+	{
+		send(event.ident, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
+		send(event.ident, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>", 61, 0);
+		send(event.ident, "My first paragraph.</p>\n\n</body>\n</html>\r\n\r\n", 45, 0);
+	}
 }
 
 void	WebServ::sendResponse(t_event &event)
@@ -162,10 +184,11 @@ void	WebServ::sendResponse(t_event &event)
 	// Have a check for if the response is done
 
 	// Send respons
-
+	//TODO have a sendall function (so you know that the whole message has been sent)
 	//Make a new RequestHandler
 	delete evudat->req;
 	evudat->req = new RequestHandler(getServer(evudat->key));
+
 
 	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
 	// send(client_socket, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
@@ -218,7 +241,7 @@ void	WebServ::runServer()
 			else if (events[i].filter == EVFILT_READ)
 				readFromSocket(events[i]);
 			else if (events[i].filter == EVFILT_WRITE)
-				writeToSocket(events[i]);	
+				writeToSocket(events[i]);
 		}
 	}
 }

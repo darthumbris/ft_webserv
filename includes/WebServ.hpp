@@ -15,20 +15,25 @@
 # include "Config.hpp"
 # include "RequestHandler.hpp"
 
-# define BACKLOG 		10000
+# define BACKLOG 		10000 //not sure yet what a proper value is (most systems do 20?)
 # define MAX_EVENTS 	32
 # define NUM_CLIENTS 	10
 # define MAX_MSG_SIZE 	256
 # define MAX_FD			1024
 
-class Config;
-class RequestHandler;
 
 enum	event_types
 {
 	ADD,
 	DELETE
 };
+
+using t_sckadr = struct sockaddr;
+using t_addr_in = struct sockaddr_in;
+using t_event = struct kevent;
+using t_ev_lst = std::vector<t_event>;
+using t_evudat = struct ev_data;
+using t_add_strg = struct sockaddr_storage;
 
 struct ev_data
 {
@@ -39,12 +44,6 @@ struct ev_data
 	RequestHandler	*req; // request of the client
 	t_addr_in		addr; // address of the client
 };
-
-typedef struct sockaddr 		*sckadr;
-using t_addr_in = struct sockaddr_in;
-using t_event = struct kevent;
-using t_evudat = struct ev_data;
-using t_ev_lst = std::vector<t_event>;
 
 class WebServ
 {

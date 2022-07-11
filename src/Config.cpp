@@ -12,15 +12,15 @@ Config::Config(std::string config_path)
 
 	//Examples for the parsing:
 	// Config parsed new server with listen 127.0.0.1 8080
-	addServer("127.0.0.1", "8080");
+	addServer("127.0.0.1", "7575");
 	// Config sees server_name test.com
 	getLastServer()->setServerName("test.com");
 
 	// Config parsed new location with dir: "/images"
 	addLocation("/images");
 
-	// Config parsed new server with listen 0.0.0.0 80
-	addServer("0.0.0.0", "80");
+	// Config parsed new server with listen 0.0.0.0 4242
+	addServer("0.0.0.0", "4242");
 }
 
 Config::Config(const Config &copy)
