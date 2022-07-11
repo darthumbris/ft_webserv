@@ -160,30 +160,36 @@ void	WebServ::receiveRequest(t_event &event)
 
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	if (bytes_read < 0)
+	{
+		std::cout << "receive error" << std::endl;
 		return ;
-	buf[bytes_read] = 0;
-	evudat->req->setRequestMsg(buf);
+	}
+	if (bytes_read == 0)
+		evudat->flag = true;
+	else
+	{
+		buf[bytes_read] = 0;
+		evudat->req->addToRequestMsg(buf);
+	}
 	fflush(stdout);
 
 	// Receive message might also contain part of the next packet
 	// TODO make sure this is handled in the requesthandler!.
-
-	// // This is just for a simple test for now
-	if (strnstr(buf, "GET / HTTP/1.1", strlen(buf)))
-	{
-		send(event.ident, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
-		send(event.ident, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>", 61, 0);
-		send(event.ident, "My first paragraph.</p>\n\n</body>\n</html>\r\n\r\n", 45, 0);
-	}
 }
 
 void	WebServ::sendResponse(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
+	std::string	response;
 
-	// Have a check for if the response is done
-
+	// get response
+	response = evudat->req->getResponse();
 	// Send respons
+	if (send(event.ident, response.c_str(), response.length(), 0) == -1)
+	{
+		std::cout << "Error sending response" << std::endl;
+		return ;
+	}
 	//TODO have a sendall function (so you know that the whole message has been sent)
 	//Make a new RequestHandler
 	delete evudat->req;
@@ -218,7 +224,7 @@ void	WebServ::writeToSocket(t_event &event)
 
 	if (event.flags & EV_EOF || evudat->flag)
 		deleteConnection(event, EVFILT_WRITE);
-	else
+	else if (evudat->req->isRequestComplete())
 		sendResponse(event);
 }
 

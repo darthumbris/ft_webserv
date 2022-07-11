@@ -18,7 +18,7 @@
 # define BACKLOG 		10000 //not sure yet what a proper value is (most systems do 20?)
 # define MAX_EVENTS 	32
 # define NUM_CLIENTS 	10
-# define MAX_MSG_SIZE 	256
+# define MAX_MSG_SIZE 	64
 # define MAX_FD			1024
 
 
