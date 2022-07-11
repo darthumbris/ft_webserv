@@ -72,12 +72,19 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			_response.append("</head>\n<body>\n\n<h1>This is a Heading</h1>\n");
 			_response.append("<p>This is a paragraph.</p>\n\n</body>\n</html>\r\n\r\n");
 		}
+		else if (_complete_request.find("GET /test.png HTTP/1.1") != std::string::npos) // testing how image things are handled
+		{
+			_response.append("HTTP/1.1 200 ok\nContent-Type: image/png; charset=utf-8\r\n");
+			_response.append("Connection: close\r\n\r\n");
+			// _response.append
+			//TODO see how to open file etc and load it in here?
+		}
 		std::cout << _complete_request;  // just for testing
 		if (size_req - crlf_pos != 4) // in case recv has gotten more than a single HTTP request
 		{
 			_has_remaining_request = true;
 			_remaining_request = _complete_request.substr(crlf_pos, size_req - crlf_pos);
-			std::cout << "More than one packet in the receive msg" << std::endl; // just for testing
+			std::cout << "\nMore than one packet in the receive msg" << std::endl; // just for testing
 			std::cout << _remaining_request << std::endl; // just for testing
 		}
 	}
