@@ -2,6 +2,12 @@
 # define REQUESTHANDLER_HPP
 
 # include "Server.hpp"
+# include <fcntl.h>
+# include <sys/event.h>
+# include <arpa/inet.h>
+# include <netdb.h>
+# include <unistd.h>
+# include <fstream>
 
 //TODO make all the request handling stuff. (parsing etc)
 //TODO check if remaining request stuff is actually needed
@@ -27,6 +33,7 @@ class RequestHandler
 		// Setters
 		void	setResponse();
 		void	addToRequestMsg(const std::string &msg);
+		void	setSocket(int socket); //temp function for testing stuff
 
 		// Member Functions
 		
@@ -40,6 +47,7 @@ class RequestHandler
 		int			_content_length;
 		bool		_is_request_complete;
 		bool		_has_remaining_request;
+		int			_fd;
 };
 
 #endif

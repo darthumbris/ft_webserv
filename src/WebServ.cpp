@@ -101,12 +101,14 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
+	std::cout << "going to delete a connection/event" << std::endl;
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
 	if (evudat->flag)
 		close(event.ident);
 	else
 		evudat->flag = true;
+	std::cout << "deleted a connection/event" << std::endl;
 }
 
 void	WebServ::addConnection(t_event event, t_evudat *old_udat)
@@ -134,7 +136,7 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->port = old_udat->port;
 	new_udat->key = old_udat->key;
 	new_udat->req = new RequestHandler(getServer(new_udat->key));
-
+	new_udat->req->setSocket(clnt_sckt);
 	getnameinfo((const t_sckadr *)&newaddr, socklen, host, sizeof host, service, sizeof service, 0);
 
 	//putting the read and write event for the new client in the kqueue
@@ -162,9 +164,8 @@ void	WebServ::receiveRequest(t_event &event)
 	if (bytes_read < 0)
 	{
 		std::cout << "receive error" << std::endl;
-		return ;
 	}
-	if (bytes_read == 0)
+	else if (bytes_read == 0)
 	{
 		evudat->flag = true;
 		// std::cout << "bytes_read is 0" << std::endl;
@@ -174,7 +175,7 @@ void	WebServ::receiveRequest(t_event &event)
 		buf[bytes_read] = 0;
 		evudat->req->addToRequestMsg(buf);
 	}
-	fflush(stdout);
+	// fflush(stdout);
 	// Receive message might also contain part of the next packet
 	// TODO make sure this is handled in the requesthandler!.
 }
@@ -190,7 +191,10 @@ void	WebServ::sendResponse(t_event &event)
 
 	// In case receive receives more than one packet
 	if (evudat->req->hasRemainingRequestMsg())
+	{
+		// std::cout << "should have remaining request here" << std::endl;
 		remaining_request = evudat->req->getRemainingRequestMsg();
+	}
 	// Send respons
 	if (send(event.ident, response.c_str(), response.length(), 0) == -1)
 	{
@@ -204,7 +208,7 @@ void	WebServ::sendResponse(t_event &event)
 	if (evudat->req->hasRemainingRequestMsg())
 	{
 		evudat->req->addToRequestMsg(remaining_request);
-		std::cout << "Adding remaining request to new RequestHandler" << std::endl;
+		std::cout << "\n------Adding remaining request to new RequestHandler--------" << std::endl;
 	}
 
 
