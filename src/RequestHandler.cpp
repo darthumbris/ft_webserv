@@ -75,6 +75,7 @@ int sendStr(int sckt, const std::string &s)
 	return sendData(sckt, s.c_str(), s.size());
 }
 
+//TODO remove all the stuff and move it to different function (testFunction or something)
 void	RequestHandler::addToRequestMsg(const std::string &msg)
 {
 	size_t	crlf_pos;
@@ -86,6 +87,7 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 	if (crlf_pos != std::string::npos)
 	{
 		_is_request_complete = true;
+		/* test stuff
 		std::string root = "var/www/html/";
 		if (_complete_request.find("GET /") != std::string::npos) // testing how image things are handled
 		{
@@ -96,7 +98,6 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				path = root + "cheese.png";
 			else
 				path = root + "index.html";
-			// std::cout << "path: " << path << std::endl;
 			std::ifstream infile(path, std::ios::in);
 			if (!infile.is_open())
 			{
@@ -106,7 +107,6 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			else
 			{
 				std::string content_type;
-
 				if (_complete_request.find("/favicon.ico") != std::string::npos)
 					content_type = "image/x-icon";
 				else if (_complete_request.find("/test.png") != std::string::npos)
@@ -147,11 +147,10 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 					}
 					while (length > 0);
 					_response.erase();
-					// std::cout << "length: " << length << std::endl;
 				}
 			}
-			// _response.append
 		}
+		*/
 		// std::cout << _complete_request << "\n----------end of request------------" << std::endl;;  // just for testing
 		// std::cout << "response: " << _response << std::endl;
 		if (size_req - crlf_pos != 4) // in case recv has gotten more than a single HTTP request
@@ -163,19 +162,11 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			// 	crlf_pos = _complete_request.find_last_of("GET");
 			_remaining_request = _complete_request.substr(crlf_pos, size_req - crlf_pos);
 			// std::cout << "\nMore than one packet in the receive msg" << std::endl; // just for testing
-			// std::cout << _remaining_request << "\n-------end of remaining request---------" << std::endl; // just for testing
-			// try
-			// {
-			// 	addToRequestMsg(_remaining_request);
-			// }
-			// catch(const std::exception& e)
-			// {
-			// 	std::cerr << e.what() << '\n';
-			// }		
+			// std::cout << _remaining_request << "\n-------end of remaining request---------" << std::endl; // just for testing	
 		}
 	}
-	// std::cout << "fd: " << _fd << std::endl;
-	// std::cout << _complete_request;
+
+
 	//TODO make sure to parse this message. 
 	//TODO might need a need to see if the msg is done being received?
 	// for request headers they always end with \r\n\r\n (section 4.1 of RFC 2616)
