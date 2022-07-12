@@ -111,6 +111,7 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 	std::cout << "deleted a connection/event" << std::endl;
 }
 
+//TODO maybe needs a check for the udat if it needs to be deleted?
 void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 {
 	int			clnt_sckt;
