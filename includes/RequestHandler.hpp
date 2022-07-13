@@ -12,6 +12,8 @@
 
 //TODO make all the request handling stuff. (parsing etc)
 //TODO check if remaining request stuff is actually needed
+//TODO check if maybe easier to have a _response_header and _response_body or somethign similiar
+//     to make it easier for the sendresponse function, or set an fd for a file if it needs to be sent?
 class RequestHandler
 {
 	public:
@@ -46,7 +48,6 @@ class RequestHandler
 		std::string	_msg;
 		std::string	_response;
 		std::string	_response_body;
-		// int			_content_length;
 		bool		_is_request_complete;
 		bool		_has_remaining_request;
 		int			_fd;

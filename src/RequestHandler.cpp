@@ -142,12 +142,9 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				}
 			}
 		}
-		// std::cout << _complete_request << "\n----------end of request------------" << std::endl;;  // just for testing
-		// std::cout << "response: " << _response << std::endl;
 		if (size_req - crlf_pos != 4) // in case recv has gotten more than a single HTTP request
 		{
 			_has_remaining_request = true;
-			// _is_request_complete = true;
 			// if (_complete_request.find_last_of("GET") != _complete_request.find("GET") &&
 			// 	_complete_request.find_last_of("GET") > crlf_pos)
 			// 	crlf_pos = _complete_request.find_last_of("GET");
