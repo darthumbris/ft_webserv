@@ -5,8 +5,10 @@
 */
 
 // Constructors
+//TODO server is necesarry to check for location , accepted methods etc.
 RequestHandler::RequestHandler(Server *server) : _server(server), _is_request_complete(false), _has_remaining_request(false)
 {
+	(void)_server;
 }
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
@@ -31,7 +33,7 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 // Getters
 std::string	RequestHandler::getResponse() const
 {
-	return this->_response;
+	return this->_response + this->_response_body;
 }
 
 bool	RequestHandler::isRequestComplete() const
@@ -50,6 +52,12 @@ bool	RequestHandler::hasRemainingRequestMsg() const
 }
 
 // Setters
+void	RequestHandler::setResponse()
+{
+	this->_is_request_complete = true;
+}
+
+
 void	RequestHandler::setSocket(int socket)
 {
 	this->_fd = socket;
@@ -87,7 +95,6 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 	if (crlf_pos != std::string::npos)
 	{
 		_is_request_complete = true;
-		/* test stuff
 		std::string root = "var/www/html/";
 		if (_complete_request.find("GET /") != std::string::npos) // testing how image things are handled
 		{
@@ -102,7 +109,7 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			if (!infile.is_open())
 			{
 				std::cout << "failed to open file" << std::endl;
-				_response.append("HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n");
+				_response = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
 			}
 			else
 			{
@@ -115,42 +122,26 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 					content_type = "text/html";
 				infile.seekg(0, std::ios::end);
 				std::size_t length = infile.tellg();
+				std::cout << "length of file: " << length << std::endl;
 				infile.seekg(0, std::ios::beg);
 				_response = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
 				if (infile.fail())
 				{
 					std::cout << "failed to get size of file" << std::endl;
-					if (sendStr(_fd, "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n") == -1)
-						close(_fd);
+					_response.empty();
+					_response = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
 				}
-				else if (sendStr(_fd, _response) == -1)
-					close(_fd);
 				else if (length > 0)
 				{
-					char data[256];
-					do
-					{
-						if (!infile.read(data, std::min(length, sizeof(data))))
-						{
-							close(_fd);
-							std::cout << "error here" << std::endl;
-							break ;
-						}
-						int bytes = infile.gcount();
-						if (sendData(_fd, data, bytes) == -1)
-						{
-							close(_fd);
-							std::cout << "error in senddata" << std::endl;
-							break ;
-						}
-						length -= bytes;
-					}
-					while (length > 0);
-					_response.erase();
+					std::stringstream buffer;
+
+					buffer << infile.rdbuf();
+					_response_body = buffer.str();
+					// _response.append(buffer.str());
+					infile.close();
 				}
 			}
 		}
-		*/
 		// std::cout << _complete_request << "\n----------end of request------------" << std::endl;;  // just for testing
 		// std::cout << "response: " << _response << std::endl;
 		if (size_req - crlf_pos != 4) // in case recv has gotten more than a single HTTP request

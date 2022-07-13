@@ -8,6 +8,7 @@
 # include <netdb.h>
 # include <unistd.h>
 # include <fstream>
+# include <sstream>
 
 //TODO make all the request handling stuff. (parsing etc)
 //TODO check if remaining request stuff is actually needed
@@ -44,7 +45,8 @@ class RequestHandler
 		std::string	_remaining_request;
 		std::string	_msg;
 		std::string	_response;
-		int			_content_length;
+		std::string	_response_body;
+		// int			_content_length;
 		bool		_is_request_complete;
 		bool		_has_remaining_request;
 		int			_fd;

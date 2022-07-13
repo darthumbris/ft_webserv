@@ -181,28 +181,46 @@ void	WebServ::receiveRequest(t_event &event)
 	// TODO make sure this is handled in the requesthandler!.
 }
 
+
+//TODO make it use send for the header and sendfile for the body
 void	WebServ::sendResponse(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 	std::string	response;
 	std::string	remaining_request;
+	int			datalen;
 
 	// get response
 	response = evudat->req->getResponse();
 
 	// In case receive receives more than one packet
 	if (evudat->req->hasRemainingRequestMsg())
-	{
-		// std::cout << "should have remaining request here" << std::endl;
 		remaining_request = evudat->req->getRemainingRequestMsg();
-	}
-	// Send respons
-	if (send(event.ident, response.c_str(), response.length(), 0) == -1)
+
+	// Sending all the data in chunks of 64 bytes
+	datalen = response.size();
+	const char *ptr = static_cast<const char *>(response.c_str());
+	while (datalen > 0)
 	{
-		std::cout << "Error sending response" << std::endl;
-		return ;
+		int send_bytes = datalen;
+		if (datalen > 64)
+			send_bytes = 64;
+		int bytes = send(event.ident, ptr, send_bytes, 0);
+		if (bytes <= 0)
+		{
+			if (bytes == -1)
+			{
+				delete evudat->req;
+				evudat->flag = true;
+				deleteConnection(event, EVFILT_WRITE);
+				return ;
+			}
+			break ;
+		}
+		ptr += bytes;
+		datalen -= bytes;
 	}
-	//TODO have a sendall function (so you know that the whole message has been sent)
+
 	//Make a new RequestHandler
 	delete evudat->req;
 	evudat->req = new RequestHandler(getServer(evudat->key));
@@ -211,10 +229,6 @@ void	WebServ::sendResponse(t_event &event)
 		evudat->req->addToRequestMsg(remaining_request);
 		std::cout << "\n------Adding remaining request to new RequestHandler--------" << std::endl;
 	}
-
-
-	// send(client_socket, "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 100\n\n", 62, 0);
-	// send(client_socket, "<!DOCTYPE html>\n<html>\n<body>\n\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n\n</body>\n</html>", 100, 0);
 }
 
 bool	WebServ::isListenSocket(int fd)
