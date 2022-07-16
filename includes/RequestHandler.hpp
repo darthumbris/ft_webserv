@@ -3,6 +3,8 @@
 
 //includes iostream vector string map
 # include "Server.hpp"
+# include <sstream>
+# include <cctype>
 
 class Server;
 
@@ -34,6 +36,7 @@ class RequestHandler
 	private:
 		Server					*_server;
 		const std::string		_protocol = "HTTP/1.1";
+		const std::string		_methods[3] = {"GET", "POST", "DELETE"};
 		//const std::string[4]	_requests = "HTTP/1.1"; //maybe a map of DELETE GET POST
 		std::string				_msg;
 		std::string				_response;

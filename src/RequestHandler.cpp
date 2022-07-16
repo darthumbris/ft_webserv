@@ -1,5 +1,6 @@
 #include "RequestHandler.hpp"
 
+
 /*TODO need to have a check here for post to check how big the upload is
 // and compare it to the client_body_size variable of the server
 */
@@ -55,6 +56,21 @@ void	RequestHandler::setRequestMsg(std::string msg)
 	// might also work for sending the response?
 	//reponse herader?
 	std::cout << _protocol << std::endl;
+	std::cout << msg << std::endl;
+
+	std::string	line;
+	std::istringstream iss(msg);
+	while (std::getline(iss, line))
+	{
+		try {
+			std::cout <<  << std::endl;
+			if (line.compare(0, 3, "GET") == 0 && std::isspace(line.at(3)))
+				std::cout << "this is get rquest: " << line << std::endl;
+			std::cout << "Hallo from loop: " << line << std::endl;
+		}
+		catch (std::exception& ex) {(void)ex;}
+	}
+
 	if (msg.find("\r\n\r\n"))
 		std::cout << "end of request header" << std::endl;
 }
