@@ -29,17 +29,19 @@ class RequestHandler
 		// Setters
 		void	setResponse(std::string response);
 		void	setRequestMsg(std::string msg);
+		void	parseMethod(std::string method);
+		bool	isMethodImplimented(std::string line, std::string availableMethod);
 
 		// Member Functions
 		
 		
 	private:
-		Server					*_server;
-		const std::string		_protocol = "HTTP/1.1";
-		const std::string		_methods[3] = {"GET", "POST", "DELETE"};
+		Server							*_server;
+		const std::string				_protocol = "HTTP/1.1";
+		const std::vector<std::string>	_availableMethods = {"GET", "POST", "DELETE"};
+		std::string						_msg;
+		std::string						_response;
 		//const std::string[4]	_requests = "HTTP/1.1"; //maybe a map of DELETE GET POST
-		std::string				_msg;
-		std::string				_response;
 };
 
 #endif

@@ -14,10 +14,10 @@ SRC =	main.cpp \
         Location.cpp \
         RequestHandler.cpp \
 
-SRC_EXT = cpp
-
 OBJ := $(addprefix $(OBJ_DIR)/, $(SRC:%.$(SRC_EXT)=%.o))
 SRC :=  $(addprefix $(SRC_DIR)/, $(SRC))
+
+SRC_EXT = cpp
 
 INC = -I $(INC_DIR)
 
@@ -86,5 +86,47 @@ fclean:	clean
 	@rm -f $(NAME)
 
 re: fclean all
+
+TEST_NAME = test.out
+TEST_OBJ_DIR = obj
+TEST_SRC_DIR = test
+
+TEST_SRC = test.c
+
+
+TEST_OBJ := $(addprefix $(TEST_OBJ_DIR)/, $(TEST_SRC:%.$(SRC_EXT)=%.o))
+TEST_SRC :=  $(addprefix $(TEST_SRC_DIR)/, $(TEST_SRC))
+
+test: $(TEST_OBJ)
+	@$(CXX) $(CXXFLAGS) $(TEST_OBJ) -o $(TEST_NAME) 2> $@.log; \
+        RESULT=$$?; \
+        if [ $$RESULT -ne 0 ]; then \
+            printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(PRG_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+        elif [ -s $@.log ]; then \
+            printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(PRG_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+        else  \
+            printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(PRG_COLOR) $(@F)" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+        fi; \
+        cat $@.log; \
+        rm -f $@.log; \
+        exit $$RESULT
+
+$(TEST_OBJ_DIR):
+	@mkdir -p $(TEST_OBJ_DIR)
+
+$(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.$(SRC_EXT) | $(TEST_OBJ_DIR)
+	@$(CXX) $(CXXFLAGS) $(INC) -c -o $@ $< 2> $@.log; \
+        RESULT=$$?; \
+        if [ $$RESULT -ne 0 ]; then \
+            printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+        elif [ -s $@.log ]; then \
+            printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+        else  \
+            printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $(@F)" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+        fi; \
+        cat $@.log; \
+        rm -f $@.log; \
+        exit $$RESULT
+	gcc Unity/test.c -I Unity/src -L Unity -lunity -o test.out
 
 .PHONY: all clean fclean re
