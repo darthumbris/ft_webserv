@@ -88,6 +88,7 @@ bool	RequestHandler::parseFirstLine(std::string line)
 void	RequestHandler::setRequestMsg(std::string msg) 
 {
 	_msg = msg;
+
 	std::vector<std::vector<std::string>>	request_line;
 	request_line.push_back({"test", "GET"});
 	std::cout << _protocol << std::endl;
@@ -95,6 +96,7 @@ void	RequestHandler::setRequestMsg(std::string msg)
 
 	std::string	line;
 	std::istringstream iss(msg);
+
 	if (parseFirstLine(msg))
 
 	while (std::getline(iss, line))
