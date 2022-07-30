@@ -1,4 +1,1 @@
-while [ 1 ]
-do
-	nc -l localhost -p 8081
-done
+c++ -Wall -Werror -Wextra -I includes -I Unity/src src/test.cpp -o test.out
