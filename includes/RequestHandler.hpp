@@ -5,6 +5,8 @@
 # include "Server.hpp"
 # include <sstream>
 # include <cctype>
+# include <map>
+
 
 class Server;
 
@@ -29,18 +31,23 @@ class RequestHandler
 		// Setters
 		void	setResponse(std::string response);
 		void	setRequestMsg(std::string msg);
-		void	parseMethod(std::string method);
+		bool	parseFirstLine(std::string method);
 		bool	isMethodImplimented(std::string line, std::string availableMethod);
+		bool	isMethodFollowedBySpace(std::string line, std::string availableMethod);
+
 
 		// Member Functions
 		
-		
-	private:
-		Server							*_server;
 		const std::string				_protocol = "HTTP/1.1";
 		const std::vector<std::string>	_availableMethods = {"GET", "POST", "DELETE"};
-		std::string						_msg;
-		std::string						_response;
+		std::string								_method;
+		
+	private:
+		Server									*_server;
+		std::string								_msg;
+		std::string								_response;
+		std::multimap<std::string, std::string>	_header;
+
 		//const std::string[4]	_requests = "HTTP/1.1"; //maybe a map of DELETE GET POST
 };
 

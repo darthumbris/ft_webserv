@@ -87,8 +87,16 @@ fclean:	clean
 
 re: fclean all
 
-test:
+TEST_NAME = test.out
+
+test: $(TEST_NAME)
 	c++ $(CXXFLAGS) -I includes -I Unity/src -c tests/test.cpp -o obj/test.o
 	c++ $(CXXFLAGS) -L Unity -lunity -I includes -I Unity/src obj/test.o obj/WebServ.o obj/Config.o obj/Server.o obj/Location.o obj/RequestHandler.o -o test.out
+	./test.out
+
+testd: $(TEST_NAME)
+	c++ $(CXXFLAGS) -g3 -fsanitize=address -I includes -I Unity/src -c tests/test.cpp -o obj/test.o
+	c++ $(CXXFLAGS) -g3 -fsanitize=address -L Unity -lunity -I includes -I Unity/src obj/test.o obj/WebServ.o obj/Config.o obj/Server.o obj/Location.o obj/RequestHandler.o -o test.out
+	./test.out
 
 .PHONY: all clean fclean re

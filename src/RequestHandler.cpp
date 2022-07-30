@@ -43,6 +43,7 @@ std::string	RequestHandler::getResponse() const
 	return this->_response;
 }
 
+//just a strncmp that cheks if line has GET POST DELETE as the starting charaters
 bool	RequestHandler::isMethodImplimented(std::string line, std::string availableMethod)
 {
 	if (!line.compare(0, availableMethod.length(), availableMethod))
@@ -50,31 +51,43 @@ bool	RequestHandler::isMethodImplimented(std::string line, std::string available
 	return (false);
 }
 
-void	RequestHandler::parseMethod(std::string line)
+//check if the line is longer than mothod.length and if next char after is a space
+bool	RequestHandler::isMethodFollowedBySpace(std::string line, std::string methodsIterator)
 {
-	for (std::vector<std::string>::const_iterator methodsIterator = _availableMethods.begin(); methodsIterator != _availableMethods.end(); methodsIterator++)
+	if (methodsIterator.length() < line.length() && std::isspace(line.at(methodsIterator.length())))//checks if the next char after methodsIterator
+		return (true);
+	return (false);
+}
+
+bool	RequestHandler::parseFirstLine(std::string line)
+{
+	if (!line.empty())
 	{
-		if (isMethodImplimented(line, *methodsIterator))
+		for (std::vector<std::string>::const_iterator methodsIterator = _availableMethods.begin(); methodsIterator != _availableMethods.end(); methodsIterator++)
 		{
-			if (methodsIterator->length() < line.length() && std::isspace(line.at(methodsIterator->length())))//checks if the next char after methodsIterator
+			if (isMethodImplimented(line, *methodsIterator))
 			{
-				std::cout << "The right line found: "<< *methodsIterator << std::endl;
+				//method does not have anything else so there for its valid
+				if (methodsIterator->length() == line.length())
+				{
+					_method = *methodsIterator;
+					return (true);
+				}
+				if (isMethodFollowedBySpace(line, *methodsIterator))
+				{
+					_method = *methodsIterator;
+					return (true);
+				}
 			}
 		}
 	}
+	_method = "";
+	return (false);
 }
 
 void	RequestHandler::setRequestMsg(std::string msg) 
 {
 	_msg = msg;
-	//std::cout << "< mes this is >" << msg;
-	//todo make sure to parse this message. 
-	//todo might need a need to see if the msg is done being received?
-	// for request headers they always end with \r\n\r\n (section 4.1 of RFC 2616)
-	// We can use that to check if the full message has been received.
-	// if it has been fully received set a bool _is_fully_read or something to true?
-	// might also work for sending the response?
-	//reponse herader?
 	std::vector<std::vector<std::string>>	request_line;
 	request_line.push_back({"test", "GET"});
 	std::cout << _protocol << std::endl;
@@ -82,7 +95,8 @@ void	RequestHandler::setRequestMsg(std::string msg)
 
 	std::string	line;
 	std::istringstream iss(msg);
-	parseMethod(msg);
+	if (parseFirstLine(msg))
+
 	while (std::getline(iss, line))
 	{
 		request_line.push_back({"tes", line});
