@@ -6,7 +6,7 @@
 # include <sstream>
 # include <cctype>
 # include <map>
-
+# include "ReadyResponses.hpp"
 
 class Server;
 
@@ -37,16 +37,19 @@ class RequestHandler
 
 
 		// Member Functions
+		// 405 An origin server SHOULD return the status code 405 (Method Not Allowed) if the method is known by the origin server but not allowed for the requested resource,
+		// and 501 (Not Implemented) if the method is unrecognized or not implemented by the origin server
 		
-		const std::string				_protocol = "HTTP/1.1";
-		const std::vector<std::string>	_availableMethods = {"GET", "POST", "DELETE"};
+		const std::vector<std::string>			_availableMethods = {"GET", "POST", "DELETE"};
+		const std::string						_protocol = "HTTP/1.1";
 		std::string								_method;
+		std::string								_uri;
+		std::multimap<std::string, std::string>	_header;
 		
 	private:
 		Server									*_server;
 		std::string								_msg;
 		std::string								_response;
-		std::multimap<std::string, std::string>	_header;
 
 		//const std::string[4]	_requests = "HTTP/1.1"; //maybe a map of DELETE GET POST
 };

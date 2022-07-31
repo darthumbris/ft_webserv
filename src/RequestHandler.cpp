@@ -59,6 +59,7 @@ bool	RequestHandler::isMethodFollowedBySpace(std::string line, std::string metho
 	return (false);
 }
 
+/*
 bool	RequestHandler::parseFirstLine(std::string line)
 {
 	if (!line.empty())
@@ -84,6 +85,31 @@ bool	RequestHandler::parseFirstLine(std::string line)
 	_method = "";
 	return (false);
 }
+*/
+
+void	parseFirstLine(std::string line)
+{
+	std::vector<std::string> wordVector;
+
+	std::size_t prev = 0, pos;
+
+	while ((pos = line.find_first_of(" ", prev)) != std::string::npos)
+	{
+		if (pos > prev)
+			wordVector.push_back(line.substr(prev, pos - prev));
+		prev = pos + 1;
+	}
+	if (prev < line.length())
+		wordVector.push_back(line.substr(prev, std::string::npos));
+	if (wordVector.length() != 3)
+		return ;
+	if (wordVector[0] != "GET" || wordVector[0] == "DELETE" || wordVector[0] == "POST")
+		return ;
+	if ()
+	{
+	
+	}
+}
 
 void	RequestHandler::setRequestMsg(std::string msg) 
 {
@@ -97,19 +123,27 @@ void	RequestHandler::setRequestMsg(std::string msg)
 	std::string	line;
 	std::istringstream iss(msg);
 
-	if (parseFirstLine(msg))
+	std::getline(iss, line);
+	parseFirstLine(line);
+	{
+	
+	}
+	for (std::vector<std::string>::iterator iter = wordVector.begin(); iter != wordVector.end(); iter++)
+	{
+		std::cout << *iter << std::endl;
+	}
+	/*
+		
 
 	while (std::getline(iss, line))
 	{
 		request_line.push_back({"tes", line});
-		/*
 		try {
 			if (line.compare(0, 3, "GET") == 0 )
 				std::cout << "this is get rquest: " << line << std::endl;
 			std::cout << "Hallo from loop: " << line << std::endl;
 		}
 		catch (std::exception& ex) {(void)ex;}
-		*/
 	}
 	for (auto i = request_line.begin(); i < request_line.end(); i++)
 	{
@@ -119,6 +153,7 @@ void	RequestHandler::setRequestMsg(std::string msg)
 		}
 		std::cout << std::endl;
 	}
+	*/
 
 	if (msg.find("\r\n\r\n"))
 		std::cout << "end of request header" << std::endl;
