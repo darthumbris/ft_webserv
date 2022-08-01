@@ -147,8 +147,6 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
 
 	//Debug messages
-	// std::cout << "   host: " << host << std::endl;
-	// std::cout << "service: " << service << std::endl;
 	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr);
 	std::cout << " and port: " << ntohs(newaddr.sin_port) << std::endl;
 	std::cout << "Client connected to server with ip: " << old_udat->ip << " and port: " << old_udat->port << std::endl;
@@ -203,13 +201,15 @@ void	WebServ::sendResponse(t_event &event)
 	while (datalen > 0)
 	{
 		int send_bytes = datalen;
-		if (datalen > 64)
-			send_bytes = 64;
+		if (datalen > MAX_MSG_SIZE)
+			send_bytes = MAX_MSG_SIZE;
 		int bytes = send(event.ident, ptr, send_bytes, 0);
 		if (bytes <= 0)
 		{
 			if (bytes == -1)
 			{
+				//Debug message
+				std::cout << "deleting req bytes -1" << std::endl;
 				delete evudat->req;
 				evudat->flag = true;
 				deleteConnection(event, EVFILT_WRITE);
@@ -223,6 +223,8 @@ void	WebServ::sendResponse(t_event &event)
 
 	//Make a new RequestHandler
 	delete evudat->req;
+	//Debug message
+	std::cout << "deleted req" << std::endl;
 	evudat->req = new RequestHandler(getServer(evudat->key));
 	if (evudat->req->hasRemainingRequestMsg())
 	{
