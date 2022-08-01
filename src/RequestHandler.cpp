@@ -104,13 +104,16 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			else if (_complete_request.find("/cheese.png") != std::string::npos)
 				path = root + "cheese.png";
 			else if (_complete_request.find("/index.html") != std::string::npos)
+				path = root + "index.html";
+			else if (_complete_request.find("/dirtest.html") != std::string::npos)
 				path = root + "dirtest.html";
 			else if (_server->getLocationMap()["/"] && _server->getLocationMap()["/"]->getAutoIndex())
 			{
-				std::cout << "setting index responde" << std::endl;
-				_response_body = AutoIndexGenerator("/", "var/www/html").getDirectoryIndex();
+				std::size_t start = _complete_request.find("GET /") + 5;
+				std::size_t end = _complete_request.find("HTTP/1.1") - 1;
+				std::string path = _complete_request.substr(start, end - start);
+				_response_body = AutoIndexGenerator(path, root + path).getDirectoryIndex();
 				std::size_t length = _response_body.length();
-				std::cout << "length: " << length << std::endl;
 				std::string content_type = "text/html";
 				_response = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
 				return ;

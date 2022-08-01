@@ -21,7 +21,7 @@ class AutoIndexGenerator
 
 		// Getters
 		std::string	getDirectoryIndex() const;
-		bool		isCurrentOrParentDirectory(std::string name) const;
+		bool		isCurrentDirectory(std::string name) const;
 		
 	private:
 

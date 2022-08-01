@@ -23,7 +23,7 @@ AutoIndexGenerator::AutoIndexGenerator(const std::string root, const std::string
 	struct dirent	*currentDirEntry;
 	while ((currentDirEntry = readdir(dir)))
 	{
-		if (!isCurrentOrParentDirectory(currentDirEntry->d_name))
+		if (!isCurrentDirectory(currentDirEntry->d_name))
 		{
 			this->_directoryIndex += "<li><a href=\"";
 			this->_directoryIndex += root;
@@ -67,7 +67,7 @@ std::string	AutoIndexGenerator::getDirectoryIndex() const
 	return this->_directoryIndex;
 }
 
-bool	AutoIndexGenerator::isCurrentOrParentDirectory(std::string name) const
+bool	AutoIndexGenerator::isCurrentDirectory(std::string name) const
 {
-	return (strcmp(name.c_str(), ".") == 0 || strcmp(name.c_str(), "..") == 0);
+	return (strcmp(name.c_str(), ".") == 0);
 }
