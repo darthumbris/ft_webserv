@@ -100,7 +100,7 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
-	// std::cout << "going to delete a connection/event" << std::endl;
+	std::cout << "going to delete a connection/event" << std::endl;
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
 	if (evudat->flag)
@@ -203,7 +203,7 @@ void	WebServ::sendResponse(t_event &event)
 			return ;
 		}
 	}
-	if (evudat->total_size >= evudat->req->getFileSize())
+	if (evudat->total_size >= evudat->req->getFileSize() || fd <= 0)
 	{
 		evudat->flag = 0;
 		if (fd > 0)
