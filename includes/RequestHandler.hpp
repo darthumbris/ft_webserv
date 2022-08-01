@@ -11,10 +11,9 @@
 # include <sstream>
 # include "AutoIndexGenerator.hpp"
 
-//TODO make all the request handling stuff. (parsing etc)
+//TODO make all the request handling stuff. (parsing etc) for alkrust
 //TODO check if remaining request stuff is actually needed
-//TODO check if maybe easier to have a _response_header and _response_body or somethign similiar
-//     to make it easier for the sendresponse function, or set an fd for a file if it needs to be sent?
+//TODO maybe instead of adding a file to response_body instead set the fd and use sendfile in the webserv
 class RequestHandler
 {
 	public:
@@ -33,6 +32,8 @@ class RequestHandler
 		bool		isRequestComplete() const;
 		std::string	getRemainingRequestMsg() const;
 		bool		hasRemainingRequestMsg() const;
+		int			getFileDescriptor() const;
+		std::size_t	getFileSize() const;
 
 		// Setters
 		void	setResponse();
@@ -46,12 +47,13 @@ class RequestHandler
 		Server		*_server;
 		std::string	_complete_request;
 		std::string	_remaining_request;
-		std::string	_msg;
-		std::string	_response;
+		std::string	_response_header;
 		std::string	_response_body;
 		bool		_is_request_complete;
 		bool		_has_remaining_request;
+		bool		_send_file;
 		int			_fd;
+		std::size_t	_file_size;
 };
 
 #endif

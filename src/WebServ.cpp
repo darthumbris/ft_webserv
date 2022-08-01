@@ -29,7 +29,6 @@ WebServ::WebServ(const WebServ &copy)
 	(void) copy;
 }
 
-
 // Destructor
 WebServ::~WebServ()
 {
@@ -101,14 +100,13 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
-	std::cout << "going to delete a connection/event" << std::endl;
+	// std::cout << "going to delete a connection/event" << std::endl;
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
 	if (evudat->flag)
 		close(event.ident);
 	else
-		evudat->flag = true;
-	std::cout << "deleted a connection/event" << std::endl;
+		evudat->flag = 1;
 }
 
 //TODO maybe needs a check for the udat if it needs to be deleted?
@@ -131,13 +129,15 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 
 	//setting initial values for the new_udat
 	t_evudat	*new_udat = new t_evudat;
-	new_udat->flag = false;
+	new_udat->flag = 0;
 	new_udat->addr = newaddr;
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
 	new_udat->key = old_udat->key;
 	new_udat->req = new RequestHandler(getServer(new_udat->key));
 	new_udat->req->setSocket(clnt_sckt);
+	new_udat->datalen = 0;
+	new_udat->total_size = 0;
 	getnameinfo((const t_sckadr *)&newaddr, socklen, host, sizeof host, service, sizeof service, 0);
 
 	//putting the read and write event for the new client in the kqueue
@@ -164,9 +164,9 @@ void	WebServ::receiveRequest(t_event &event)
 	{
 		std::cout << "receive error" << std::endl;
 	}
-	else if (bytes_read == 0)
+	else if (bytes_read == 0 && evudat->flag != 2)
 	{
-		evudat->flag = true;
+		evudat->flag = 1;
 		// std::cout << "bytes_read is 0" << std::endl;
 	}
 	else
@@ -175,8 +175,6 @@ void	WebServ::receiveRequest(t_event &event)
 		evudat->req->addToRequestMsg(buf);
 	}
 	// fflush(stdout);
-	// Receive message might also contain part of the next request
-	// TODO make sure this is handled in the requesthandler!.
 }
 
 
@@ -185,54 +183,35 @@ void	WebServ::sendResponse(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 	std::string	response;
-	std::string	remaining_request;
-	int			datalen;
+	int			fd;
 
-	// get response
-	response = evudat->req->getResponse();
-
-	// In case receive receives more than one request
-	if (evudat->req->hasRemainingRequestMsg())
+	fd = evudat->req->getFileDescriptor();
+	if (evudat->flag != 2)
 	{
-		std::cout << "receiving remaining request" << std::endl;
-		remaining_request = evudat->req->getRemainingRequestMsg();
+		// get response
+		response = evudat->req->getResponse();
+		// Sending response header (might contain the body too in case of autoindex?)
+		send(event.ident, response.c_str(), response.size(), 0);
 	}
-
-	// Sending all the data in chunks of 64 bytes
-	datalen = response.size();
-	const char *ptr = static_cast<const char *>(response.c_str());
-	while (datalen > 0)
+	if (fd > 0)
 	{
-		int send_bytes = datalen;
-		if (datalen > MAX_MSG_SIZE)
-			send_bytes = MAX_MSG_SIZE;
-		int bytes = send(event.ident, ptr, send_bytes, 0);
-		if (bytes <= 0)
+		int bytes = sendfile(fd, event.ident, evudat->total_size, &evudat->datalen, NULL, 0);
+		evudat->total_size += evudat->datalen;
+		if (bytes == -1 || evudat->total_size < evudat->req->getFileSize())
 		{
-			if (bytes == -1)
-			{
-				//Debug message
-				std::cout << "deleting req bytes -1" << std::endl;
-				delete evudat->req;
-				evudat->flag = true;
-				deleteConnection(event, EVFILT_WRITE);
-				return ;
-			}
-			break ;
+			evudat->flag = 2;
+			return ;
 		}
-		ptr += bytes;
-		datalen -= bytes;
 	}
-
-	//Make a new RequestHandler
-	delete evudat->req;
-	//Debug message
-	// std::cout << "deleted req" << std::endl;
-	evudat->req = new RequestHandler(getServer(evudat->key));
-	if (evudat->req->hasRemainingRequestMsg())
+	if (evudat->total_size >= evudat->req->getFileSize())
 	{
-		evudat->req->addToRequestMsg(remaining_request);
-		std::cout << "\n------Adding remaining request to new RequestHandler--------" << std::endl;
+		evudat->flag = 0;
+		if (fd > 0)
+			close(fd);
+		evudat->datalen = 0;
+		evudat->total_size = 0;
+		delete evudat->req;
+		evudat->req = new RequestHandler(getServer(evudat->key));
 	}
 }
 
@@ -248,7 +227,7 @@ void	WebServ::readFromSocket(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
-	if (event.flags & EV_EOF || evudat->flag)
+	if (event.flags & EV_EOF || evudat->flag == 1)
 		deleteConnection(event, EVFILT_READ);
 	else
 		receiveRequest(event);
@@ -258,7 +237,7 @@ void	WebServ::writeToSocket(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
-	if (event.flags & EV_EOF || evudat->flag)
+	if (event.flags & EV_EOF || evudat->flag == 1)
 		deleteConnection(event, EVFILT_WRITE);
 	else if (evudat->req->isRequestComplete())
 		sendResponse(event);

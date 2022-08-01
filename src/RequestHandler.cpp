@@ -6,9 +6,11 @@
 
 // Constructors
 //TODO server is necesarry to check for location , accepted methods etc.
-RequestHandler::RequestHandler(Server *server) : _server(server), _is_request_complete(false), _has_remaining_request(false)
+RequestHandler::RequestHandler(Server *server) : 
+		_server(server), _is_request_complete(false), 
+		_has_remaining_request(false), _send_file(false), _fd(0),
+		_file_size(0)
 {
-	(void)_server;
 }
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
@@ -33,7 +35,7 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 // Getters
 std::string	RequestHandler::getResponse() const
 {
-	return this->_response + this->_response_body;
+	return this->_response_header + this->_response_body;
 }
 
 bool	RequestHandler::isRequestComplete() const
@@ -49,6 +51,16 @@ std::string	RequestHandler::getRemainingRequestMsg() const
 bool	RequestHandler::hasRemainingRequestMsg() const
 {
 	return this->_has_remaining_request;
+}
+
+int	RequestHandler::getFileDescriptor() const
+{
+	return this->_fd;
+}
+
+std::size_t	RequestHandler::getFileSize() const
+{
+	return this->_file_size;
 }
 
 // Setters
@@ -115,7 +127,7 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				_response_body = AutoIndexGenerator(path, root + path).getDirectoryIndex();
 				std::size_t length = _response_body.length();
 				std::string content_type = "text/html";
-				_response = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
+				_response_header = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
 				return ;
 			}
 			else
@@ -124,7 +136,7 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			if (!infile.is_open())
 			{
 				std::cout << "failed to open file" << std::endl;
-				_response = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
+				_response_header = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
 			}
 			else
 			{
@@ -137,34 +149,23 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 					content_type = "text/html";
 				infile.seekg(0, std::ios::end);
 				std::size_t length = infile.tellg();
-				std::cout << "length of file: " << length << std::endl;
+				// std::cout << "length of file: " << length << std::endl;
 				infile.seekg(0, std::ios::beg);
-				_response = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
+				_file_size = length;
+				_response_header = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
 				if (infile.fail())
 				{
 					std::cout << "failed to get size of file" << std::endl;
-					_response.empty();
-					_response = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
+					_response_header.empty();
+					_response_header = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
 				}
 				else if (length > 0)
 				{
-					std::stringstream buffer;
-
-					buffer << infile.rdbuf();
-					_response_body = buffer.str();
+					_send_file = true;
 					infile.close();
+					_fd = open(path.c_str(), O_RDONLY);
 				}
 			}
-		}
-		if (size_req - crlf_pos != 4) // in case recv has gotten more than a single HTTP request
-		{
-			_has_remaining_request = true;
-			// if (_complete_request.find_last_of("GET") != _complete_request.find("GET") &&
-			// 	_complete_request.find_last_of("GET") > crlf_pos)
-			// 	crlf_pos = _complete_request.find_last_of("GET");
-			_remaining_request = _complete_request.substr(crlf_pos, size_req - crlf_pos);
-			// std::cout << "\nMore than one packet in the receive msg" << std::endl; // just for testing
-			// std::cout << _remaining_request << "\n-------end of remaining request---------" << std::endl; // just for testing	
 		}
 	}
 
