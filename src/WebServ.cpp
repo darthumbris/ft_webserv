@@ -175,7 +175,7 @@ void	WebServ::receiveRequest(t_event &event)
 		evudat->req->addToRequestMsg(buf);
 	}
 	// fflush(stdout);
-	// Receive message might also contain part of the next packet
+	// Receive message might also contain part of the next request
 	// TODO make sure this is handled in the requesthandler!.
 }
 
@@ -191,9 +191,12 @@ void	WebServ::sendResponse(t_event &event)
 	// get response
 	response = evudat->req->getResponse();
 
-	// In case receive receives more than one packet
+	// In case receive receives more than one request
 	if (evudat->req->hasRemainingRequestMsg())
+	{
+		std::cout << "receiving remaining request" << std::endl;
 		remaining_request = evudat->req->getRemainingRequestMsg();
+	}
 
 	// Sending all the data in chunks of 64 bytes
 	datalen = response.size();
@@ -224,7 +227,7 @@ void	WebServ::sendResponse(t_event &event)
 	//Make a new RequestHandler
 	delete evudat->req;
 	//Debug message
-	std::cout << "deleted req" << std::endl;
+	// std::cout << "deleted req" << std::endl;
 	evudat->req = new RequestHandler(getServer(evudat->key));
 	if (evudat->req->hasRemainingRequestMsg())
 	{

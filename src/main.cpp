@@ -6,7 +6,7 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/07/12 16:16:55 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/01 12:48:42 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 int	main(int argc, char *argv[])
 {
-	Config	*config;
+	Config				*config;
 
 	if (argc == 2)
 		config = new Config(argv[1]);

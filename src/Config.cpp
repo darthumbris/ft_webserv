@@ -18,6 +18,8 @@ Config::Config(std::string config_path)
 
 	// Config parsed new location with dir: "/images"
 	addLocation("/images");
+	addLocation("/");
+	getLastServer()->getLocationMap()["/"]->setAutoIndex(true);
 
 	// Config parsed new server with listen 0.0.0.0 4242
 	addServer("0.0.0.0", "4242");

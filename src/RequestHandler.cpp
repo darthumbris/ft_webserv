@@ -101,8 +101,20 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			std::string path;
 			if (_complete_request.find("/favicon.ico") != std::string::npos)
 				path = root + "favicon.ico";
-			else if (_complete_request.find("/test.png") != std::string::npos)
+			else if (_complete_request.find("/cheese.png") != std::string::npos)
 				path = root + "cheese.png";
+			else if (_complete_request.find("/index.html") != std::string::npos)
+				path = root + "dirtest.html";
+			else if (_server->getLocationMap()["/"] && _server->getLocationMap()["/"]->getAutoIndex())
+			{
+				std::cout << "setting index responde" << std::endl;
+				_response_body = AutoIndexGenerator("/", "var/www/html").getDirectoryIndex();
+				std::size_t length = _response_body.length();
+				std::cout << "length: " << length << std::endl;
+				std::string content_type = "text/html";
+				_response = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
+				return ;
+			}
 			else
 				path = root + "index.html";
 			std::ifstream infile(path, std::ios::in);
@@ -116,7 +128,7 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				std::string content_type;
 				if (_complete_request.find("/favicon.ico") != std::string::npos)
 					content_type = "image/x-icon";
-				else if (_complete_request.find("/test.png") != std::string::npos)
+				else if (_complete_request.find("/cheese.png") != std::string::npos)
 					content_type = "image/png";
 				else
 					content_type = "text/html";
@@ -137,7 +149,6 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 
 					buffer << infile.rdbuf();
 					_response_body = buffer.str();
-					// _response.append(buffer.str());
 					infile.close();
 				}
 			}
@@ -154,7 +165,6 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 		}
 	}
 
-	std::cout << "added to request msg" << std::endl;
 	//TODO make sure to parse this message. 
 	//TODO might need a need to see if the msg is done being received?
 	// for request headers they always end with \r\n\r\n (section 4.1 of RFC 2616)

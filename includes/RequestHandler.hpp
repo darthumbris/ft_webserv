@@ -9,6 +9,7 @@
 # include <unistd.h>
 # include <fstream>
 # include <sstream>
+# include "AutoIndexGenerator.hpp"
 
 //TODO make all the request handling stuff. (parsing etc)
 //TODO check if remaining request stuff is actually needed

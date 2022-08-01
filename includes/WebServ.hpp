@@ -11,6 +11,7 @@
 
 # include "Config.hpp"
 # include "RequestHandler.hpp"
+# include "AutoIndexGenerator.hpp"
 
 # define BACKLOG 		10000 //not sure yet what a proper value is (most systems do 20?)
 # define MAX_EVENTS 	1024

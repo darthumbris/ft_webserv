@@ -13,6 +13,7 @@ SRC =	main.cpp \
         Server.cpp \
         Location.cpp \
         RequestHandler.cpp \
+        AutoIndexGenerator.cpp \
 
 SRC_EXT = cpp
 
