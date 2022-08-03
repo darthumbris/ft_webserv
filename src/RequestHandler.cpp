@@ -6,8 +6,8 @@
 
 // Constructors
 //TODO server is necesarry to check for location , accepted methods etc.
-RequestHandler::RequestHandler(Server *server) : 
-		_server(server), _is_request_complete(false), 
+RequestHandler::RequestHandler(const t_servmap &srv_map) : 
+		_srv_map(srv_map), _is_request_complete(false), 
 		_has_remaining_request(false), _send_file(false), _fd(0),
 		_file_size(0)
 {
@@ -72,27 +72,23 @@ void	RequestHandler::setResponse()
 
 void	RequestHandler::setSocket(int socket)
 {
-	this->_fd = socket;
+	this->_client_socket = socket;
 }
 
-int sendData(int sckt, const void *data, int datalen)
+void	RequestHandler::setPort(int port)
 {
-	const char *ptr = static_cast<const char*>(data);
+	this->_port = port;
+}
 
-	while (datalen > 0)
+// Member functions
+Location	*RequestHandler::getLocation(std::string url) const
+{
+	for (std::size_t it = 0; it < _srv_map.size(); it++)
 	{
-		int bytes = send(sckt, ptr, datalen, 0);
-		if (bytes <=0)
-			return -1;
-		ptr += bytes;
-		datalen -= bytes;
+		if (_srv_map[it]->getLocation(_port, url))
+			return (_srv_map[it]->getLocation(_port, url));
 	}
-	return 0;
-}
-
-int sendStr(int sckt, const std::string &s)
-{
-	return sendData(sckt, s.c_str(), s.size());
+	return NULL;
 }
 
 //TODO remove all the stuff and move it to different function (testFunction or something)
@@ -109,9 +105,11 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 		std::cout << _complete_request << std::endl;
 		_is_request_complete = true;
 		std::string root = "var/www/html/";
+		std::string	url = "/";
 		if (_complete_request.find("GET /") != std::string::npos) // testing how image things are handled
 		{
 			std::string path;
+			Location *loc;
 			if (_complete_request.find("/favicon.ico") != std::string::npos)
 				path = root + "favicon.ico";
 			else if (_complete_request.find("/cheese.png") != std::string::npos)
@@ -120,8 +118,10 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				path = root + "index.html";
 			else if (_complete_request.find("/dirtest.html") != std::string::npos)
 				path = root + "dirtest.html";
-			else if (_server->getLocationMap()["/"] && _server->getLocationMap()["/"]->getAutoIndex())
+			else if ((loc = this->getLocation(url)))
 			{
+				if (!loc->getAutoIndex())
+					return;
 				std::size_t start = _complete_request.find("GET /") + 5;
 				std::size_t end = _complete_request.find("HTTP/1.1") - 1;
 				std::string path = _complete_request.substr(start, end - start);

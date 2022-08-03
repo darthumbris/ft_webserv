@@ -4,6 +4,7 @@
 //TODO in constructor check if file can be opened.
 //Map for server, string part is ip + port for easy checking
 // for duplicates etc.
+//TODO check if ip+port as a key should be instead servername or instead of a map for the server should be a vector?
 Config::Config(std::string config_path)
 {
 	std::cout << "config filename: " << config_path << std::endl;
@@ -14,7 +15,7 @@ Config::Config(std::string config_path)
 	// Config parsed new server with listen 127.0.0.1 8080
 	addServer("127.0.0.1", "4242");
 	// Config sees server_name test.com
-	getLastServer()->setServerName("test.com");
+	getLastServer()->addServerName("test.com");
 
 	// Config parsed new location with dir: "/images"
 	addLocation("/images");
@@ -57,9 +58,7 @@ t_servmap	Config::getServerMap() const
 
 Server	*Config::getLastServer()
 {
-	auto it = _server.end();
-	it--;
-	return (it->second);
+	return (_server.back());
 }
 
 
@@ -68,11 +67,12 @@ Server	*Config::getLastServer()
 void	Config::addServer(std::string ip, std::string port)
 {
 	std::string	server_key = ip + ":" +  port;
-	if (_server.find(server_key) != _server.end())
-		std::cout << "Error: duplicate server in config" << std::endl; //Should throw ?
-	_server.insert(std::make_pair(server_key, new Server()));
-	_server.at(server_key)->setServerIp(ip);
-	_server.at(server_key)->setServerPort(std::stoi(port));
+	// if (_server.find(server_key) != _server.end())
+	// 	std::cout << "Error: duplicate server in config" << std::endl; //Should throw ?
+	_server.push_back(new Server());
+	// _server.insert(std::make_pair(server_key, new Server()));
+	_server.back()->setServerIp(ip);
+	_server.back()->addServerPort(std::stoi(port));
 }
 
 void	Config::addLocation(std::string location_dir)

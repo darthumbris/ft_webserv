@@ -37,11 +37,10 @@ struct ev_data
 	int				flag; // flag for deleting connection
 	int				port; // port of the server
 	std::string		ip; //Ip of the server
-	std::string		key; // ip:port of the server
 	RequestHandler	*req; // request of the client
 	t_addr_in		addr; // address of the client
-	off_t			datalen; // used for sending of files
-	size_t			total_size;
+	off_t			datalen; // used for sending response
+	size_t			total_size; // used for sending response
 };
 
 class WebServ
@@ -59,11 +58,14 @@ class WebServ
 		WebServ &operator=(const WebServ &assign);
 
 		// Getters
-		Server	*getServer(std::string key) const;
+		// Server		*getServer(std::string key) const;
+		Location	*getLocation(int port) const;
+		bool		listeningToPort(int port) const;
+	
 		// Setters
 
 		// Member functions
-		void	setNewServerSocket(Server *server);
+		void	setNewServerSocket(Server *server, int port);
 		bool	isListenSocket(int fd);
 		void	addConnection(t_event event, t_evudat *old_udat);
 		void	readFromSocket(t_event &event);
@@ -75,10 +77,11 @@ class WebServ
 		
 	private:
 		
-		int			_kqueue;
-		int			_n_servers;
-		Config		*_config;
-		t_ev_lst 	_change_ev;
+		int					_kqueue;
+		int					_n_servers;
+		std::vector<int>	_ports;
+		Config				*_config;
+		t_ev_lst 			_change_ev;
 };
 
 #endif

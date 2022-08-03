@@ -1,7 +1,7 @@
 #include "WebServ.hpp"
 
-//TODO cleanup some of the functions (maybe add some smaller functions)
 //TODO throw for somethings and make a error handler for those
+//TODO check if other server shares a port, then don't need to make a socket for it
 
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
@@ -14,11 +14,18 @@ WebServ::WebServ(Config *config) : _config(config)
 	server_map = _config->getServerMap();
 	_n_servers = 0;
 	// Going through the config and making a socket and event for all servers in it.
-	for (auto it = server_map.begin(); it != server_map.end(); it++)
+	for (std::size_t it = 0; it < server_map.size(); it++)
 	{
-		std::cout << "setting socket for: " << it->first << std::endl;
-		setNewServerSocket(it->second);
-		_n_servers++;
+		// std::cout << "setting socket for: " << it->first << std::endl;
+		std::vector<int> ports = server_map[it]->getServerPort();
+		for (std::size_t it = 0; it < ports.size(); it++)
+		{
+			if (!listeningToPort(ports[it]))
+			{
+				setNewServerSocket(server_map[it], ports[it]);
+				_n_servers++;
+			}
+		}
 	}
 	//This will make it so that kqueue will look for changes to the server events
 	kevent(_kqueue, &_change_ev[0], _change_ev.size(), NULL, 0, NULL);
@@ -43,13 +50,23 @@ WebServ & WebServ::operator=(const WebServ &assign)
 }
 
 // Getters
-Server *WebServ::getServer(std::string key) const
+// Server *WebServ::getServer(std::string key) const
+// {
+// 	return _config->getServerMap().find(key)->second;
+// }
+
+bool	WebServ::listeningToPort(int port) const
 {
-	return _config->getServerMap().find(key)->second;
+	for (std::size_t it = 0; it < _ports.size(); it++)
+	{
+		if (_ports[it] == port)
+			return true;
+	}
+	return false;
 }
 
 // Member Functions
-void	WebServ::setNewServerSocket(Server *server)
+void	WebServ::setNewServerSocket(Server *server, int port)
 {
 	int			srvr_sckt;
 	int			option = 1;
@@ -71,7 +88,7 @@ void	WebServ::setNewServerSocket(Server *server)
 	memset((char *)&srvr_addr, 0, sizeof(srvr_addr));
 	srvr_addr.sin_family = AF_INET;
 	srvr_addr.sin_addr.s_addr = inet_addr(server->getServerIp().c_str());
-	srvr_addr.sin_port = htons(server->getServerPort());
+	srvr_addr.sin_port = htons(port);
 
 	// Binding and listening to the new socket using the address struct data
 	if (bind(srvr_sckt, (t_sckadr *)&srvr_addr, sizeof(srvr_addr)) == -1)
@@ -90,8 +107,7 @@ void	WebServ::setNewServerSocket(Server *server)
 
 	//Setting the udata for the event and adding it to the changelst.
 	ev_udat->ip = server->getServerIp();
-	ev_udat->port = server->getServerPort();
-	ev_udat->key = server->getServerIp() + ":" + std::to_string(server->getServerPort());
+	ev_udat->port = port;
 	EV_SET(&event, srvr_sckt, EVFILT_READ, EV_ADD, 0, 0, ev_udat);
 	_change_ev.push_back(event);
 }
@@ -133,9 +149,9 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->addr = newaddr;
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
-	new_udat->key = old_udat->key;
-	new_udat->req = new RequestHandler(getServer(new_udat->key));
+	new_udat->req = new RequestHandler(_config->getServerMap());
 	new_udat->req->setSocket(clnt_sckt);
+	new_udat->req->setPort(old_udat->port);
 	new_udat->datalen = 0;
 	new_udat->total_size = 0;
 	getnameinfo((const t_sckadr *)&newaddr, socklen, host, sizeof host, service, sizeof service, 0);
@@ -212,7 +228,7 @@ void	WebServ::sendResponse(t_event &event)
 		evudat->datalen = 0;
 		evudat->total_size = 0;
 		delete evudat->req;
-		evudat->req = new RequestHandler(getServer(evudat->key));
+		evudat->req = new RequestHandler(_config->getServerMap());
 	}
 	// system("leaks webserv");
 }

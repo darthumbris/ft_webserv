@@ -18,7 +18,7 @@ class Config
 
 		// Getters
 		t_servmap	getServerMap() const;
-		Server	*getLastServer();
+		Server		*getLastServer();
 
 		// Member Functions
 		void	addServer(std::string ip, std::string port);
