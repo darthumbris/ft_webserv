@@ -13,14 +13,19 @@ Config::Config(std::string config_path)
 	addServer("127.0.0.1", "4242");
 	// Config sees server_name test.com
 	getLastServer()->addServerName("test.com");
+	getLastServer()->addServerName("test2.com");
+	getLastServer()->addServerName("test3.com");
+	getLastServer()->addServerPort(4343);
 
 	// Config parsed new location with dir: "/images"
 	addLocation("/images");
 	addLocation("/");
+	// Setting autoindex for location / to true (default is off)
 	getLastServer()->getLocationMap()["/"]->setAutoIndex(true);
 
 	// Config parsed new server with listen 0.0.0.0 4242
 	addServer("0.0.0.0", "7575");
+	getLastServer()->addServerName("different.com");
 }
 
 Config::Config(const Config &copy)

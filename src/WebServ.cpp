@@ -11,19 +11,20 @@ WebServ::WebServ(Config *config) : _config(config)
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
 	server_map = _config->getServerMap();
-	_n_servers = 0;
+	_n_servers = server_map.size();
 	// Going through the config and making a socket and event for all servers in it.
+	std::cout << "servers: " << server_map.size() << std::endl;
 	for (std::size_t it = 0; it < server_map.size(); it++)
 	{
-		// std::cout << "setting socket for: " << it->first << std::endl;
 		std::vector<int> ports = server_map[it]->getServerPort();
-		for (std::size_t it = 0; it < ports.size(); it++)
+		for (std::size_t j = 0; j < server_map[it]->getServerNames().size(); j++)
+			std::cout << "server " << it << " server_name: " << server_map[it]->getServerNames()[j] << std::endl;
+		for (std::size_t i = 0; i < ports.size(); i++)
 		{
-			if (!listeningToPort(ports[it]))
+			if (!listeningToPort(ports[i]))
 			{
-				std::cout << "setting socket for port: " << ports[it] << std::endl;
-				setNewServerSocket(server_map[it], ports[it]);
-				_n_servers++;
+				std::cout << "setting socket for port: " << ports[i] << std::endl;
+				setNewServerSocket(server_map[it], ports[i]);
 			}
 		}
 	}
