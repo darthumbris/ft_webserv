@@ -106,6 +106,7 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 	size_req = _complete_request.size();
 	if (crlf_pos != std::string::npos)
 	{
+		std::cout << _complete_request << std::endl;
 		_is_request_complete = true;
 		std::string root = "var/www/html/";
 		if (_complete_request.find("GET /") != std::string::npos) // testing how image things are handled

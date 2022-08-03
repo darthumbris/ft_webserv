@@ -69,7 +69,7 @@ int	Server::getServerSocket() const
 }
 
 // Setters
-void	Server::setServerIp(std::string ip)
+void	Server::setServerIp(const std::string& ip)
 {
 	this->_server_ip = ip;
 }

@@ -32,7 +32,7 @@ class Server
 		t_locmap					getLocationMap() const;
 
 		// Setters
-		void	setServerIp(std::string ip);
+		void	setServerIp(const std::string& ip);
 		void	setServerPort(int port);
 		void	setServerName(std::string server_name);
 		void	setServerRoot(std::string root);

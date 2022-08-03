@@ -148,8 +148,9 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 
 	//Debug messages
 	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr);
-	std::cout << " and port: " << ntohs(newaddr.sin_port) << std::endl;
+	std::cout << " and client port: " << ntohs(newaddr.sin_port) << std::endl;
 	std::cout << "Client connected to server with ip: " << old_udat->ip << " and port: " << old_udat->port << std::endl;
+	// std::cout << "or port: " << newaddr.sin_port << std::endl;
 }
 
 //TODO requests need to be parsed and handled still
@@ -213,6 +214,7 @@ void	WebServ::sendResponse(t_event &event)
 		delete evudat->req;
 		evudat->req = new RequestHandler(getServer(evudat->key));
 	}
+	// system("leaks webserv");
 }
 
 bool	WebServ::isListenSocket(int fd)
