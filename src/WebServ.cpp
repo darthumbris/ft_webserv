@@ -1,6 +1,7 @@
 #include "WebServ.hpp"
 
 //TODO throw for somethings and make a error handler for those
+//TODO cleanup some of the code here
 //TODO maybe do setNewServerSocket so that each server listening on same port does get a socket ? check this
 
 // Constructors
