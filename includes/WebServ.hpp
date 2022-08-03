@@ -58,7 +58,6 @@ class WebServ
 		WebServ &operator=(const WebServ &assign);
 
 		// Getters
-		Location	*getLocation(int port) const;
 		bool		listeningToPort(int port) const;
 	
 		// Setters

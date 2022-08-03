@@ -51,6 +51,7 @@ WebServ & WebServ::operator=(const WebServ &assign)
 	return *this;
 }
 
+// Getters
 bool	WebServ::listeningToPort(int port) const
 {
 	for (std::size_t it = 0; it < _ports.size(); it++)
