@@ -1,16 +1,8 @@
 #include "Server.hpp"
 
 // Constructors
-//TODO make a proper constructor for server instead this hardcoded stuff
-Server::Server()
+Server::Server() : _server_ip("127.0.0.1")
 {
-	// _client_body_size = 500;
-	// _server_fd = 0;
-	// _server_port = 8080;
-	// _server_name.push_back("test_server");
-	// _server_ip = "127.0.0.1";
-	// _error_page = "404.html";
-
 }
 
 Server::Server(const Server &copy)

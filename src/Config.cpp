@@ -2,9 +2,6 @@
 
 // Constructors
 //TODO in constructor check if file can be opened.
-//Map for server, string part is ip + port for easy checking
-// for duplicates etc.
-//TODO check if ip+port as a key should be instead servername or instead of a map for the server should be a vector?
 Config::Config(std::string config_path)
 {
 	std::cout << "config filename: " << config_path << std::endl;
@@ -45,10 +42,8 @@ Config & Config::operator=(const Config &assign)
 	return *this;
 }
 
-//TODO make proper getter/setter and member functions.
-
 //TODO make a parseconfig function which goes through the config
-// and adds new servers and locations (to the corresponding servers)
+// and adds new servers and locations (to the corresponding servers) (for ABBA)
 
 // Getters
 t_servmap	Config::getServerMap() const

@@ -1,7 +1,6 @@
 #include "WebServ.hpp"
 
 //TODO throw for somethings and make a error handler for those
-//TODO check if other server shares a port, then don't need to make a socket for it
 
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
@@ -22,6 +21,7 @@ WebServ::WebServ(Config *config) : _config(config)
 		{
 			if (!listeningToPort(ports[it]))
 			{
+				std::cout << "setting socket for port: " << ports[it] << std::endl;
 				setNewServerSocket(server_map[it], ports[it]);
 				_n_servers++;
 			}
@@ -48,12 +48,6 @@ WebServ & WebServ::operator=(const WebServ &assign)
 	(void) assign;
 	return *this;
 }
-
-// Getters
-// Server *WebServ::getServer(std::string key) const
-// {
-// 	return _config->getServerMap().find(key)->second;
-// }
 
 bool	WebServ::listeningToPort(int port) const
 {
@@ -169,7 +163,6 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	// std::cout << "or port: " << newaddr.sin_port << std::endl;
 }
 
-//TODO requests need to be parsed and handled still
 void	WebServ::receiveRequest(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
@@ -194,8 +187,6 @@ void	WebServ::receiveRequest(t_event &event)
 	// fflush(stdout);
 }
 
-
-//TODO make it use send for the header and sendfile for the body
 void	WebServ::sendResponse(t_event &event)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;

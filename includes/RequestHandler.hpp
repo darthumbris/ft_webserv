@@ -13,7 +13,7 @@
 
 //TODO make all the request handling stuff. (parsing etc) for alkrust
 //TODO check if remaining request stuff is actually needed
-//TODO change it so it has the t_servmap because multiple servers could be listening on the same port. So need to be able to go through all servers
+
 class RequestHandler
 {
 	public:
@@ -47,7 +47,7 @@ class RequestHandler
 		
 	private:
 
-		t_servmap	_srv_map; //TODO might need to be a t_servmap instead to handle servers on same port but with different server names?
+		t_servmap	_srv_map;
 		std::string	_complete_request;
 		std::string	_remaining_request;
 		std::string	_response_header;

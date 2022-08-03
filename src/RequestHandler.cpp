@@ -170,7 +170,6 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 		}
 	}
 
-	//TODO make sure to parse this message. 
 	//TODO might need a need to see if the msg is done being received?
 	// for request headers they always end with \r\n\r\n (section 4.1 of RFC 2616)
 	// We can use that to check if the full message has been received.
