@@ -1,6 +1,7 @@
 #include "WebServ.hpp"
 
 //TODO throw for somethings and make a error handler for those
+//TODO maybe do setNewServerSocket so that each server listening on same port does get a socket ? check this
 
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
@@ -11,7 +12,7 @@ WebServ::WebServ(Config *config) : _config(config)
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
 	server_map = _config->getServerMap();
-	_n_servers = server_map.size();
+	_n_servers = 0;
 	// Going through the config and making a socket and event for all servers in it.
 	std::cout << "servers: " << server_map.size() << std::endl;
 	for (std::size_t it = 0; it < server_map.size(); it++)
@@ -26,9 +27,11 @@ WebServ::WebServ(Config *config) : _config(config)
 				std::cout << "setting socket for port: " << ports[i] << std::endl;
 				setNewServerSocket(server_map[it], ports[i]);
 				addPortToList(ports[i]);
+				_n_servers++;
 			}
 		}
 	}
+
 	//This will make it so that kqueue will look for changes to the server events
 	kevent(_kqueue, &_change_ev[0], _change_ev.size(), NULL, 0, NULL);
 }
@@ -169,7 +172,6 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr);
 	std::cout << " and client port: " << ntohs(newaddr.sin_port) << std::endl;
 	std::cout << "Client connected to server with ip: " << old_udat->ip << " and port: " << old_udat->port << std::endl;
-	// std::cout << "or port: " << newaddr.sin_port << std::endl;
 }
 
 void	WebServ::receiveRequest(t_event &event)
@@ -180,9 +182,7 @@ void	WebServ::receiveRequest(t_event &event)
 
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	if (bytes_read < 0)
-	{
 		std::cout << "receive error" << std::endl;
-	}
 	else if (bytes_read == 0 && evudat->flag != 2)
 	{
 		evudat->flag = 1;
@@ -235,10 +235,12 @@ void	WebServ::sendResponse(t_event &event)
 
 bool	WebServ::isListenSocket(int fd)
 {
-	for (int i = 0; i < _n_servers; i++)
+	for (std::size_t i = 0; i < _change_ev.size(); i++)
+	{
 		if (_change_ev[i].ident == (uintptr_t)fd)
-			return 1;
-	return 0;
+			return true;
+	}
+	return false;
 }
 
 void	WebServ::readFromSocket(t_event &event)
