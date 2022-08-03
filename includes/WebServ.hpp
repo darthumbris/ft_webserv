@@ -58,11 +58,11 @@ class WebServ
 		WebServ &operator=(const WebServ &assign);
 
 		// Getters
-		// Server		*getServer(std::string key) const;
 		Location	*getLocation(int port) const;
 		bool		listeningToPort(int port) const;
 	
 		// Setters
+		void	addPortToList(int port);
 
 		// Member functions
 		void	setNewServerSocket(Server *server, int port);

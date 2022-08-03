@@ -25,6 +25,7 @@ WebServ::WebServ(Config *config) : _config(config)
 			{
 				std::cout << "setting socket for port: " << ports[i] << std::endl;
 				setNewServerSocket(server_map[it], ports[i]);
+				addPortToList(ports[i]);
 			}
 		}
 	}
@@ -58,6 +59,12 @@ bool	WebServ::listeningToPort(int port) const
 			return true;
 	}
 	return false;
+}
+
+//Setters
+void	WebServ::addPortToList(int port)
+{
+	this->_ports.push_back(port);
 }
 
 // Member Functions

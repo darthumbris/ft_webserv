@@ -2,6 +2,7 @@
 
 // Constructors
 //TODO in constructor check if file can be opened.
+// TODO maybe needs to be a check if there are no duplicate server_names?
 Config::Config(std::string config_path)
 {
 	std::cout << "config filename: " << config_path << std::endl;
@@ -25,6 +26,7 @@ Config::Config(std::string config_path)
 
 	// Config parsed new server with listen 0.0.0.0 4242
 	addServer("0.0.0.0", "7575");
+	getLastServer()->addServerPort(4343);
 	getLastServer()->addServerName("different.com");
 }
 
