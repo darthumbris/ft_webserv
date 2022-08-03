@@ -68,11 +68,9 @@ Server	*Config::getLastServer()
 // Member Functions
 void	Config::addServer(std::string ip, std::string port)
 {
+	//Ip can probably just be always 127.0.0.1 ?
 	std::string	server_key = ip + ":" +  port;
-	// if (_server.find(server_key) != _server.end())
-	// 	std::cout << "Error: duplicate server in config" << std::endl; //Should throw ?
 	_server.push_back(new Server());
-	// _server.insert(std::make_pair(server_key, new Server()));
 	_server.back()->setServerIp(ip);
 	_server.back()->addServerPort(std::stoi(port));
 }
@@ -85,6 +83,6 @@ void	Config::addLocation(std::string location_dir)
 	server = getLastServer();
 	location = server->getLocationMap();
 	if (location.size() && location.find(location_dir) != location.end())
-		std::cout << "Error: duplicate location in config" << std::endl; // Should throw ?
+		std::cout << "Error: duplicate location in config" << std::endl; // Should throw ?, can of course be a different server with same location
 	server->addLocationToServer(location_dir);
 }
