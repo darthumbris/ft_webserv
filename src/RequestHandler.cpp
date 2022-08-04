@@ -7,12 +7,6 @@
 
 // Constructors
 //
-typedef struct	s_response
-{
-	std::string											protocal;
-	std::vector<std::map<std::string, std::string>>		fields;
-
-}				t_reponse;
 
 RequestHandler::RequestHandler(Server *server) : _server(server)
 {
@@ -38,7 +32,7 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 }
 
 // Getters
-std::string	RequestHandler::getResponse() const
+t_response	RequestHandler::getResponse() const
 {
 	return this->_response;
 }
@@ -87,11 +81,16 @@ bool	RequestHandler::parseFirstLine(std::string line)
 }
 */
 
-void	parseFirstLine(std::string line)
-{
-	std::vector<std::string> wordVector;
+/*	FROM RFC
+ *
+ */
 
-	std::size_t prev = 0, pos;
+
+
+std::vector<std::string>	cpp_split(std::strin line)
+{
+	std::size_t 				prev = 0, pos;
+	std::vector<std::string>	wordVector;
 
 	while ((pos = line.find_first_of(" ", prev)) != std::string::npos)
 	{
@@ -101,37 +100,41 @@ void	parseFirstLine(std::string line)
 	}
 	if (prev < line.length())
 		wordVector.push_back(line.substr(prev, std::string::npos));
-	if (wordVector.length() != 3)
+	return (wrodVector);
+}
+
+void	ParseRequestLine(std::string line)
+{
+	if (wordVector.size() != 3)
 		return ;
 	if (wordVector[0] != "GET" || wordVector[0] == "DELETE" || wordVector[0] == "POST")
 		return ;
-	if ()
-	{
-	
-	}
-}
-
-void	RequestHandler::setRequestMsg(std::string msg) 
-{
-	_msg = msg;
-
-	std::vector<std::vector<std::string>>	request_line;
-	request_line.push_back({"test", "GET"});
-	std::cout << _protocol << std::endl;
-	std::cout << msg << std::endl;
-
-	std::string	line;
-	std::istringstream iss(msg);
-
-	std::getline(iss, line);
-	parseFirstLine(line);
-	{
-	
-	}
 	for (std::vector<std::string>::iterator iter = wordVector.begin(); iter != wordVector.end(); iter++)
 	{
 		std::cout << *iter << std::endl;
 	}
+}
+
+void	RequestHandler::setResponse(std::string msg)
+{
+
+}
+
+void	RequestHandler::setRequestMsg(std::string msg) 
+{
+	std::string	line;
+
+	_msg = msg;
+
+	std::vector<std::vector<std::string>>	request_line;
+	std::cout << "RAW DATA: " << msg << " :END OF DATA" << std::endl;
+
+	std::istringstream iss(msg);
+
+	if (std::getline(iss, line) == -1)
+		return (setResponse(""));
+	ParseRequestLine(line);
+
 	/*
 		
 
@@ -157,4 +160,5 @@ void	RequestHandler::setRequestMsg(std::string msg)
 
 	if (msg.find("\r\n\r\n"))
 		std::cout << "end of request header" << std::endl;
+	return (response);
 }
