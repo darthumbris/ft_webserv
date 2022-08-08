@@ -68,7 +68,9 @@ std::string	CgiHandler::execute()
 	std::string body;
 	std::string	test;
 
+	//TODO: change this
 	envp = getEnv();
+	//TODO: remove this
 	test = "name=test&email=kaas";
 	write(In, test.c_str(), 20);
 	lseek(In, 0, SEEK_SET);
@@ -80,6 +82,7 @@ std::string	CgiHandler::execute()
 	{
 		dup2(In, STDIN_FILENO);
 		dup2(Out, STDOUT_FILENO);
+		//TODO: Need to fix this probably so it's not hardcoded?
 		execve("/Users/shoogenb/.brew/Cellar/php/8.1.9/bin/php-cgi", NULL, envp);
 		write(STDOUT_FILENO, "Status: 500\r\n", 15);
 	}
