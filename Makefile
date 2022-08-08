@@ -14,6 +14,7 @@ SRC =	main.cpp \
         Location.cpp \
         RequestHandler.cpp \
         AutoIndexGenerator.cpp \
+        CgiHandler.cpp \
 
 SRC_EXT = cpp
 
