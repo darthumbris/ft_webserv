@@ -1,4 +1,5 @@
 #include "RequestHandler.hpp"
+#include "CgiHandler.hpp"
 
 /*TODO need to have a check here for post to check how big the upload is
 // and compare it to the client_body_size variable of the server
@@ -173,6 +174,7 @@ void	RequestHandler::makeHeaderMap()
 	}
 }
 
+//TODO if there is a POST request it might have a body. Need to save that too for cgi handler
 //TODO remove all the stuff and move it to different function (testFunction or something)
 void	RequestHandler::addToRequestMsg(const std::string &msg)
 {
@@ -189,8 +191,16 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 		_is_request_complete = true;
 		std::string root = "var/www/html/";
 		std::string	url = "/";
-		if (_complete_request.find("GET /") != std::string::npos) // testing how image things are handled
+		if (_complete_request.find("GET /") != std::string::npos || _complete_request.find("POST /") != std::string::npos) // testing how image things are handled
 		{
+			if (_url.path.find(".php") != std::string::npos)
+			{
+				CgiHandler	cgi(*this);
+				_response_header = cgi.execute();
+				_response_header.append("\r\n");
+				std::cout << "size: " << _response_header.length() << std::endl;
+				return;
+			}
 			std::string path;
 			Location *loc;
 			if (_complete_request.find("/favicon.ico") != std::string::npos)
@@ -201,6 +211,8 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				path = root + "index.html";
 			else if (_complete_request.find("/dirtest.html") != std::string::npos)
 				path = root + "dirtest.html";
+			else if (_complete_request.find("/test/subscription_page.html") != std::string::npos)
+				path = root + "test/subscription_page.html";
 			else if ((loc = this->getLocation(url)))
 			{
 				if (!loc->getAutoIndex())

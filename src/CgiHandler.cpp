@@ -1,29 +1,38 @@
 #include "CgiHandler.hpp"
 
+//TODO fix this, now doesnt properly give a return that makes sense
+
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(req)
 {
-	_cgi_path = "/Users/shoogenb/.brew/Cellar/php/8.1.9/bin/php-cgi"; //temp for now should get from config
+	// std::cout << "path: " << req.getUrl().path << std::endl;
+	std::string	temp_path = "form.php";
+	_cgi_path = "/Users/shoogenb/.brew/bin/php-cgi"; //temp for now should get from config
 	_env["AUTH_TYPE="] = req.getHeaderMap()["Authorization"];
-	_env["CONTENT_LENGTH="] = std::to_string(_req.getResponseBody().length());
-	_env["CONTENT_TYPE="] = req.getHeaderMap()["content-type"];
+	// _env["CONTENT_LENGTH="] = std::to_string(_req.getResponseBody().length());
+	_env["CONTENT_LENGTH="] = "38";
+	_env["CONTENT_TYPE="] = req.getHeaderMap()["Content-Type"];
 	_env["GATEWAY_INTERFACE="] = "CGI/1.1";
-	_env["PATH_INFO="] = req.getUrl().path;
-	_env["PATH_TRANSLATED="] = req.getUrl().path;
-	_env["QUERY_STRING="] = req.getUrl().querry;
+	// _env["PATH_INFO="] = req.getUrl().path;
+	_env["PATH_INFO="] = temp_path;
+	// _env["PATH_TRANSLATED="] = req.getUrl().path;
+	_env["PATH_TRANSLATED="] = temp_path;
+	// _env["QUERY_STRING="] = req.getUrl().querry;
+	_env["QUERY_STRING="] = "";
 	_env["REMOTE_ADDR="] = req.getClientIp();
 	// _env["REMOTE_HOST="] = "";
 	_env["REMOTE_IDENT="] = req.getHeaderMap()["Authorization"];
 	_env["REMOTE_USER="] = req.getHeaderMap()["Authorization"];
 	_env["REQUEST_METHOD="] = req.getRequestMethod();
 	_env["SCRIPT_NAME="] = _cgi_path;
-	_env["SERVER_NAME="] = req.getHeaderMap()["host"];
+	_env["SERVER_NAME="] = req.getHeaderMap()["Host"];
 	_env["SERVER_PORT="] = std::to_string(req.getPort());
 	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
 	_env["SERVER_SOFTWARE="] = "";
 	_env["REDIRECT_STATUS="] = "200";
 	_env["SCRIPT_FILENAME="] = _cgi_path;
-	_env["REQUEST_URI="] = req.getUrl().path + req.getUrl().querry;
+	// _env["REQUEST_URI="] = req.getUrl().path + req.getUrl().querry;
+	_env["REQUEST_URI="] = temp_path;
 }
 
 
@@ -53,25 +62,30 @@ char**	CgiHandler::makeEnvArray()
 
 void	CgiHandler::executeScript(char **envp)
 {
+	char * const * _null = NULL;
+
 	dup2(_in_file_fd, STDIN_FILENO);
 	dup2(_out_file_fd, STDOUT_FILENO);
-	execve(_cgi_path.c_str(), NULL, envp);
+	execve(_cgi_path.c_str(), _null, envp);
 	write(STDOUT_FILENO, "Status: 500\r\n", 15);
 }
 
 void	CgiHandler::readScriptOutput(pid_t pid)
 {	
-	char	buffer[256 + 1];
-	int 	ret = 1;
+	char	buffer[65536] = {0};
+	// int 	ret = 1;
 
 	waitpid(pid, NULL, 0);
 	lseek(_out_file_fd, 0, SEEK_SET);
 
-	while (ret > 0)
+	while (read(_out_file_fd, buffer, 65536) > 0)
 	{
-		ret = read(_out_file_fd, buffer, 256);
-		buffer[ret] = '\0';
-		_output_body.append(buffer); //this is the output of the script
+		// ret = read(_out_file_fd, buffer, 65536);
+		// buffer[ret] = '\0';
+		_output_body += buffer;
+		memset(buffer, 0, 65536);
+		// _output_body.append(buffer); //this is the output of the script
+		// std::cout << "size: " << _output_body.length() << std::endl;
 	}
 }
 
@@ -109,7 +123,8 @@ std::string	CgiHandler::execute()
 	envp = makeEnvArray();
 
 	//reading in the input body to temp file
-	input_body = "name=test&email=kaas"; //this is what gets put as input for the script
+	input_body = "name=dsa&email=fdasfdsaf%40chicken.nl"; //this is what gets put as input for the script
+	// std::cout << input_body << std::endl;
 	write(_in_file_fd, input_body.c_str(), input_body.length());
 	//Resetting to beginning of file
 	lseek(_in_file_fd, 0, SEEK_SET);
@@ -132,7 +147,9 @@ std::string	CgiHandler::execute()
 
 	if (pid == 0)
 		exit(0);
-
+	std::cout << "finished executing " << std::endl;
+	std::cout << "size now: " << _output_body.length() << std::endl;
+	// std::cout << "script: " << _output_body << std::endl;
 	return _output_body;
 }
 
