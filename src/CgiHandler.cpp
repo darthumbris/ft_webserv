@@ -3,27 +3,27 @@
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(req)
 {
-	_env["AUTH_TYPE="] = "";
+	_cgi_path = "/Users/shoogenb/.brew/Cellar/php/8.1.9/bin/php-cgi"; //temp for now should get from config
+	_env["AUTH_TYPE="] = req.getHeaderMap()["Authorization"];
 	_env["CONTENT_LENGTH="] = std::to_string(_req.getResponseBody().length());
-	_env["CONTENT_TYPE="] = "";
+	_env["CONTENT_TYPE="] = req.getHeaderMap()["content-type"];
 	_env["GATEWAY_INTERFACE="] = "CGI/1.1";
-	_env["PATH_INFO="] = "";
-	_env["PATH_TRANSLATED="] = "";
-	_env["QUERY_STRING="] = "";
-	_env["REMOTE_ADDR="] = "";
-	_env["REMOTE_HOST="] = "";
-	_env["REMOTE_IDENT="] = "";
-	_env["REMOTE_USER="] = "";
+	_env["PATH_INFO="] = req.getUrl().path;
+	_env["PATH_TRANSLATED="] = req.getUrl().path;
+	_env["QUERY_STRING="] = req.getUrl().querry;
+	_env["REMOTE_ADDR="] = req.getClientIp();
+	// _env["REMOTE_HOST="] = "";
+	_env["REMOTE_IDENT="] = req.getHeaderMap()["Authorization"];
+	_env["REMOTE_USER="] = req.getHeaderMap()["Authorization"];
 	_env["REQUEST_METHOD="] = req.getRequestMethod();
-	_env["SCRIPT_NAME="] = "";
-	_env["SERVER_NAME="] = "";
-	_env["SERVER_PORT="] = "";
+	_env["SCRIPT_NAME="] = _cgi_path;
+	_env["SERVER_NAME="] = req.getHeaderMap()["host"];
+	_env["SERVER_PORT="] = std::to_string(req.getPort());
 	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
 	_env["SERVER_SOFTWARE="] = "";
 	_env["REDIRECT_STATUS="] = "200";
-	_env["SCRIPT_FILENAME="] = "";
-	_env["REQUEST_URI="] = "";
-	_cgi_path = "/Users/shoogenb/.brew/Cellar/php/8.1.9/bin/php-cgi"; //temp for now should get from config
+	_env["SCRIPT_FILENAME="] = _cgi_path;
+	_env["REQUEST_URI="] = req.getUrl().path + req.getUrl().querry;
 }
 
 
@@ -44,7 +44,7 @@ char**	CgiHandler::makeEnvArray()
 	t_strmap::iterator it = _env.begin();
 	for (; it != _env.end(); it++, i++)
 	{
-		envp[i] = new char[it->first.size() + it->second.size() + 2];
+		envp[i] = new char[it->first.size() + it->second.size() + 1];
 		strcpy(envp[i], (it->first + it->second).c_str());
 	}
 	envp[i] = NULL;

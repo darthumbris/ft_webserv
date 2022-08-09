@@ -7,8 +7,6 @@
 # include <map>
 # include "RequestHandler.hpp"
 
-using	t_strmap = std::map<std::string, std::string>;
-
 class CgiHandler
 {
 	public:

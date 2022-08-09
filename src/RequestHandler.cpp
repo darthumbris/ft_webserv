@@ -73,6 +73,26 @@ std::string RequestHandler::getResponseBody() const
 	return this->_response_body;
 }
 
+t_strmap	RequestHandler::getHeaderMap() const
+{
+	return this->_headermap;
+}
+
+t_url	RequestHandler::getUrl() const
+{
+	return this->_url;
+}
+
+int	RequestHandler::getPort() const
+{
+	return this->_port;
+}
+
+std::string	RequestHandler::getClientIp() const
+{
+	return this->_client_ip;
+}
+
 // Setters
 void	RequestHandler::setResponse()
 {
@@ -90,7 +110,6 @@ void	RequestHandler::setPort(int port)
 	this->_port = port;
 }
 
-// Member functions
 Location	*RequestHandler::getLocation(std::string url) const
 {
 	for (std::size_t it = 0; it < _srv_map.size(); it++)
@@ -99,6 +118,59 @@ Location	*RequestHandler::getLocation(std::string url) const
 			return (_srv_map[it]->getLocation(_port, url));
 	}
 	return NULL;
+}
+
+void	RequestHandler::setUrlStruct(std::string full_url)
+{
+	std::size_t	q_pos = full_url.find('?');
+	if (q_pos == std::string::npos)
+		q_pos = full_url.length();
+	_url.path = full_url.substr(0, q_pos);
+	_url.querry = full_url.substr(q_pos, full_url.length());
+}
+
+void	RequestHandler::setClientIp(std::string ip)
+{
+	_client_ip = ip;
+}
+
+// Member functions
+void	RequestHandler::makeHeaderMap()
+{
+	std::vector<std::string>	split;
+	std::size_t	pos;
+	std::size_t	last_pos;
+	std::size_t	len;
+
+	//splitting the request on \r\n
+	len = _complete_request.length();
+	last_pos = 0;
+	while (last_pos < len + 1)
+	{
+		pos = _complete_request.find_first_of("\r\n", last_pos);
+		if (pos == std::string::npos)
+			pos = len;
+		if (pos != last_pos)
+			split.push_back(std::string(_complete_request.data() + last_pos, pos - last_pos));
+		last_pos = pos + 1;
+	}
+	std::size_t	first_pos = _complete_request.find_first_of(' ');
+	std::size_t	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
+	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
+
+	_method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
+
+	//making a map of all the request headers
+	if (split.size() > 1)
+	{
+		for (std::size_t i = 1; i < split.size(); i++)
+		{
+			if (split[i] == "\r\n")
+				break ;
+			pos = split[i].find_first_of(':');
+			_headermap[split[i].substr(0, pos)] = split[i].substr(pos + 2, split[i].length());
+		}
+	}
 }
 
 //TODO remove all the stuff and move it to different function (testFunction or something)
@@ -113,6 +185,7 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 	if (crlf_pos != std::string::npos)
 	{
 		std::cout << _complete_request << std::endl;
+		makeHeaderMap();
 		_is_request_complete = true;
 		std::string root = "var/www/html/";
 		std::string	url = "/";

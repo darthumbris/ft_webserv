@@ -107,5 +107,6 @@ void	Server::setServerErrorPage(std::string error_page)
 // Member Functions
 void	Server::addLocationToServer(std::string location_dir)
 {
+	//TODO check for error inserting? (for example two same directories)
 	this->_location.insert(std::make_pair(location_dir, new Location()));
 }

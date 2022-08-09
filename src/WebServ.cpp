@@ -159,6 +159,7 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->req = new RequestHandler(_config->getServerMap());
 	new_udat->req->setSocket(clnt_sckt);
 	new_udat->req->setPort(old_udat->port);
+	new_udat->req->setClientIp(inet_ntoa(newaddr.sin_addr));
 	new_udat->datalen = 0;
 	new_udat->total_size = 0;
 	getnameinfo((const t_sckadr *)&newaddr, socklen, host, sizeof host, service, sizeof service, 0);

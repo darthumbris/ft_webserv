@@ -3,8 +3,6 @@
 // Constructors
 Location::Location() : _auto_index(true)
 {
-	// _upload_path = "/upload";
-	// _return_url = "google.com";
 	_allowed_methods.del = false;
 	_allowed_methods.get = false;
 	_allowed_methods.post = false;
