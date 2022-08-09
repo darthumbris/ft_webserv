@@ -35,6 +35,8 @@ class RequestHandler
 		int			getFileDescriptor() const;
 		std::size_t	getFileSize() const;
 		Location	*getLocation(std::string url) const;
+		std::string	getRequestMethod() const;
+		std::string	getResponseBody() const;
 
 		// Setters
 		void	setResponse();
@@ -52,6 +54,7 @@ class RequestHandler
 		std::string	_remaining_request;
 		std::string	_response_header;
 		std::string	_response_body;
+		std::string _request_method; //set this, this is used for the cgihandler
 		bool		_is_request_complete;
 		bool		_has_remaining_request;
 		bool		_send_file;

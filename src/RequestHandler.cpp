@@ -63,6 +63,16 @@ std::size_t	RequestHandler::getFileSize() const
 	return this->_file_size;
 }
 
+std::string	RequestHandler::getRequestMethod() const
+{
+	return this->_request_method;
+}
+
+std::string RequestHandler::getResponseBody() const
+{
+	return this->_response_body;
+}
+
 // Setters
 void	RequestHandler::setResponse()
 {

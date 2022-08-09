@@ -1,13 +1,29 @@
 #include "CgiHandler.hpp"
 
 // Constructors
-CgiHandler::CgiHandler()
+CgiHandler::CgiHandler(RequestHandler &req) : _req(req)
 {
-}
-
-CgiHandler::CgiHandler(const CgiHandler &copy)
-{
-	(void) copy;
+	_env["AUTH_TYPE="] = "";
+	_env["CONTENT_LENGTH="] = std::to_string(_req.getResponseBody().length());
+	_env["CONTENT_TYPE="] = "";
+	_env["GATEWAY_INTERFACE="] = "CGI/1.1";
+	_env["PATH_INFO="] = "";
+	_env["PATH_TRANSLATED="] = "";
+	_env["QUERY_STRING="] = "";
+	_env["REMOTE_ADDR="] = "";
+	_env["REMOTE_HOST="] = "";
+	_env["REMOTE_IDENT="] = "";
+	_env["REMOTE_USER="] = "";
+	_env["REQUEST_METHOD="] = req.getRequestMethod();
+	_env["SCRIPT_NAME="] = "";
+	_env["SERVER_NAME="] = "";
+	_env["SERVER_PORT="] = "";
+	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
+	_env["SERVER_SOFTWARE="] = "";
+	_env["REDIRECT_STATUS="] = "200";
+	_env["SCRIPT_FILENAME="] = "";
+	_env["REQUEST_URI="] = "";
+	_cgi_path = "/Users/shoogenb/.brew/Cellar/php/8.1.9/bin/php-cgi"; //temp for now should get from config
 }
 
 
@@ -16,104 +32,107 @@ CgiHandler::~CgiHandler()
 {
 }
 
-
-// Operators
-CgiHandler & CgiHandler::operator=(const CgiHandler &assign)
-{
-	(void) assign;
-	return *this;
-}
-
 // this is for testing need to make a proper version for this
-char	**getEnv()
+char**	CgiHandler::makeEnvArray()
 {
 	char **envp;
+	int	i = 0;
+	
+	//maybe a try catch for this?
+	envp = new char* [_env.size() + 1];
 
-	envp = (char **)calloc(24, sizeof(char *));
-	envp[0] = strdup("AUTH_TYPE=");
-	envp[1] = strdup("REDIRECT_STATUS=200");
-	envp[2] = strdup("GATEWAY_INTERFACE=CGI/1.1");
-	envp[3] = strdup("SCRIPT_NAME=subscription.php");
-	envp[4] = strdup("SCRIPT_FILENAME=subscription.php");
-	envp[5] = strdup("REQUEST_METHOD=POST");
-	envp[6] = strdup("CONTENT_LENGTH=20");
-	envp[7] = strdup("CONTENT_TYPE=application/x-www-form-urlencoded");
-	envp[8] = strdup("PATH_INFO=/upload");
-	envp[9] = strdup("PATH_TRANSLATED=/upload");
-	envp[10] = strdup("QUERY_STRING=");
-	envp[11] = strdup("REMOTEaddr=127.0.0.1");
-	envp[12] = strdup("REMOTE_IDENT=auth");
-	envp[13] = strdup("REMOTE_USER=remote_usr");
-	envp[14] = strdup("REQUEST_URI=/upload");
-	envp[15] = strdup("SERVER_NAME=127.0.0.1");
-	envp[16] = strdup("SERVER_PORT=4242");
-	envp[17] = strdup("SERVER_PROTOCOL=HTTP/1.1");
-	envp[18] = strdup("SERVER_SOFTWARE=test.com");
-	envp[19] = strdup("name=test&email=kaas");
-	envp[20] = NULL;
+	t_strmap::iterator it = _env.begin();
+	for (; it != _env.end(); it++, i++)
+	{
+		envp[i] = new char[it->first.size() + it->second.size() + 2];
+		strcpy(envp[i], (it->first + it->second).c_str());
+	}
+	envp[i] = NULL;
 	return (envp);
+}
+
+void	CgiHandler::executeScript(char **envp)
+{
+	dup2(_in_file_fd, STDIN_FILENO);
+	dup2(_out_file_fd, STDOUT_FILENO);
+	execve(_cgi_path.c_str(), NULL, envp);
+	write(STDOUT_FILENO, "Status: 500\r\n", 15);
+}
+
+void	CgiHandler::readScriptOutput(pid_t pid)
+{	
+	char	buffer[256 + 1];
+	int 	ret = 1;
+
+	waitpid(pid, NULL, 0);
+	lseek(_out_file_fd, 0, SEEK_SET);
+
+	while (ret > 0)
+	{
+		ret = read(_out_file_fd, buffer, 256);
+		buffer[ret] = '\0';
+		_output_body.append(buffer); //this is the output of the script
+	}
+}
+
+void	CgiHandler::setFileDescriptors()
+{
+	_temp_in_fd = dup(STDIN_FILENO);
+	_temp_out_fd = dup(STDOUT_FILENO);
+	_tmp_in_file = tmpfile();
+	_tmp_out_file = tmpfile();
+	_in_file_fd = fileno(_tmp_in_file);
+	_out_file_fd = fileno(_tmp_out_file);
+}
+
+void	CgiHandler::closeFileDescriptors()
+{
+	dup2(_temp_in_fd, STDIN_FILENO);
+	dup2(_temp_out_fd, STDOUT_FILENO);
+	fclose(_tmp_in_file);
+	fclose(_tmp_out_file);
+	close(_in_file_fd);
+	close(_out_file_fd);
+	close(_temp_in_fd);
+	close(_temp_out_fd);
 }
 
 //Executer needs some cleaning up and removing some test stuff but otherwise should be workable
 std::string	CgiHandler::execute()
 {
 	char		**envp;
-	int			tempIn = dup(STDIN_FILENO);
-	int			tempOut = dup(STDOUT_FILENO);
-	FILE		*tmpIn = tmpfile();
-	FILE		*tmpOut = tmpfile();
-	int			In = fileno(tmpIn);
-	int			Out = fileno(tmpOut);
 	pid_t		pid;
-	std::string body;
-	std::string	test;
+	std::string	input_body;
 
-	//TODO: change this
-	envp = getEnv();
-	//TODO: remove this
-	test = "name=test&email=kaas";
-	write(In, test.c_str(), 20);
-	lseek(In, 0, SEEK_SET);
+	setFileDescriptors();
 
+	envp = makeEnvArray();
+
+	//reading in the input body to temp file
+	input_body = "name=test&email=kaas"; //this is what gets put as input for the script
+	write(_in_file_fd, input_body.c_str(), input_body.length());
+	//Resetting to beginning of file
+	lseek(_in_file_fd, 0, SEEK_SET);
+
+	//forking for executing script
 	pid = fork();
 	if (pid == -1)
 		return ("Status: 500\r\n");
 	else if (pid == 0)
-	{
-		dup2(In, STDIN_FILENO);
-		dup2(Out, STDOUT_FILENO);
-		//TODO: Need to fix this probably so it's not hardcoded?
-		execve("/Users/shoogenb/.brew/Cellar/php/8.1.9/bin/php-cgi", NULL, envp);
-		write(STDOUT_FILENO, "Status: 500\r\n", 15);
-	}
+		executeScript(envp);
 	else
-	{
-		char	buffer[256 + 1];
-	
-		waitpid(pid, NULL, 0);
-		lseek(Out, 0, SEEK_SET);
+		readScriptOutput(pid);
 
-		int ret = 1;
-		while (ret > 0)
-		{
-			ret = read(Out, buffer, 256);
-			buffer[ret] = '\0';
-			body += buffer;
-		}
-	}
-	
+	closeFileDescriptors();
 
-	dup2(tempIn, STDIN_FILENO);
-	dup2(tempOut, STDOUT_FILENO);
-	fclose(tmpIn);
-	fclose(tmpOut);
-	close(In);
-	close(Out);
-	close(tempIn);
-	close(tempOut);
+	//freeing envp
+	for (std::size_t i = 0; envp[i]; i++)
+		delete[] envp[i];
+	delete envp;
 
 	if (pid == 0)
 		exit(0);
-	return body;
+
+	return _output_body;
 }
 
