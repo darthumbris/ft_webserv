@@ -39,14 +39,17 @@ class RequestHandler
 		bool		parseFirstLine(std::string method);
 		bool		isMethodImplimented(std::string line, std::string availableMethod);
 		bool		isMethodFollowedBySpace(std::string line, std::string availableMethod);
-		void		(std::string name, );
+		void		buildResponse(std::string);
+		void		ParseRequestLine(std::string line);
+		bool		fileExists(const std::string &path);
+		//void		(std::string name, );
 
 
-		const std::vector<std::string>			_availableMethods = {"GET", "POST", "DELETE"};
-		const std::string						_protocol = "HTTP/1.1";
-		std::string								_method;
-		std::string								_uri;
-		std::multimap<std::string, std::string>	_header;
+		const std::vector<std::string>						_availableMethods = {"GET", "POST", "DELETE"};
+		const std::string									_protocol = "HTTP/1.1";
+		std::string											_method;
+		std::string											_uri;
+		std::vector<std::pair<std::string, std::string>>	_header;
 		
 	private:
 		Server									*_server;

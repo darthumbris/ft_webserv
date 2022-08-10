@@ -46,7 +46,7 @@ endif
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) 2> $@.log; \
+	@$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) 2> $@.log; \
         RESULT=$$?; \
         if [ $$RESULT -ne 0 ]; then \
             printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(PRG_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
@@ -64,7 +64,7 @@ $(OBJ_DIR):
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.$(SRC_EXT) | $(OBJ_DIR)
 	
-	$(CXX) $(CXXFLAGS) $(INC) -c -o $@ $< 2> $@.log; \
+	@$(CXX) $(CXXFLAGS) $(INC) -c -o $@ $< 2> $@.log; \
         RESULT=$$?; \
         if [ $$RESULT -ne 0 ]; then \
             printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \

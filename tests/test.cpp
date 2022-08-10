@@ -67,6 +67,11 @@ void isMethodFollowedBySpace(void) {
 	TEST_ASSERT_TRUE(request.isMethodFollowedBySpace("DELETE\n", request._availableMethods[2]));
 }
 
+void	TEST_cpp_split(void)
+{
+
+}
+
 /*
  *
  * The Request-Line begins with a method token, followed by the Request-URI and the protocol version, and ending with CRLF. The elements are separated by SP characters. No CR or LF is allowed except in the final CRLF sequence.

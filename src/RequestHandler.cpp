@@ -1,22 +1,66 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   RequestHandler.cpp                                 :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: alkrusts <marvin@codam.nl>                   +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
+/*   Updated: 2022/08/10 14:47:19 by alkrusts      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "RequestHandler.hpp"
+#include <fcntl.h>
+#include <fstream>
+#include <filesystem>
+#include <filesystem>
 
+//A server SHOULD return 414 (Request-URI Too Long) status if a URI is longer than the server can handle (see section 10.4.15).
 
-/*todo need to have a check here for post to check how big the upload is
-// and compare it to the client_body_size variable of the server
+const std::string WHITESPACE = " \n\r\t\f\v";
+ 
+std::string ltrim(const std::string &s)
+{
+    size_t start = s.find_first_not_of(WHITESPACE);
+    return (start == std::string::npos) ? "" : s.substr(start);
+}
+ 
+std::string rtrim(const std::string &s)
+{
+    size_t end = s.find_last_not_of(WHITESPACE);
+    return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+ 
+std::string trim(const std::string &s) {
+    return rtrim(ltrim(s));
+}
+
+bool RequestHandler::fileExists(const std::string& path)
+{
+	std::ifstream fstream(path);
+
+	return (fstream.good());
+}
+
+/*
+bool RequestHandler::filePremissions(const std::string& path)
+{
+	std::filesystem::premissions(path);
+
+	return (fstream.good());
+}
 */
-
-// Constructors
-//
 
 RequestHandler::RequestHandler(Server *server) : _server(server)
 {
+
 }
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
 {
 	(void) copy;
 }
-
 
 // Destructor
 RequestHandler::~RequestHandler()
@@ -37,57 +81,7 @@ t_response	RequestHandler::getResponse() const
 	return this->_response;
 }
 
-//just a strncmp that cheks if line has GET POST DELETE as the starting charaters
-bool	RequestHandler::isMethodImplimented(std::string line, std::string availableMethod)
-{
-	if (!line.compare(0, availableMethod.length(), availableMethod))
-		return (true);
-	return (false);
-}
-
-//check if the line is longer than mothod.length and if next char after is a space
-bool	RequestHandler::isMethodFollowedBySpace(std::string line, std::string methodsIterator)
-{
-	if (methodsIterator.length() < line.length() && std::isspace(line.at(methodsIterator.length())))//checks if the next char after methodsIterator
-		return (true);
-	return (false);
-}
-
-/*
-bool	RequestHandler::parseFirstLine(std::string line)
-{
-	if (!line.empty())
-	{
-		for (std::vector<std::string>::const_iterator methodsIterator = _availableMethods.begin(); methodsIterator != _availableMethods.end(); methodsIterator++)
-		{
-			if (isMethodImplimented(line, *methodsIterator))
-			{
-				//method does not have anything else so there for its valid
-				if (methodsIterator->length() == line.length())
-				{
-					_method = *methodsIterator;
-					return (true);
-				}
-				if (isMethodFollowedBySpace(line, *methodsIterator))
-				{
-					_method = *methodsIterator;
-					return (true);
-				}
-			}
-		}
-	}
-	_method = "";
-	return (false);
-}
-*/
-
-/*	FROM RFC
- *
- */
-
-
-
-std::vector<std::string>	cpp_split(std::strin line)
+std::vector<std::string>	cpp_split(std::string line)
 {
 	std::size_t 				prev = 0, pos;
 	std::vector<std::string>	wordVector;
@@ -95,29 +89,39 @@ std::vector<std::string>	cpp_split(std::strin line)
 	while ((pos = line.find_first_of(" ", prev)) != std::string::npos)
 	{
 		if (pos > prev)
-			wordVector.push_back(line.substr(prev, pos - prev));
+			wordVector.push_back(trim(line.substr(prev, pos - prev)));
 		prev = pos + 1;
 	}
 	if (prev < line.length())
 		wordVector.push_back(line.substr(prev, std::string::npos));
-	return (wrodVector);
+	return (wordVector);
 }
 
-void	ParseRequestLine(std::string line)
+void	RequestHandler::buildResponse(std::string path)
 {
-	if (wordVector.size() != 3)
-		return ;
-	if (wordVector[0] != "GET" || wordVector[0] == "DELETE" || wordVector[0] == "POST")
-		return ;
-	for (std::vector<std::string>::iterator iter = wordVector.begin(); iter != wordVector.end(); iter++)
+	if (path == "BAD REQUEST")
 	{
-		std::cout << *iter << std::endl;
+		int fd = open("var/www/500.html", O_RDONLY);
+		//if (fd == -1)
+		//	return //internal server error or 403 forbiden etc or 404
+		_response.fd = fd;
+		_response.header = "HTTP/1.1 Bad Request 400\r\nServer: ft_webserver\r\nContent-Type: text/html\r\n";
+		_header.push_back({"Server", "ft_webserver"});
 	}
 }
 
-void	RequestHandler::setResponse(std::string msg)
+void	RequestHandler::ParseRequestLine(std::string line)
 {
+	const std::vector<std::string>	wordVector = cpp_split(line);
 
+	if (wordVector.size() != 3)
+		return buildResponse("BAD REQUEST");
+	if (wordVector[0] != "GET" && wordVector[0] != "DELETE" && wordVector[0] != "POST")
+		return buildResponse("BAD REQUEST");
+	if (wordVector[1][0] != '/')
+		return buildResponse("BAD REQUEST");
+	if (wordVector[2] != "HTTP/1.1")
+		return buildResponse("BAD REQUEST");
 }
 
 void	RequestHandler::setRequestMsg(std::string msg) 
@@ -127,38 +131,26 @@ void	RequestHandler::setRequestMsg(std::string msg)
 	_msg = msg;
 
 	std::vector<std::vector<std::string>>	request_line;
-	std::cout << "RAW DATA: " << msg << " :END OF DATA" << std::endl;
+	//std::cout << "RAW DATA: " << msg << " :END OF DATA" << std::endl;
 
 	std::istringstream iss(msg);
 
-	if (std::getline(iss, line) == -1)
-		return (setResponse(""));
+	std::getline(iss, line);
+
+	//std::cout << "Hi I am getline and this is what I return: " << std::ios_base::iostate() << std::endl;
+
 	ParseRequestLine(line);
-
-	/*
-		
-
-	while (std::getline(iss, line))
+	while (1)
 	{
-		request_line.push_back({"tes", line});
-		try {
-			if (line.compare(0, 3, "GET") == 0 )
-				std::cout << "this is get rquest: " << line << std::endl;
-			std::cout << "Hallo from loop: " << line << std::endl;
-		}
-		catch (std::exception& ex) {(void)ex;}
+		std::getline(iss, line);
+		//if (iss.fail())
+		//	return (internal_server_error());
+		if (iss.eof())
+			break;
 	}
-	for (auto i = request_line.begin(); i < request_line.end(); i++)
-	{
-		for (auto j = i->begin(); j < i->end(); j++)
-		{
-			std::cout << "> " << *j;
-		}
-		std::cout << std::endl;
-	}
-	*/
 
 	if (msg.find("\r\n\r\n"))
 		std::cout << "end of request header" << std::endl;
-	return (response);
+	std::cout << "FD:" << _response.fd << " HAEDER: " << _response.header << " : " << _response.header << std::endl;
+	//return (_response);
 }
