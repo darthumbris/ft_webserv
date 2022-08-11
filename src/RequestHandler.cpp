@@ -16,7 +16,6 @@ RequestHandler::RequestHandler(const t_servmap &srv_map) :
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
 {
-	std::cout << "hello copy constructor" << std::endl;
 	(void) copy;
 }
 
@@ -164,7 +163,7 @@ void	RequestHandler::makeHeaderMap()
 	std::size_t	first_pos = _complete_request.find_first_of(' ') + 1;
 	std::size_t	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
 	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
-
+	_request_method = _complete_request.substr(0, first_pos - 1);
 	_method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
 
 	//making a map of all the request headers
@@ -204,10 +203,12 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 		{
 			if (_url.path.find(".php") != std::string::npos)
 			{
+				// std::cout << "method header: " << _method_header << std::endl;
 				CgiHandler	cgi(*this);
 				_response_body = cgi.execute();
 				_response_body.append("\r\n\r\n");
-				_response_header = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(_response_body.length()) + "\r\nConnection: keep-alive\r\nContent-Type: " + "Content-type: text/plain; charset=UTF-8" + "\r\n\r\n");
+				//TODO response header needs to be properly made based on the response body?
+				_response_header = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(_response_body.length()) + "\r\nConnection: keep-alive\r\nContent-Type: " + "Content-type: text/html; charset=UTF-8" + "\r\n\r\n");
 				std::cout << "_response_header: " << _response_header << std::endl;
 				std::cout << "_response_body: " << _response_body << std::endl;
 				std::cout << "\n--------end of response body----------" << std::endl;
@@ -228,6 +229,8 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				path = root + "test/subscription_page.html";
 			else if (_complete_request.find("/test/upload.html") != std::string::npos)
 				path = root + "test/upload.html";
+			else if (_complete_request.find("/test/welcome.html") != std::string::npos)
+				path = root + "test/welcome.html";
 			else if ((loc = this->getLocation(url)))
 			{
 				if (!loc->getAutoIndex())

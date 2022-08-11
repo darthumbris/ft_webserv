@@ -42,7 +42,11 @@ void	CgiHandler::setCgiPaths()
 {
 	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/'));
 	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
-	_root = _req->getLocation(_folder)->getRootPath();
+	if (_req->getLocation(_folder))
+		_root = _req->getLocation(_folder)->getRootPath();
+	else
+		_root = "";
+	
 	_root.pop_back();
 	_folder.push_back('/');
 	_cur_dir = getCurDir();
@@ -60,7 +64,7 @@ void	CgiHandler::setEnvValues()
 	_env["PATH_TRANSLATED="] = _cur_dir + _root + _folder + _file;
 	_env["QUERY_STRING="] = _req->getUrl().querry;
 	_env["REMOTE_ADDR="] = _req->getClientIp();
-	// _env["REMOTE_HOST="] = "";
+	_env["REMOTEaddr="] = _req->getClientIp();
 	_env["REMOTE_IDENT="] = _req->getHeaderMap()["Authorization"];
 	_env["REMOTE_USER="] = _req->getHeaderMap()["Authorization"];
 	_env["REQUEST_METHOD="] = _req->getRequestMethod();
@@ -68,14 +72,19 @@ void	CgiHandler::setEnvValues()
 	_env["SERVER_NAME="] = "test_server"; // TODO get correct name from _req
 	_env["SERVER_PORT="] = std::to_string(_req->getPort());
 	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
-	_env["SERVER_SOFTWARE="] = "";
+	_env["SERVER_SOFTWARE="] = "test_server";
 	_env["REDIRECT_STATUS="] = "200";
 	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
 
-	std::cout << "current dir:" << _cur_dir << std::endl;
-	std::cout << "path_info:" << _env["PATH_INFO="] << std::endl;
-	std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
-	std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
+	// std::cout << "current dir:" << _cur_dir << std::endl;
+	// std::cout << "path_info:" << _env["PATH_INFO="] << std::endl;
+	// std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
+	// std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
+	// std::cout << "REQUEST_METHOD: " << _env["REQUEST_METHOD="] << std::endl;
+	for (auto it = _env.begin(); it != _env.end(); it++)
+		std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
+
+
 	std::cout << "\n-----end of cgihandler env setter--------" << std::endl;
 }
 
@@ -100,11 +109,9 @@ char**	CgiHandler::makeEnvArray()
 
 void	CgiHandler::executeScript(char **envp)
 {
-	char * const * _null = NULL;
-
 	dup2(_in_file_fd, STDIN_FILENO);
 	dup2(_out_file_fd, STDOUT_FILENO);
-	execve(_cgi_path.c_str(), _null, envp);
+	execve(_cgi_path.c_str(), NULL, envp);
 	write(STDOUT_FILENO, "Status: 500\r\n", 15);
 }
 
@@ -178,6 +185,9 @@ std::string	CgiHandler::execute()
 	if (pid == 0)
 		exit(0);
 	std::cout << "finished executing " << std::endl;
+	std::size_t	start_content_type = _output_body.find("Content-type");
+	std::size_t	start_body = _output_body.find('\n', start_content_type);
+	_output_body = _output_body.substr(start_body, std::string::npos);
 	return _output_body;
 }
 

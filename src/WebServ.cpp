@@ -231,6 +231,7 @@ void	WebServ::sendResponse(t_event &event)
 		evudat->total_size = 0;
 		delete evudat->req;
 		evudat->req = new RequestHandler(_config->getServerMap());
+		evudat->req->setPort(evudat->port);
 	}
 	// system("leaks webserv");
 }
