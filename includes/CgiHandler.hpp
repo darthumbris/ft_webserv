@@ -26,7 +26,7 @@ class CgiHandler
 		
 	private:
 		
-		RequestHandler	_req;
+		RequestHandler	*_req;
 		t_strmap		_env;
 		std::string		_output_body;
 		std::string		_cgi_path;

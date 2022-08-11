@@ -16,6 +16,7 @@ RequestHandler::RequestHandler(const t_servmap &srv_map) :
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
 {
+	std::cout << "hello copy constructor" << std::endl;
 	(void) copy;
 }
 
@@ -92,6 +93,11 @@ int	RequestHandler::getPort() const
 std::string	RequestHandler::getClientIp() const
 {
 	return this->_client_ip;
+}
+
+std::string RequestHandler::getCompleteRequest() const
+{
+	return this->_complete_request;
 }
 
 // Setters
@@ -187,7 +193,10 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 	if (crlf_pos != std::string::npos)
 	{
 		std::cout << _complete_request << std::endl;
+		std::cout << "\n------end of complete request--------" << std::endl;
+		std::cout << "size of complete request: " << _complete_request.length() << std::endl;
 		makeHeaderMap();
+		std::cout << "size of complete request after makeheadermap: " << _complete_request.length() << std::endl;
 		_is_request_complete = true;
 		std::string root = "var/www/html/";
 		std::string	url = "/";

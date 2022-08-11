@@ -3,36 +3,36 @@
 //TODO fix this, now doesnt properly give a return that makes sense
 
 // Constructors
-CgiHandler::CgiHandler(RequestHandler &req) : _req(req)
+CgiHandler::CgiHandler(RequestHandler &req) : _req(&req)
 {
+	std::cout << "\n\n------------hello world------------\n" << std::endl;
 	// std::cout << "path: " << req.getUrl().path << std::endl;
-	std::string	temp_path = "form.php";
+	std::string	temp_path = "/Users/shoogenb/Documents/Circle6/webserv/ft_webvserv/subscription.php";
 	_cgi_path = "/Users/shoogenb/.brew/bin/php-cgi"; //temp for now should get from config
 	_env["AUTH_TYPE="] = req.getHeaderMap()["Authorization"];
 	// _env["CONTENT_LENGTH="] = std::to_string(_req.getResponseBody().length());
-	_env["CONTENT_LENGTH="] = "38";
+	_env["CONTENT_LENGTH="] = "23";
 	_env["CONTENT_TYPE="] = req.getHeaderMap()["Content-Type"];
 	_env["GATEWAY_INTERFACE="] = "CGI/1.1";
 	// _env["PATH_INFO="] = req.getUrl().path;
-	_env["PATH_INFO="] = temp_path;
+	_env["PATH_INFO="] = "subscription.php";
 	// _env["PATH_TRANSLATED="] = req.getUrl().path;
 	_env["PATH_TRANSLATED="] = temp_path;
-	// _env["QUERY_STRING="] = req.getUrl().querry;
-	_env["QUERY_STRING="] = "";
+	_env["QUERY_STRING="] = req.getUrl().querry;
+	// _env["QUERY_STRING="] = "";
 	_env["REMOTE_ADDR="] = req.getClientIp();
 	// _env["REMOTE_HOST="] = "";
 	_env["REMOTE_IDENT="] = req.getHeaderMap()["Authorization"];
 	_env["REMOTE_USER="] = req.getHeaderMap()["Authorization"];
 	_env["REQUEST_METHOD="] = req.getRequestMethod();
 	_env["SCRIPT_NAME="] = _cgi_path;
-	_env["SERVER_NAME="] = req.getHeaderMap()["Host"];
+	_env["SERVER_NAME="] = "test_server";
 	_env["SERVER_PORT="] = std::to_string(req.getPort());
 	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
 	_env["SERVER_SOFTWARE="] = "";
 	_env["REDIRECT_STATUS="] = "200";
-	_env["SCRIPT_FILENAME="] = _cgi_path;
-	// _env["REQUEST_URI="] = req.getUrl().path + req.getUrl().querry;
-	_env["REQUEST_URI="] = temp_path;
+	_env["REQUEST_URI="] = req.getUrl().path + req.getUrl().querry;
+	// _env["REQUEST_URI="] = temp_path;
 }
 
 
@@ -116,18 +116,22 @@ std::string	CgiHandler::execute()
 {
 	char		**envp;
 	pid_t		pid;
-	std::string	input_body;
+	std::string	request;
+	std::string	body;
 
 	setFileDescriptors();
 
 	envp = makeEnvArray();
-
+	request = _req->getCompleteRequest();
+	std::size_t	body_start = request.find("\r\n\r\n");
 	//reading in the input body to temp file
-	input_body = "name=dsa&email=fdasfdsaf%40chicken.nl"; //this is what gets put as input for the script
-	// std::cout << input_body << std::endl;
-	write(_in_file_fd, input_body.c_str(), input_body.length());
+	body = _req->getCompleteRequest().substr(body_start + 4);
+	std::size_t body_size = request.length() - body_start - 4;
+	std::cout << "body: " << body << std::endl;
+	write(_in_file_fd, body.c_str(), body_size);
 	//Resetting to beginning of file
 	lseek(_in_file_fd, 0, SEEK_SET);
+	std::cout << "length: " << body_size << std::endl;
 
 	//forking for executing script
 	pid = fork();
@@ -148,6 +152,7 @@ std::string	CgiHandler::execute()
 	if (pid == 0)
 		exit(0);
 	std::cout << "finished executing " << std::endl;
+	// send(_req.gets)
 	std::cout << "size now: " << _output_body.length() << std::endl;
 	// std::cout << "script: " << _output_body << std::endl;
 	return _output_body;

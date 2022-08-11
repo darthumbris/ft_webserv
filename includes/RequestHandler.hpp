@@ -50,6 +50,7 @@ class RequestHandler
 		t_url		getUrl() const;
 		int			getPort() const;
 		std::string	getClientIp() const;
+		std::string	getCompleteRequest() const;
 
 		// Setters
 		void	setResponse();
