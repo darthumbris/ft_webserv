@@ -40,18 +40,19 @@ class RequestHandler
 
 		// Setters
 
-		void		setResponse(std::string response);
-		void		setRequestMsg(std::string msg);
-		bool		parseFirstLine(std::string method);
-		bool		isMethodImplimented(std::string line, std::string availableMethod);
-		bool		isMethodFollowedBySpace(std::string line, std::string availableMethod);
-		void		buildResponse(std::string);
-		void		ParseRequestLine(std::string line);
-		bool		fileExists(const std::string &path);
+		void	setResponse(std::string response);
+		void	setRequestMsg(std::string msg);
+		bool	parseFirstLine(std::string method);
+		bool	isMethodImplimented(std::string line, std::string availableMethod);
+		bool	isMethodFollowedBySpace(std::string line, std::string availableMethod);
+		int		buildResponse(std::string);
+		int		ParseRequestLine(std::string line);
+		bool	fileExists(const std::string &path);
+		int		OpenFile(void);
+		int		ParseRequestMsg(void);
 		//void		(std::string name, );
 
 		//utils
-		void		OpenFile(void);
 		std::string	ltrim(const std::string &s);
 		std::string	rtrim(const std::string &s);
 		std::string trim(const std::string &s);

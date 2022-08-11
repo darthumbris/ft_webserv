@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/11 21:25:04 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/11 22:45:33 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,7 @@ int			RequestHandler::getBody(void) const
 	return (_body);
 }
 
-void	RequestHandler::buildResponse(std::string request)
+int	RequestHandler::buildResponse(std::string request)
 {
 	if (request == "INTERNAL SERVER ERROR 500")
 	{
@@ -170,9 +170,10 @@ void	RequestHandler::buildResponse(std::string request)
 		_header += "Server: ft_webserver\r\n";
 		_header += "Content-Type: text/html\r\n";
 	}
+	return (1);
 }
 
-void	RequestHandler::ParseRequestLine(std::string line)
+int	RequestHandler::ParseRequestLine(std::string line)
 {
 	const std::vector<std::string>	wordVector = cpp_split(line);
 
@@ -187,9 +188,10 @@ void	RequestHandler::ParseRequestLine(std::string line)
 	_method = wordVector[0];
 	_uri = wordVector[1];
 	_protocol = wordVector[2];
+	return (0);
 }
 
-void	RequestHandler::OpenFile(void)
+int	RequestHandler::OpenFile(void)
 {
 	int	status;
 
@@ -211,28 +213,37 @@ void	RequestHandler::OpenFile(void)
 	if ("DELETE" == _method)
 	{
 	}
+	return (0);
 }
 
+//wrap this on in try catch block if this fails return internal server error :D I fucking h8 c++
+//asembly or die
 void	RequestHandler::setRequestMsg(std::string msg) 
+{
+	_msg = msg;
+
+}
+
+int	RequestHandler::ParseRequestMsg(void)
 {
 	std::string	line;
 
-	_msg = msg;
-	std::istringstream iss(msg);
+	if (_msg.find("\r\n\r\n"))
+		return buildResponse("INTERNAL SERVER ERROR 500");
 
+	std::istringstream iss(_msg);
 	std::getline(iss, line);
 
-	ParseRequestLine(line);
-	OpenFile();
+	if (ParseRequestLine(line)
+		|| OpenFile())
+		return (1);
 	while (1)
 	{
 		std::getline(iss, line);
-		//if (iss.fail())
-		//	return (internal_server_error());
+		if (iss.fail())
+			return buildResponse("INTERNAL SERVER ERROR 500");
 		if (iss.eof())
 			break;
 	}
-
-	if (msg.find("\r\n\r\n"))
-		std::cout << "end of request header" << std::endl;
+	return (0);
 }
