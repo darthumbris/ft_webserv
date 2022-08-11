@@ -7,13 +7,18 @@
 # include <cctype>
 # include <map>
 
-class Server;
+const char std::string = "<!DOCTYPE html> \
+<html lang='en'> \
+  <head> \
+    <meta charset='UTF-8'> \
+    <title>500 Internal Server Error</title> \
+  </head> \
+  <body bgcolor='white'> \
+    <center><h1>404 Not Found</h1></center> \
+  </body> \
+</html>";
 
-typedef struct s_response
-{
-	int			fd;
-	std::string	header;
-}				t_response;
+class Server;
 
 class RequestHandler
 {
@@ -29,11 +34,12 @@ class RequestHandler
 		RequestHandler & operator=(const RequestHandler &assign);
 
 		// Getters
-		t_response	getResponse() const;
+		std::string	getContent() const;
+		std::string	getHeader() const;
 		//std::string	make
 
 		// Setters
-	
+
 		void		setResponse(std::string response);
 		void		setRequestMsg(std::string msg);
 		bool		parseFirstLine(std::string method);
@@ -44,17 +50,21 @@ class RequestHandler
 		bool		fileExists(const std::string &path);
 		//void		(std::string name, );
 
+		//utils
+		bool		openFile(const char *path, int mode);
+		std::string	ltrim(const std::string &s);
+		std::string	rtrim(const std::string &s);
+		std::string trim(const std::string &s);
 
-		const std::vector<std::string>						_availableMethods = {"GET", "POST", "DELETE"};
-		const std::string									_protocol = "HTTP/1.1";
-		std::string											_method;
-		std::string											_uri;
-		std::vector<std::pair<std::string, std::string>>	_header;
 		
 	private:
 		Server									*_server;
 		std::string								_msg;
-		t_response								_response;
+		int										_body;
+		char									*_header;
+		std::string											_method;
+		std::string											_uri;
+		std::vector<std::pair<std::string, std::string>>	_tmpHeader;
 };
 
 #endif
