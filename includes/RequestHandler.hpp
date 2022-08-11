@@ -7,7 +7,7 @@
 # include <cctype>
 # include <map>
 
-const char std::string = "<!DOCTYPE html> \
+const std::string INTERNAL_SERVER_ERROR_500 = "<!DOCTYPE html> \
 <html lang='en'> \
   <head> \
     <meta charset='UTF-8'> \
@@ -34,8 +34,8 @@ class RequestHandler
 		RequestHandler & operator=(const RequestHandler &assign);
 
 		// Getters
-		std::string	getContent() const;
-		std::string	getHeader() const;
+		int			getBody(void) const;
+		const char	*getHeader(void) const;
 		//std::string	make
 
 		// Setters
@@ -51,20 +51,20 @@ class RequestHandler
 		//void		(std::string name, );
 
 		//utils
-		bool		openFile(const char *path, int mode);
+		void		OpenFile(void);
 		std::string	ltrim(const std::string &s);
 		std::string	rtrim(const std::string &s);
 		std::string trim(const std::string &s);
 
 		
 	private:
-		Server									*_server;
-		std::string								_msg;
-		int										_body;
-		char									*_header;
-		std::string											_method;
-		std::string											_uri;
-		std::vector<std::pair<std::string, std::string>>	_tmpHeader;
+		Server			*_server;
+		std::string		_msg;
+		int				_body;
+		std::string		_header;
+		std::string		_method;
+		std::string		_protocol;
+		std::string		_uri;
 };
 
 #endif

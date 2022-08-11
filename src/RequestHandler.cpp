@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/11 13:27:24 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/11 21:25:04 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,15 +22,6 @@ const std::string WHITESPACE = " \n\r\t\f\v";
 /*
 */
 
-std::string	RequestHandler::openFile(const char *path, std::string method)
-{
-	int	status;
-	int	mode;
-
-	status = access(path, mode);
-	if (status
-}
- 
 std::string ltrim(const std::string &s)
 {
     size_t start = s.find_first_not_of(WHITESPACE);
@@ -86,12 +77,6 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 	return *this;
 }
 
-// Getters
-t_response	RequestHandler::getResponse() const
-{
-	return this->_response;
-}
-
 std::vector<std::string>	cpp_split(std::string line)
 {
 	std::size_t 				prev = 0, pos;
@@ -108,26 +93,26 @@ std::vector<std::string>	cpp_split(std::string line)
 	return (wordVector);
 }
 
-char	*RequestHandler::getHeader(void) const
+//Getters
+
+const char	*RequestHandler::getHeader(void) const
 {
-	return (_header);
+	return (_header.c_str());
 }
 
-int		RequestHandler::getBody(void) const
+int			RequestHandler::getBody(void) const
 {
 	return (_body);
 }
 
 void	RequestHandler::buildResponse(std::string request)
 {
-	std::string	TmpHeader;
-
 	if (request == "INTERNAL SERVER ERROR 500")
 	{
-		TmpHeader += "HTTP/1.1 Internal Server Error 500\r\n";
-		TmpHeader += "Server: ft_webserver\r\n";
-		TmpHeader += "Content-Type: text/html\r\n";
-		TmpHeader += INTERNAL_SERVER_ERROR_500;
+		_header += "HTTP/1.1 Internal Server Error 500\r\n";
+		_header += "Server: ft_webserver\r\n";
+		_header += "Content-Type: text/html\r\n";
+		_header += INTERNAL_SERVER_ERROR_500;
 	}
 	/*
 	 * CLIENT ERROR 4xx
@@ -137,55 +122,54 @@ void	RequestHandler::buildResponse(std::string request)
 		_body = open("var/www/400.html", O_RDONLY);
 		if (_body == -1)
 			return buildResponse("INTERNAL SERVER ERROR 500");
-		TmpHeader += "HTTP/1.1 Bad Request 400\r\n";
-		TmpHeader += "Server: ft_webserver\r\n";
-		TmpHeader += "Content-Type: text/html\r\n";
+		_header += "HTTP/1.1 Bad Request 400\r\n";
+		_header += "Server: ft_webserver\r\n";
+		_header += "Content-Type: text/html\r\n";
 	}
 	if (request == "UNAUTHORIZED 401")
 	{
 		_body = open("var/www/401.html", O_RDONLY);
 		if (_body == -1)
 			return buildResponse("INTERNAL SERVER ERROR 500");
-		TmpHeader += "HTTP/1.1 Bad Request 401\r\n";
-		TmpHeader += "Server: ft_webserver\r\n";
-		TmpHeader += "Content-Type: text/html\r\n";
+		_header += "HTTP/1.1 Bad Request 401\r\n";
+		_header += "Server: ft_webserver\r\n";
+		_header += "Content-Type: text/html\r\n";
 	}
 	if (request == "PAYMENT REQUIRED 402") //this code is reserver for future use XD rfc2626
 	{
 		_body = open("var/www/402.html", O_RDONLY);
 		if (_body == -1)
 			return buildResponse("INTERNAL SERVER ERROR 500");
-		TmpHeader += "HTTP/1.1 Payment Required 402\r\n";
-		TmpHeader += "Server: ft_webserver\r\n";
-		TmpHeader += "Content-Type: text/html\r\n";
+		_header += "HTTP/1.1 Payment Required 402\r\n";
+		_header += "Server: ft_webserver\r\n";
+		_header += "Content-Type: text/html\r\n";
 	}
 	if (request == "NOT FOUND 403")
 	{
 		_body = open("var/www/403.html", O_RDONLY);
 		if (_body == -1)
 			return buildResponse("INTERNAL SERVER ERROR 500");
-		TmpHeader += "HTTP/1.1 Not Found 404\r\n";
-		TmpHeader += "Server: ft_webserver\r\n";
-		TmpHeader += "Content-Type: text/html\r\n";
+		_header += "HTTP/1.1 Not Found 404\r\n";
+		_header += "Server: ft_webserver\r\n";
+		_header += "Content-Type: text/html\r\n";
 	}	
 	if (request == "NOT FOUND 404")
 	{
 		_body = open("var/www/404.html", O_RDONLY);
 		if (_body == -1)
 			return buildResponse("INTERNAL SERVER ERROR 500");
-		TmpHeader += "HTTP/1.1 Not Found 404\r\n";
-		TmpHeader += "Server: ft_webserver\r\n"; TmpHeader += "Content-Type: text/html\r\n"; }
+		_header += "HTTP/1.1 Not Found 404\r\n";
+		_header += "Server: ft_webserver\r\n"; _header += "Content-Type: text/html\r\n";
 	}
 	if (request == "BAD REQUEST 400")
 	{
 		_body = open("var/www/400.html", O_RDONLY);
 		if (_body == -1)
 			return buildResponse("INTERNAL SERVER ERROR 500");
-		TmpHeader += "HTTP/1.1 Bad Request 400\r\n";
-		TmpHeader += "Server: ft_webserver\r\n";
-		TmpHeader += "Content-Type: text/html\r\n";
+		_header += "HTTP/1.1 Bad Request 400\r\n";
+		_header += "Server: ft_webserver\r\n";
+		_header += "Content-Type: text/html\r\n";
 	}
-	_header = TmpHeader.c_str();
 }
 
 void	RequestHandler::ParseRequestLine(std::string line)
@@ -200,24 +184,27 @@ void	RequestHandler::ParseRequestLine(std::string line)
 		return buildResponse("400 BAD REQUEST");
 	if (wordVector[2] != "HTTP/1.1")
 		return buildResponse("400 BAD REQUEST");
+	_method = wordVector[0];
+	_uri = wordVector[1];
+	_protocol = wordVector[2];
 }
 
-void	OpenFile(void)
+void	RequestHandler::OpenFile(void)
 {
 	int	status;
 
-	status = access(_uri, F_OK); //checks if file exists
+	status = access(_uri.c_str(), F_OK); //checks if file exists
 	if (status == -1)
 		return buildResponse("404 NOT FOUND");
 	if ("GET" == _method)
 	{
-		status = access(_uri, R_OK); //checks if file is redable
+		status = access(_uri.c_str(), R_OK); //checks if file is redable
 		if (status == -1)
 			return buildResponse("403 PERMISSION DENIED");
 	}
 	if ("POST" == _method)
 	{
-		status = access(_uri, W_OK); //checks if file is writeble
+		status = access(_uri.c_str(), W_OK); //checks if file is writeble
 		if (status == -1)
 			return buildResponse("403 PERMISSION DENIED");
 	}
@@ -248,6 +235,4 @@ void	RequestHandler::setRequestMsg(std::string msg)
 
 	if (msg.find("\r\n\r\n"))
 		std::cout << "end of request header" << std::endl;
-	std::cout << "FD:" << _response.fd << " HAEDER: " << _response.header << " : " << _response.header << std::endl;
-	//return (_response);
 }
