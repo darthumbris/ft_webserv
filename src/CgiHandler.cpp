@@ -1,44 +1,82 @@
 #include "CgiHandler.hpp"
+#include <mach-o/dyld.h>
 
 //TODO fix this, now doesnt properly give a return that makes sense
+
+static std::string getCurDir()
+{
+	unsigned int bufferSize = 512;
+	std::vector<char> buffer(bufferSize + 1);
+
+	if(_NSGetExecutablePath(&buffer[0], &bufferSize))
+	{
+		buffer.resize(bufferSize);
+		_NSGetExecutablePath(&buffer[0], &bufferSize);
+	}
+	std::string cur_dir = &buffer[0];
+	cur_dir.resize(cur_dir.length() - 10);
+	return cur_dir;
+}
+
 
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(&req)
 {
-	std::cout << "\n\n------------hello world------------\n" << std::endl;
-	// std::cout << "path: " << req.getUrl().path << std::endl;
-	std::string	temp_path = "/Users/shoogenb/Documents/Circle6/webserv/ft_webvserv/subscription.php";
-	_cgi_path = "/Users/shoogenb/.brew/bin/php-cgi"; //temp for now should get from config
-	_env["AUTH_TYPE="] = req.getHeaderMap()["Authorization"];
-	// _env["CONTENT_LENGTH="] = std::to_string(_req.getResponseBody().length());
-	_env["CONTENT_LENGTH="] = "23";
-	_env["CONTENT_TYPE="] = req.getHeaderMap()["Content-Type"];
-	_env["GATEWAY_INTERFACE="] = "CGI/1.1";
-	// _env["PATH_INFO="] = req.getUrl().path;
-	_env["PATH_INFO="] = "subscription.php";
-	// _env["PATH_TRANSLATED="] = req.getUrl().path;
-	_env["PATH_TRANSLATED="] = temp_path;
-	_env["QUERY_STRING="] = req.getUrl().querry;
-	// _env["QUERY_STRING="] = "";
-	_env["REMOTE_ADDR="] = req.getClientIp();
-	// _env["REMOTE_HOST="] = "";
-	_env["REMOTE_IDENT="] = req.getHeaderMap()["Authorization"];
-	_env["REMOTE_USER="] = req.getHeaderMap()["Authorization"];
-	_env["REQUEST_METHOD="] = req.getRequestMethod();
-	_env["SCRIPT_NAME="] = _cgi_path;
-	_env["SERVER_NAME="] = "test_server";
-	_env["SERVER_PORT="] = std::to_string(req.getPort());
-	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
-	_env["SERVER_SOFTWARE="] = "";
-	_env["REDIRECT_STATUS="] = "200";
-	_env["REQUEST_URI="] = req.getUrl().path + req.getUrl().querry;
-	// _env["REQUEST_URI="] = temp_path;
+	_cgi_path = "/Users/shoogenb/.brew/bin/php-cgi"; //TODO load this from config
+
+	std::string	request = _req->getCompleteRequest();
+	std::size_t	body_start = request.find("\r\n\r\n");
+	_input_body = request.substr(body_start + 4);
+	std::cout << "input_body: " << _input_body << std::endl;
+	std::cout << "length: " << _input_body.length() << std::endl;
 }
 
 
 // Destructor
 CgiHandler::~CgiHandler()
 {
+}
+
+// Setter
+void	CgiHandler::setCgiPaths()
+{
+	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/'));
+	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
+	_root = _req->getLocation(_folder)->getRootPath();
+	_root.pop_back();
+	_folder.push_back('/');
+	_cur_dir = getCurDir();
+}
+
+void	CgiHandler::setEnvValues()
+{
+	setCgiPaths();
+
+	_env["AUTH_TYPE="] = _req->getHeaderMap()["Authorization"];
+	_env["CONTENT_LENGTH="] = _req->getHeaderMap()["Content-Length"];
+	_env["CONTENT_TYPE="] = _req->getHeaderMap()["Content-Type"];
+	_env["GATEWAY_INTERFACE="] = "CGI/1.1";
+	_env["PATH_INFO="] = _file;
+	_env["PATH_TRANSLATED="] = _cur_dir + _root + _folder + _file;
+	_env["QUERY_STRING="] = _req->getUrl().querry;
+	_env["REMOTE_ADDR="] = _req->getClientIp();
+	// _env["REMOTE_HOST="] = "";
+	_env["REMOTE_IDENT="] = _req->getHeaderMap()["Authorization"];
+	_env["REMOTE_USER="] = _req->getHeaderMap()["Authorization"];
+	_env["REQUEST_METHOD="] = _req->getRequestMethod();
+	_env["SCRIPT_NAME="] = _cgi_path;
+	_env["SERVER_NAME="] = "test_server"; // TODO get correct name from _req
+	_env["SERVER_PORT="] = std::to_string(_req->getPort());
+	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
+	_env["SERVER_SOFTWARE="] = "";
+	_env["REDIRECT_STATUS="] = "200";
+	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
+
+	std::cout << "current dir:" << _cur_dir << std::endl;
+	std::cout << "path_info:" << _env["PATH_INFO="] << std::endl;
+	std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
+	std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
+	std::cout << "\n-----end of cgihandler env setter--------" << std::endl;
 }
 
 // this is for testing need to make a proper version for this
@@ -73,19 +111,14 @@ void	CgiHandler::executeScript(char **envp)
 void	CgiHandler::readScriptOutput(pid_t pid)
 {	
 	char	buffer[65536] = {0};
-	// int 	ret = 1;
 
 	waitpid(pid, NULL, 0);
 	lseek(_out_file_fd, 0, SEEK_SET);
 
 	while (read(_out_file_fd, buffer, 65536) > 0)
 	{
-		// ret = read(_out_file_fd, buffer, 65536);
-		// buffer[ret] = '\0';
 		_output_body += buffer;
 		memset(buffer, 0, 65536);
-		// _output_body.append(buffer); //this is the output of the script
-		// std::cout << "size: " << _output_body.length() << std::endl;
 	}
 }
 
@@ -111,27 +144,20 @@ void	CgiHandler::closeFileDescriptors()
 	close(_temp_out_fd);
 }
 
-//Executer needs some cleaning up and removing some test stuff but otherwise should be workable
 std::string	CgiHandler::execute()
 {
 	char		**envp;
 	pid_t		pid;
-	std::string	request;
-	std::string	body;
 
+	setEnvValues();
 	setFileDescriptors();
 
 	envp = makeEnvArray();
-	request = _req->getCompleteRequest();
-	std::size_t	body_start = request.find("\r\n\r\n");
+
 	//reading in the input body to temp file
-	body = _req->getCompleteRequest().substr(body_start + 4);
-	std::size_t body_size = request.length() - body_start - 4;
-	std::cout << "body: " << body << std::endl;
-	write(_in_file_fd, body.c_str(), body_size);
+	write(_in_file_fd, _input_body.c_str(), _input_body.length());
 	//Resetting to beginning of file
 	lseek(_in_file_fd, 0, SEEK_SET);
-	std::cout << "length: " << body_size << std::endl;
 
 	//forking for executing script
 	pid = fork();
@@ -152,9 +178,6 @@ std::string	CgiHandler::execute()
 	if (pid == 0)
 		exit(0);
 	std::cout << "finished executing " << std::endl;
-	// send(_req.gets)
-	std::cout << "size now: " << _output_body.length() << std::endl;
-	// std::cout << "script: " << _output_body << std::endl;
 	return _output_body;
 }
 

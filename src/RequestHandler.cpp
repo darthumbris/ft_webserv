@@ -161,7 +161,7 @@ void	RequestHandler::makeHeaderMap()
 			split.push_back(std::string(_complete_request.data() + last_pos, pos - last_pos));
 		last_pos = pos + 1;
 	}
-	std::size_t	first_pos = _complete_request.find_first_of(' ');
+	std::size_t	first_pos = _complete_request.find_first_of(' ') + 1;
 	std::size_t	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
 	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
 
@@ -194,9 +194,9 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 	{
 		std::cout << _complete_request << std::endl;
 		std::cout << "\n------end of complete request--------" << std::endl;
-		std::cout << "size of complete request: " << _complete_request.length() << std::endl;
+		// std::cout << "size of complete request: " << _complete_request.length() << std::endl;
 		makeHeaderMap();
-		std::cout << "size of complete request after makeheadermap: " << _complete_request.length() << std::endl;
+		// std::cout << "size of complete request after makeheadermap: " << _complete_request.length() << std::endl;
 		_is_request_complete = true;
 		std::string root = "var/www/html/";
 		std::string	url = "/";
@@ -205,9 +205,13 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			if (_url.path.find(".php") != std::string::npos)
 			{
 				CgiHandler	cgi(*this);
-				_response_header = cgi.execute();
-				_response_header.append("\r\n");
-				std::cout << "size: " << _response_header.length() << std::endl;
+				_response_body = cgi.execute();
+				_response_body.append("\r\n\r\n");
+				_response_header = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(_response_body.length()) + "\r\nConnection: keep-alive\r\nContent-Type: " + "Content-type: text/plain; charset=UTF-8" + "\r\n\r\n");
+				std::cout << "_response_header: " << _response_header << std::endl;
+				std::cout << "_response_body: " << _response_body << std::endl;
+				std::cout << "\n--------end of response body----------" << std::endl;
+				// std::cout << "size: " << _response_header.length() << std::endl;
 				return;
 			}
 			std::string path;
@@ -222,6 +226,8 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				path = root + "dirtest.html";
 			else if (_complete_request.find("/test/subscription_page.html") != std::string::npos)
 				path = root + "test/subscription_page.html";
+			else if (_complete_request.find("/test/upload.html") != std::string::npos)
+				path = root + "test/upload.html";
 			else if ((loc = this->getLocation(url)))
 			{
 				if (!loc->getAutoIndex())

@@ -16,6 +16,10 @@ class CgiHandler
 		// Destructor
 		~CgiHandler();
 
+		// Setter
+		void	setCgiPaths();
+		void	setEnvValues();
+
 		// Member Functions
 		std::string	execute();
 		void	readScriptOutput(pid_t pid);
@@ -36,6 +40,11 @@ class CgiHandler
 		int				_out_file_fd;
 		FILE*			_tmp_in_file;
 		FILE*			_tmp_out_file;
+		std::string		_folder;
+		std::string		_root;
+		std::string		_file;
+		std::string		_cur_dir;
+		std::string		_input_body;
 };
 
 #endif

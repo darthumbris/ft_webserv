@@ -21,8 +21,12 @@ Config::Config(std::string config_path)
 	// Config parsed new location with dir: "/images"
 	addLocation("/images");
 	addLocation("/");
+	addLocation("/test");
 	// Setting autoindex for location / to true (default is off)
 	getLastServer()->getLocationMap()["/"]->setAutoIndex(true);
+	getLastServer()->getLocationMap()["/"]->setRootFolder("/var/www/html/"); // TODO root folder is required, so needs to be a check for it
+	getLastServer()->getLocationMap()["/test"]->setRootFolder("/var/www/html/");
+	getLastServer()->getLocationMap()["/images"]->setRootFolder("/var/www/html/");
 
 	// Config parsed new server with listen 0.0.0.0 4242
 	addServer("0.0.0.0", "7575");
