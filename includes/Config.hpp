@@ -1,16 +1,7 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include <iostream>
-# include <string>
-# include <map>
 # include "Server.hpp"
-
-class	Server;
-class	Location;
-
-typedef std::map<std::string, Location*>	t_locmap;
-typedef std::map<std::string, Server*>		t_servmap;
 
 class Config
 {
@@ -27,7 +18,7 @@ class Config
 
 		// Getters
 		t_servmap	getServerMap() const;
-		Server	*getLastServer();
+		Server		*getLastServer();
 
 		// Member Functions
 		void	addServer(std::string ip, std::string port);

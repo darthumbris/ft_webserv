@@ -1,28 +1,22 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-# include <iostream>
-# include <string>
 # include <fcntl.h>
 # include <sys/event.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
 # include <arpa/inet.h>
 # include <netdb.h>
 # include <unistd.h>
-# include <vector>
-# include <map>
+
 # include "Config.hpp"
 # include "RequestHandler.hpp"
+# include "AutoIndexGenerator.hpp"
 
-# define BACKLOG 		10000
-# define MAX_EVENTS 	32
-# define NUM_CLIENTS 	10
+# define BACKLOG 		10000 //not sure yet what a proper value is (most systems do 20?)
+# define MAX_EVENTS 	1024
+# define NUM_CLIENTS 	1024
 # define MAX_MSG_SIZE 	256
 # define MAX_FD			1024
 
-class Config;
-class RequestHandler;
 
 enum	event_types
 {
@@ -30,19 +24,22 @@ enum	event_types
 	DELETE
 };
 
-typedef struct sockaddr 		*sckadr;
-typedef struct sockaddr_in		t_addr_in;
-typedef struct kevent			t_event;
+using t_sckadr = struct sockaddr;
+using t_addr_in = struct sockaddr_in;
+using t_event = struct kevent;
+using t_ev_lst = std::vector<t_event>;
+using t_evudat = struct ev_data;
 
-typedef struct ev_data
+struct ev_data
 {
-	bool			flag; // flag for deleting connection
+	int				flag; // flag for deleting connection
 	int				port; // port of the server
 	std::string		ip; //Ip of the server
-	std::string		key; // ip:port of the server
 	RequestHandler	*req; // request of the client
 	t_addr_in		addr; // address of the client
-}	t_evudat;
+	off_t			datalen; // used for sending response
+	size_t			total_size; // used for sending response
+};
 
 class WebServ
 {
@@ -59,11 +56,13 @@ class WebServ
 		WebServ &operator=(const WebServ &assign);
 
 		// Getters
-		Server	*getServer(std::string key) const;
+		bool		listeningToPort(int port) const;
+	
 		// Setters
+		void	addPortToList(int port);
 
 		// Member functions
-		void	setNewServerSocket(Server *server);
+		void	setNewServerSocket(Server *server, int port);
 		bool	isListenSocket(int fd);
 		void	addConnection(t_event event, t_evudat *old_udat);
 		void	readFromSocket(t_event &event);
@@ -75,10 +74,11 @@ class WebServ
 		
 	private:
 		
-		int						_kqueue;
-		int						_n_servers;
-		Config					*_config;
-		std::vector<t_event> 	_change_ev;
+		int					_kqueue;
+		int					_n_servers;
+		std::vector<int>	_ports;
+		Config				*_config;
+		t_ev_lst 			_change_ev;
 };
 
 #endif

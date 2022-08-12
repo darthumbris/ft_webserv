@@ -5,15 +5,15 @@
 # include <string>
 # include <vector>
 
-typedef struct accepted_methods
+struct accepted_methods
 {
 	bool	get;
 	bool	post;
 	bool	del;
-}	t_methods;
+};
 
+using t_methods = struct accepted_methods;
 
-//TODO add setter and getter functions
 class Location
 {
 	public:

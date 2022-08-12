@@ -2,8 +2,7 @@
 
 // Constructors
 //TODO in constructor check if file can be opened.
-//Map for server, string part is ip + port for easy checking
-// for duplicates etc.
+// TODO maybe needs to be a check if there are no duplicate server_names?
 Config::Config(std::string config_path)
 {
 	std::cout << "config filename: " << config_path << std::endl;
@@ -12,15 +11,23 @@ Config::Config(std::string config_path)
 
 	//Examples for the parsing:
 	// Config parsed new server with listen 127.0.0.1 8080
-	addServer("127.0.0.1", "8080");
+	addServer("127.0.0.1", "4242");
 	// Config sees server_name test.com
-	getLastServer()->setServerName("test.com");
+	getLastServer()->addServerName("test.com");
+	getLastServer()->addServerName("test2.com");
+	getLastServer()->addServerName("test3.com");
+	getLastServer()->addServerPort(4343);
 
 	// Config parsed new location with dir: "/images"
 	addLocation("/images");
+	addLocation("/");
+	// Setting autoindex for location / to true (default is off)
+	getLastServer()->getLocationMap()["/"]->setAutoIndex(true);
 
-	// Config parsed new server with listen 0.0.0.0 80
-	addServer("0.0.0.0", "80");
+	// Config parsed new server with listen 0.0.0.0 4242
+	addServer("0.0.0.0", "7575");
+	getLastServer()->addServerPort(4343);
+	getLastServer()->addServerName("different.com");
 }
 
 Config::Config(const Config &copy)
@@ -42,10 +49,8 @@ Config & Config::operator=(const Config &assign)
 	return *this;
 }
 
-//TODO make proper getter/setter and member functions.
-
 //TODO make a parseconfig function which goes through the config
-// and adds new servers and locations (to the corresponding servers)
+// and adds new servers and locations (to the corresponding servers) (for ABBA)
 
 // Getters
 t_servmap	Config::getServerMap() const
@@ -55,9 +60,7 @@ t_servmap	Config::getServerMap() const
 
 Server	*Config::getLastServer()
 {
-	auto it = _server.end();
-	it--;
-	return (it->second);
+	return (_server.back());
 }
 
 
@@ -65,12 +68,11 @@ Server	*Config::getLastServer()
 // Member Functions
 void	Config::addServer(std::string ip, std::string port)
 {
+	//Ip can probably just be always 127.0.0.1 ?
 	std::string	server_key = ip + ":" +  port;
-	if (_server.find(server_key) != _server.end())
-		std::cout << "Error: duplicate server in config" << std::endl; //Should throw ?
-	_server.insert(std::make_pair(server_key, new Server()));
-	_server.at(server_key)->setServerIp(ip);
-	_server.at(server_key)->setServerPort(std::stoi(port));
+	_server.push_back(new Server());
+	_server.back()->setServerIp(ip);
+	_server.back()->addServerPort(std::stoi(port));
 }
 
 void	Config::addLocation(std::string location_dir)
@@ -81,6 +83,6 @@ void	Config::addLocation(std::string location_dir)
 	server = getLastServer();
 	location = server->getLocationMap();
 	if (location.size() && location.find(location_dir) != location.end())
-		std::cout << "Error: duplicate location in config" << std::endl; // Should throw ?
+		std::cout << "Error: duplicate location in config" << std::endl; // Should throw ?, can of course be a different server with same location
 	server->addLocationToServer(location_dir);
 }
