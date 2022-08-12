@@ -9,9 +9,9 @@ INC_DIR = includes
 
 SRC =	main.cpp \
         WebServ.cpp \
-        Config.cpp \
-        Server.cpp \
-        Location.cpp \
+        parser/Config.cpp \
+        parser/Server.cpp \
+        parser/Location.cpp \
         RequestHandler.cpp \
         AutoIndexGenerator.cpp \
         CgiHandler.cpp \
