@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/12 10:50:05 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/12 12:51:58 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ std::vector<std::string>	cpp_split(std::string line)
 		prev = pos + 1;
 	}
 	if (prev < line.length())
-		wordVector.push_back(line.substr(prev, std::string::npos));
+		wordVector.push_back(trim(line.substr(prev, std::string::npos)));
 	return (wordVector);
 }
 
@@ -185,6 +185,7 @@ int	RequestHandler::buildResponse(std::string request)
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
 	}
+	_is_request_complete = true;
 	return (1);
 }
 
@@ -240,24 +241,21 @@ void	RequestHandler::setRequestMsg(std::string msg)
 
 int	RequestHandler::ParseRequestMsg(void)
 {
+	std::istringstream iss;
+
+	iss.str(_msg);
 	std::string	line;
-
-	if (!_msg.find("\r\n\r\n"))
-		return buildResponse("INTERNAL SERVER ERROR 500");
-
-	std::istringstream iss(_msg);
 	std::getline(iss, line);
-
 	if (ParseRequestLine(line)
 		|| OpenFile())
 		return (1);
 	while (1)
 	{
 		std::getline(iss, line);
-		if (iss.fail())
-			return buildResponse("INTERNAL SERVER ERROR 500");
 		if (iss.eof())
 			break;
+		if (iss.fail())
+			return buildResponse("INTERNAL SERVER ERROR 500");
 	}
 	return (0);
 }
@@ -392,21 +390,12 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 
 	_complete_request += msg;
 	crlf_pos = _complete_request.find("\r\n\r\n");
+	std::cout << "Important: " << crlf_pos << std::endl;
+	//return buildResponse("INTERNAL SERVER ERROR 500");
 	size_req = _complete_request.size();
 	if (crlf_pos != std::string::npos)
 	{
 		setRequestMsg(_complete_request);
 		ParseRequestMsg();
-		std::cout << _complete_request << std::endl;
-		_is_request_complete = true;
-		//if (_complete_request.find("GET /") != std::string::npos) // testing how image things are handled
-		//	test();
 	}
-
-	//TODO might need a need to see if the msg is done being received?
-	// for request headers they always end with \r\n\r\n (section 4.1 of RFC 2616)
-	// We can use that to check if the full message has been received.
-	// if it has been fully received set a bool _is_request_complete or something to true?
-	// might also work for sending the response?
-	// std::cout << "reached end of addMsg" << std::endl;
 }
