@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/14 16:22:03 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/14 20:23:23 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,80 +107,70 @@ int			RequestHandler::getBody(void) const
 	return (_fd_response);
 }
 
-int	RequestHandler::buildResponse(std::string request)
+int	RequestHandler::BuildResponse(std::string request)
 {
 	/*
 	 * 2xx: Success 
 	 */
 	if (request == "200 OK")
 	{
-		std::ifstream infile(_uri, std::ios::in);
-		if (infile.fail())
-			return buildResponse("500 INTERNAL SERVER ERROR");
-		infile.seekg(0, std::ios::end);
-		std::size_t length = infile.tellg();
-		infile.seekg(0, std::ios::beg);
-		infile.close();
-		_fd_response = open(_uri.c_str(), O_RDONLY);
-		if (_fd_response == -1)
-			return buildResponse("500 INTERNAL SERVER ERROR");
 		_response_header += "HTTP/1.1 200 OK\r\n";
 		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Length: " + std::to_string(length) + "\r\n";
+		_response_header += "Content-Length: " + std::to_string(_fd_length) + "\r\n";
 		_response_header += "Content-Type: text/html\r\n\r\n";
 	}
 	/*
 	 * CLIENT ERROR 4xx
 	 */
-	if (request == "400 BAD REQUEST")
+	else if (request == "400 BAD REQUEST")
 	{
 		std::ifstream infile("var/www/400.html", std::ios::in);
 		if (infile.fail())
-			return buildResponse("INTERNAL SERVER ERROR 500");
+			return BuildResponse("INTERNAL SERVER ERROR 500");
 		infile.seekg(0, std::ios::end);
 		std::size_t length = infile.tellg();
 		infile.seekg(0, std::ios::beg);
 		infile.close();
 		_fd_response = open("var/www/400.html", O_RDONLY);
 		if (_fd_response == -1)
-			return buildResponse("INTERNAL SERVER ERROR 500");
+			return BuildResponse("INTERNAL SERVER ERROR 500");
 		_response_header += "HTTP/1.1 Bad Request 400\r\n";
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Length: " + std::to_string(length) + "\r\n";
 		_response_header += "Content-Type: text/html\r\n\r\n";
 	}
-	if (request == "401 UNAUTHORIZED")
+	else if (request == "401 UNAUTHORIZED")
 	{
 		_fd_response = open("var/www/401.html", O_RDONLY);
 		if (_fd_response == -1)
-			return buildResponse("INTERNAL SERVER ERROR 500");
+			return BuildResponse("INTERNAL SERVER ERROR 500");
 		_response_header += "HTTP/1.1 Bad Request 401\r\n";
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
 	}
-	if (request == "402 PAYMENT REQUIRED") //this code is reserver for future use XD rfc2626
+	else if (request == "402 PAYMENT REQUIRED") //this code is reserver for future use XD rfc2626
 	{
 		_fd_response = open("var/www/402.html", O_RDONLY);
 		if (_fd_response == -1)
-			return buildResponse("INTERNAL SERVER ERROR 500");
+			return BuildResponse("INTERNAL SERVER ERROR 500");
 		_response_header += "HTTP/1.1 Payment Required 402\r\n";
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
 	}
-	if (request == "403 NOT FOUND")
+	else if (request == "403 NOT FOUND")
 	{
 		_fd_response = open("var/www/403.html", O_RDONLY);
 		if (_fd_response == -1)
-			return buildResponse("INTERNAL SERVER ERROR 500");
+			return BuildResponse("INTERNAL SERVER ERROR 500");
 		_response_header += "HTTP/1.1 Not Found 404\r\n";
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
 	}	
-	if (request == "404 NOT FOUND")
+	else if (request == "404 NOT FOUND")
 	{
 		_fd_response = open("var/www/404.html", O_RDONLY);
 		if (_fd_response == -1)
-			return buildResponse("INTERNAL SERVER ERROR 500");
+			return BuildResponse("INTERNAL SERVER ERROR 500");
 		_response_header += "HTTP/1.1 Not Found 404\r\n";
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
@@ -188,7 +178,7 @@ int	RequestHandler::buildResponse(std::string request)
 	/*
 	 * SERVER ERROR 5xx
 	 */
-	if (request ==  "500 INTERNAL SERVER ERROR")
+	else if (request ==  "500 INTERNAL SERVER ERROR")
 	{
 		_response_header += "HTTP/1.1 Internal Server Error 500\r\n";
 		_response_header += "Server: ft_webserver\r\n";
@@ -205,13 +195,13 @@ int	RequestHandler::ParseRequestLine(std::string line)
 	const std::vector<std::string>	wordVector = cpp_split(line);
 
 	if (wordVector.size() != 3)
-		return buildResponse("400 BAD REQUEST");
+		return BuildResponse("400 BAD REQUEST");
 	if (wordVector[0] != "GET" && wordVector[0] != "DELETE" && wordVector[0] != "POST")
-		return buildResponse("400 BAD REQUEST");
+		return BuildResponse("400 BAD REQUEST");
 	if (wordVector[1][0] != '/')
-		return buildResponse("400 BAD REQUEST");
+		return BuildResponse("400 BAD REQUEST");
 	if (wordVector[2] != "HTTP/1.1")
-		return buildResponse("400 BAD REQUEST");
+		return BuildResponse("400 BAD REQUEST");
 	_method = wordVector[0];
 	_uri = wordVector[1];
 	_protocol = wordVector[2];
@@ -220,25 +210,43 @@ int	RequestHandler::ParseRequestLine(std::string line)
 
 int	RequestHandler::OpenFile(void)
 {
-	int	status;
-
-	status = access(_uri.c_str(), F_OK); //checks if file exists
-	if (status == -1)
-		return buildResponse("404 NOT FOUND");
+	_fd_response = access(_uri.c_str(), F_OK); //checks if file exists
+	if (_fd_response == -1)
+		return BuildResponse("404 NOT FOUND");
 	if ("GET" == _method)
 	{
-		status = access(_uri.c_str(), R_OK); //checks if file is redable
-		if (status == -1)
-			return buildResponse("403 PERMISSION DENIED");
+		_fd_response = access(_uri.c_str(), R_OK); //checks if file is redable
+		if (_fd_response == -1)
+			return BuildResponse("403 PERMISSION DENIED");
+		std::ifstream infile(_uri, std::ios::in);
+		if (infile.fail())
+			return BuildResponse("500 INTERNAL SERVER ERROR");
+		infile.seekg(0, std::ios::end);
+		_fd_length = infile.tellg();
+		infile.seekg(0, std::ios::beg);
+		infile.close();
+		_fd_response = open(_uri.c_str(), O_RDONLY);
+		if (_fd_response == -1)
+			return BuildResponse("500 INTERNAL SERVER ERROR");
+		return BuildResponse("200 OK");
 	}
 	if ("POST" == _method)
 	{
-		status = access(_uri.c_str(), W_OK); //checks if file is writeble
-		if (status == -1)
-			return buildResponse("403 PERMISSION DENIED");
+		_fd_response = access(_uri.c_str(), W_OK); //checks if file is writeble
+		if (_fd_response == -1)
+			return BuildResponse("403 PERMISSION DENIED");
+		/*
+		infile.seekg(0, std::ios::end);
+		std::size_t length = infile.tellg();
+		infile.seekg(0, std::ios::beg);
+		infile.close();
+		*/
+		//write a mini backend test
 	}
 	if ("DELETE" == _method)
 	{
+		//adinoal headers
+		//fd body
 	}
 	return (0);
 }
@@ -247,6 +255,27 @@ void	RequestHandler::setRequestMsg(std::string msg)
 {
 	_msg = msg;
 }
+
+/*
+ * these ones are deffines
+ * request-header = Accept
+				| Accept-Charset
+				| Accept-Encoding
+				| Accept-Language
+				| Authorization
+				| Expect
+				| From
+				| Host
+				| If-Match
+				| If-Modified-Since
+				| If-None-Match
+				| If-Range
+				| If-Unmodified-Since | Max-Forwards
+				| Proxy-Authorization | Range
+				| Referer
+				| TE
+				| User-Agent
+ */
 
 int	RequestHandler::ParseRequestMsg(void)
 {
@@ -260,11 +289,11 @@ int	RequestHandler::ParseRequestMsg(void)
 	while (1)//this loop just gets all the header values
 	{
 		std::getline(iss, line);
-		std::cout << "THIS IS THE REST OF LINE: " << line << std::endl;
+		_request_header += line;
 		if (iss.eof())
 			break;
 		if (iss.fail())
-			return buildResponse("500 INTERNAL SERVER ERROR");
+			return BuildResponse("500 INTERNAL SERVER ERROR");
 	}
 	if (OpenFile())
 		return (1);
@@ -402,8 +431,8 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 
 	_complete_request += msg;
 	crlf_pos = _complete_request.find("\r\n\r\n");
+	//return BuildResponse("Bad response\r\n");does the server w to recive \r\n\r\n or does it see it every time even if the reqeust is really big
 	std::cout << "Important: " << crlf_pos << std::endl;
-	//return buildResponse("INTERNAL SERVER ERROR 500");
 	size_req = _complete_request.size();
 	if (crlf_pos != std::string::npos)
 	{

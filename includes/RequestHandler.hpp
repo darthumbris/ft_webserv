@@ -53,7 +53,7 @@ class RequestHandler
 		bool	parseFirstLine(std::string method);
 		bool	isMethodImplimented(std::string line, std::string availableMethod);
 		bool	isMethodFollowedBySpace(std::string line, std::string availableMethod);
-		int		buildResponse(std::string);
+		int		BuildResponse(std::string);
 		int		ParseRequestLine(std::string line);
 		bool	fileExists(const std::string &path);
 		int		OpenFile(void);
@@ -83,22 +83,24 @@ class RequestHandler
 	private:
 		std::string		_msg;
 		int				_request_body;
+		std::string		_request_header;
 		std::string		_method;
 		std::string		_protocol;
 		std::string		_uri;
 
-		t_servmap	_srv_map;
-		std::string	_complete_request;
-		std::string	_remaining_request;
-		std::string	_response_header;
-		std::string	_response_body;
-		bool		_is_request_complete;
-		bool		_has_remaining_request;
-		bool		_send_file;
-		int			_client_socket;
-		int			_fd_response;
-		int			_port;
-		std::size_t	_file_size;
+		t_servmap		_srv_map;
+		std::string		_complete_request;
+		std::string		_remaining_request;
+		std::string		_response_header;
+		std::string		_response_body;
+		bool			_is_request_complete;
+		bool			_has_remaining_request;
+		bool			_send_file;
+		int				_client_socket;
+		int				_fd_response;
+		int				_port;
+		size_t			_fd_length;
+		std::size_t		_file_size;
 };
 
 #endif
