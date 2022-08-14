@@ -6,21 +6,18 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/12 12:51:58 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/14 16:22:03 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "RequestHandler.hpp"
 #include <fcntl.h>
 #include <fstream>
-#include <unistd.h> //for access
+#include <unistd.h>
 
 //A server SHOULD return 414 (Request-URI Too Long) status if a URI is longer than the server can handle (see section 10.4.15).
 
 const std::string WHITESPACE = " \n\r\t\f\v";
-
-/*
-*/
 
 std::string ltrim(const std::string &s)
 {
@@ -112,13 +109,25 @@ int			RequestHandler::getBody(void) const
 
 int	RequestHandler::buildResponse(std::string request)
 {
-	if (request == "INTERNAL SERVER ERROR 500")
+	/*
+	 * 2xx: Success 
+	 */
+	if (request == "200 OK")
 	{
-		_response_header += "HTTP/1.1 Internal Server Error 500\r\n";
+		std::ifstream infile(_uri, std::ios::in);
+		if (infile.fail())
+			return buildResponse("500 INTERNAL SERVER ERROR");
+		infile.seekg(0, std::ios::end);
+		std::size_t length = infile.tellg();
+		infile.seekg(0, std::ios::beg);
+		infile.close();
+		_fd_response = open(_uri.c_str(), O_RDONLY);
+		if (_fd_response == -1)
+			return buildResponse("500 INTERNAL SERVER ERROR");
+		_response_header += "HTTP/1.1 200 OK\r\n";
 		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Length: " + std::to_string(INTERNAL_SERVER_ERROR_500.length()) + "\r\n";
+		_response_header += "Content-Length: " + std::to_string(length) + "\r\n";
 		_response_header += "Content-Type: text/html\r\n\r\n";
-		_response_header += INTERNAL_SERVER_ERROR_500;
 	}
 	/*
 	 * CLIENT ERROR 4xx
@@ -140,7 +149,7 @@ int	RequestHandler::buildResponse(std::string request)
 		_response_header += "Content-Length: " + std::to_string(length) + "\r\n";
 		_response_header += "Content-Type: text/html\r\n\r\n";
 	}
-	if (request == "UNAUTHORIZED 401")
+	if (request == "401 UNAUTHORIZED")
 	{
 		_fd_response = open("var/www/401.html", O_RDONLY);
 		if (_fd_response == -1)
@@ -149,7 +158,7 @@ int	RequestHandler::buildResponse(std::string request)
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
 	}
-	if (request == "PAYMENT REQUIRED 402") //this code is reserver for future use XD rfc2626
+	if (request == "402 PAYMENT REQUIRED") //this code is reserver for future use XD rfc2626
 	{
 		_fd_response = open("var/www/402.html", O_RDONLY);
 		if (_fd_response == -1)
@@ -158,7 +167,7 @@ int	RequestHandler::buildResponse(std::string request)
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
 	}
-	if (request == "NOT FOUND 403")
+	if (request == "403 NOT FOUND")
 	{
 		_fd_response = open("var/www/403.html", O_RDONLY);
 		if (_fd_response == -1)
@@ -167,7 +176,7 @@ int	RequestHandler::buildResponse(std::string request)
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
 	}	
-	if (request == "NOT FOUND 404")
+	if (request == "404 NOT FOUND")
 	{
 		_fd_response = open("var/www/404.html", O_RDONLY);
 		if (_fd_response == -1)
@@ -176,14 +185,16 @@ int	RequestHandler::buildResponse(std::string request)
 		_response_header += "Server: ft_webserver\r\n";
 		_response_header += "Content-Type: text/html\r\n";
 	}
-	if (request == "BAD REQUEST 400")
+	/*
+	 * SERVER ERROR 5xx
+	 */
+	if (request ==  "500 INTERNAL SERVER ERROR")
 	{
-		_fd_response = open("var/www/400.html", O_RDONLY);
-		if (_fd_response == -1)
-			return buildResponse("INTERNAL SERVER ERROR 500");
-		_response_header += "HTTP/1.1 Bad Request 400\r\n";
+		_response_header += "HTTP/1.1 Internal Server Error 500\r\n";
 		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Type: text/html\r\n";
+		_response_header += "Content-Length: " + std::to_string(INTERNAL_SERVER_ERROR_500.length()) + "\r\n";
+		_response_header += "Content-Type: text/html\r\n\r\n";
+		_response_header += INTERNAL_SERVER_ERROR_500;
 	}
 	_is_request_complete = true;
 	return (1);
@@ -232,8 +243,6 @@ int	RequestHandler::OpenFile(void)
 	return (0);
 }
 
-//wrap this on in try catch block if this fails return internal server error :D I fucking h8 c++
-//asembly or die
 void	RequestHandler::setRequestMsg(std::string msg) 
 {
 	_msg = msg;
@@ -241,22 +250,24 @@ void	RequestHandler::setRequestMsg(std::string msg)
 
 int	RequestHandler::ParseRequestMsg(void)
 {
-	std::istringstream iss;
+	std::istringstream	iss;
+	std::string			line;
 
 	iss.str(_msg);
-	std::string	line;
-	std::getline(iss, line);
-	if (ParseRequestLine(line)
-		|| OpenFile())
+	std::getline(iss, line);//firs line is special in HTTP it contains the method uri and protocol
+	if (ParseRequestLine(line))
 		return (1);
-	while (1)
+	while (1)//this loop just gets all the header values
 	{
 		std::getline(iss, line);
+		std::cout << "THIS IS THE REST OF LINE: " << line << std::endl;
 		if (iss.eof())
 			break;
 		if (iss.fail())
-			return buildResponse("INTERNAL SERVER ERROR 500");
+			return buildResponse("500 INTERNAL SERVER ERROR");
 	}
+	if (OpenFile())
+		return (1);
 	return (0);
 }
 
@@ -317,6 +328,7 @@ Location	*RequestHandler::getLocation(std::string url) const
 	}
 	return NULL;
 }
+
 void	RequestHandler::test(void)
 {
 	std::string root = "var/www/html/";

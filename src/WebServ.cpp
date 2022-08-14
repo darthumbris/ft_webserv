@@ -16,17 +16,17 @@ WebServ::WebServ(Config *config) : _config(config)
 	_n_servers = 0;
 	// Going through the config and making a socket and event for all servers in it.
 	std::cout << "servers: " << server_map.size() << std::endl;
-	for (std::size_t it = 0; it < server_map.size(); it++)
+	for (t_servmap::iterator iter = server_map.begin(); iter != server_map.end(); iter++)
 	{
-		std::vector<int> ports = server_map[it]->getServerPort();
-		for (std::size_t j = 0; j < server_map[it]->getServerNames().size(); j++)
-			std::cout << "server " << it << " server_name: " << server_map[it]->getServerNames()[j] << std::endl;
+		std::vector<int> ports = (*iter)->getServerPort();
+		for (std::size_t j = 0; j < (*iter)->getServerNames().size(); j++)
+			std::cout << "server " << (*iter) << " server_name: " << (*iter)->getServerNames()[j] << std::endl;
 		for (std::size_t i = 0; i < ports.size(); i++)
 		{
 			if (!listeningToPort(ports[i]))
 			{
 				std::cout << "setting socket for port: " << ports[i] << std::endl;
-				setNewServerSocket(server_map[it], ports[i]);
+				setNewServerSocket(*iter, ports[i]);
 				addPortToList(ports[i]);
 				_n_servers++;
 			}

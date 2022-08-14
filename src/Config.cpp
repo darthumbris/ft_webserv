@@ -8,7 +8,6 @@ Config::Config(std::string config_path)
 	std::cout << "config filename: " << config_path << std::endl;
 	//After this should parse the config
 
-
 	//Examples for the parsing:
 	// Config parsed new server with listen 127.0.0.1 8080
 	addServer("127.0.0.1", "4242");
