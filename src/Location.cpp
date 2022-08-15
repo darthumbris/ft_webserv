@@ -74,6 +74,11 @@ std::string Location::getPath(const std::string& path)
 	return path.substr(++i);
 }
 
+const std::string&	Location::getIndex() const
+{
+	return this->_index;
+}
+
 // Setters
 void Location::setAutoIndex(const Json& json)
 {

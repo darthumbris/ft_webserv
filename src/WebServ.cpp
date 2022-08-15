@@ -181,8 +181,10 @@ void	WebServ::receiveRequest(t_event &event)
 	t_evudat	*evudat = (t_evudat *)event.udata;
 	char		buf[MAX_MSG_SIZE];
 	int			bytes_read;
+	static int	total_bytes = 0;
 
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
+	total_bytes += bytes_read;
 	if (bytes_read < 0)
 		std::cout << "receive error" << std::endl;
 	else if (bytes_read == 0 && evudat->flag != 2)
@@ -195,6 +197,7 @@ void	WebServ::receiveRequest(t_event &event)
 		buf[bytes_read] = 0;
 		evudat->req->addToRequestMsg(buf);
 	}
+	// std::cout << "total_bytes: " <<  total_bytes << std::endl;
 	// fflush(stdout);
 }
 

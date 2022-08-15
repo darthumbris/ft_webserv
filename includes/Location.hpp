@@ -32,6 +32,7 @@ class Location
 		bool				getMethodGet() const;
 		bool				getMethodPost() const;
 		bool				getMethodDel() const;
+		const std::string&	getIndex() const;
 		std::string 		getPath(const std::string& path);
 		std::string			getEnumValue(Json::Token type);
 

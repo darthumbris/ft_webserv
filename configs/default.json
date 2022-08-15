@@ -25,7 +25,7 @@
           "index": "index.html",
           "root": "var/www/html"
         },
-        "location /upload/": {
+        "location /test/": {
           "return": "301",
           "root": "var/www/html",
           "allowed_method": [

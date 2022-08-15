@@ -63,6 +63,7 @@ class RequestHandler
 
 		// Member Functions
 		void	makeHeaderMap();
+		void	testFunction();
 		
 	private:
 
