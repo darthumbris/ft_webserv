@@ -11,29 +11,33 @@
 /* ************************************************************************** */
 
 #include "WebServ.hpp"
+#include "../json/includes/parse.hpp"
+#include "../includes/Config.hpp"
 
 int	main(int argc, char *argv[])
 {
-	Config				*config;
-
-	if (argc > 2)
-	{
-		std::cout << "argument to long" << std::endl;
+	if (argc != 2) {
+		std::cout << "error, the arguments has to be length of 2\n";
 		return 1;
 	}
-	else if (argc == 2)
-		config = new Config(argv[1]);
-	else
-<<<<<<< HEAD
-		config = new Config("default.conf");
-	WebServ	webserver(config);
-	webserver.runServer();
-=======
-		config = new Config("config/default.conf");
+	try {
+		std::ifstream file(argv[1]);
+		Parse parse;
+		Json* json = parse.parse(file);
+		Config config(json);
+		WebServ	webserver(&config);
+		webserver.runServer();
+//		config = new Config("config/default.conf");
+	} catch (std::exception const &e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
+//	WebServ	webserver(config);
+//	webserver.runServer();
+//		config = new Config("config/default.conf");
 	// srv_address = strdup("127.0.0.1");
 	// WebServ	server_one(8080, srv_address);
 //	WebServ	webserver(config);
 //	webserver.runServer();
->>>>>>> 1cbafb13e20a6e09f6da15a449c106575de5405e
 	return (EXIT_SUCCESS);
 }
