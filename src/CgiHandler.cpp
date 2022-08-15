@@ -22,8 +22,6 @@ static std::string getCurDir()
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(&req)
 {
-	_cgi_path = "/Users/shoogenb/.brew/bin/php-cgi"; //TODO load this from config
-
 	std::string	request = _req->getCompleteRequest();
 	std::size_t	body_start = request.find("\r\n\r\n");
 	_input_body = request.substr(body_start + 4);
@@ -40,15 +38,19 @@ CgiHandler::~CgiHandler()
 // Setter
 void	CgiHandler::setCgiPaths()
 {
-	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/'));
+	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/') + 1);
 	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
+	_root = "/";
 	if (_req->getLocation(_folder))
-		_root = _req->getLocation(_folder)->getRootPath();
+		_root += _req->getLocation(_folder)->getRootPath();
+	if (_req->getLocation(_folder))
+		_cgi_path = _req->getLocation(_folder)->getCgiPath();
 	else
-		_root = "";
+		_cgi_path = "";
 	
-	_root.pop_back();
-	_folder.push_back('/');
+	// std::cout << "root: " << _root << std::endl;
+	// std::cout << "folder: " << _folder << std::endl;
+	// std::cout << "file: " << _file << std::endl;
 	_cur_dir = getCurDir();
 }
 
@@ -81,8 +83,8 @@ void	CgiHandler::setEnvValues()
 	// std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
 	// std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
 	// std::cout << "REQUEST_METHOD: " << _env["REQUEST_METHOD="] << std::endl;
-	// for (auto it = _env.begin(); it != _env.end(); it++)
-	// 	std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
+	for (auto it = _env.begin(); it != _env.end(); it++)
+		std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
 
 
 	// std::cout << "\n-----end of cgihandler env setter--------" << std::endl;
@@ -112,7 +114,7 @@ void	CgiHandler::executeScript(char **envp)
 	dup2(_in_file_fd, STDIN_FILENO);
 	dup2(_out_file_fd, STDOUT_FILENO);
 	execve(_cgi_path.c_str(), NULL, envp);
-	write(STDOUT_FILENO, "Status: 500\r\n", 15);
+	write(STDOUT_FILENO, "Status: 500\r\n", 14);
 }
 
 void	CgiHandler::readScriptOutput(pid_t pid)
@@ -190,6 +192,7 @@ std::string	CgiHandler::execute()
 	std::size_t	start_content_type = _output_body.find("Content-type");
 	std::size_t	start_body = _output_body.find('\n', start_content_type);
 	_output_body = _output_body.substr(start_body, std::string::npos);
+	std::cout << "output: " << _output_body << std::endl;
 	return _output_body;
 }
 

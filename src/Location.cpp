@@ -79,6 +79,11 @@ const std::string&	Location::getIndex() const
 	return this->_index;
 }
 
+std::string			Location::getCgiPath() const
+{
+	return this->_cgi_path;
+}
+
 // Setters
 void Location::setAutoIndex(const Json& json)
 {
@@ -161,17 +166,25 @@ void Location::setLocation(const Json& json)
 	}
 }
 
+void	Location::setCgi(const Json& json)
+{
+	_cgi_file_type = json.values.str.substr(0, json.values.str.find_first_of(" "));
+	_cgi_path = json.values.str.substr(json.values.str.find_first_of(" ") + 1, std::string::npos);
+	// std::cout << "CGI file type: " << _cgi_file_type << "\nCgi path: " << _cgi_path << std::endl;
+}
+
 
 // Member Function
 Location::Func	Location::which(const std::string& name, const Json &json)
 {
-	t_table	map[5] =
+	t_table	map[6] =
 	{
 			{"return", Json::STRING, &Location::setReturnUrl},
 			{"auto_index", Json::BOOLEAN, &Location::setAutoIndex},
 			{"index", Json::STRING, &Location::setIndex},
 			{"root", Json::STRING, &Location::setRootFolder},
 			{"allowed_method", Json::ARRAY,&Location::setAllowedMethod},
+			{"CGI", Json::STRING,&Location::setCgi},
 	};
 
 	for (const t_table& entry : map)

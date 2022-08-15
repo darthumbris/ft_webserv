@@ -35,6 +35,7 @@ class Location
 		const std::string&	getIndex() const;
 		std::string 		getPath(const std::string& path);
 		std::string			getEnumValue(Json::Token type);
+		std::string			getCgiPath() const;
 
 		typedef void (Location::* Func )(const Json&);
 
@@ -47,6 +48,8 @@ class Location
 		}	t_table;
 
 		// Setters
+		void	setCgi(const Json& json);
+		// void	setCgiFileType(std::string file_type);
 		void 	setLocation(const Json& json);
 		void	setAutoIndex(const Json& json);
 		void	setUploadPath(const Json& json);
@@ -81,6 +84,8 @@ class Location
 
 	private:
 		bool						_auto_index;
+		std::string					_cgi_path;
+		std::string					_cgi_file_type;
 		std::string 				_index;
 		std::string					_upload_path;
 		std::string					_return_url;
