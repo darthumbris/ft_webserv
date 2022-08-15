@@ -25,7 +25,6 @@ WebServ::WebServ(Config *config) : _config(config)
 		{
 			if (!listeningToPort(ports[i]))
 			{
-				std::cout << "locmap size: " << server_map[it].getLocationMap().size() << std::endl;
 				std::cout << "setting socket for port: " << ports[i] << std::endl;
 				setNewServerSocket(server_map[it], ports[i]);
 				addPortToList(ports[i]);
