@@ -1,10 +1,17 @@
 #include "Json.hpp"
 #include "Config.hpp"
 
+// Constructor
 Json::Json() {}
 
-void Json::print() const {
-	switch (type) {
+// Destructor
+Json::~Json() {}
+
+// Member Function
+void Json::print() const
+{
+	switch (type)
+	{
 		case STRING:
 			std::cout << "String ";
 			std::cout << values.str;
@@ -39,8 +46,11 @@ void Json::print() const {
 	}
 }
 
-std::ostream& operator<<(std::ostream& out, const Json::Token& t) {
-	switch (t) {
+// Operators
+std::ostream& operator<<(std::ostream& out, const Json::Token& t)
+{
+	switch (t)
+	{
 		case Json::STRING:
 			out << "STRING";
 			break;
@@ -62,5 +72,3 @@ std::ostream& operator<<(std::ostream& out, const Json::Token& t) {
 	}
 	return out;
 }
-
-Json::~Json() {}

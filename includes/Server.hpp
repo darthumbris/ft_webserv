@@ -11,66 +11,54 @@ using t_locmap = std::map<std::string, Location*>;
 using t_servmap =  std::vector<Server>;
 using t_vecstr = std::vector<std::string>;
 
-//TODO IP should probably always be 127.0.0.1 then at least one port should be set per server. A server might also have servernames.
-
 class Server
 {
-public:
-	// Constructors
-	Server();
-//	Server(const Server &copy);
+	public:
+		// Constructors
+		Server();
 
-	// Destructor
-	~Server();
+		// Destructor
+		~Server();
 
-	// Operators
-//	Server & operator=(const Server &assign);
+		// Getters
+		//	std::vector<int>	getServerSocket() const;
+		const std::string&		getServerIp() const;
+		int						getClientBodySize() const;
+		const std::vector<int>&	getServerPort() const;
+		const t_vecstr&			getErrorPage() const;
+		const t_vecstr&			getServerNames() const;
+		t_locmap				getLocationMap() const;
+		Location				*getLocation(int port, std::string url) const;
 
-	// Getters
-//	std::vector<int>	getServerSocket() const;
-	const std::string&		getServerIp() const;
-	int						getClientBodySize() const;
-	const std::vector<int>&	getServerPort() const;
-	const t_vecstr&			getErrorPage() const;
-	const t_vecstr&			getServerNames() const;
-	t_locmap				getLocationMap() const;
-//	std::string				getServerRoot() const;
-	Location				*getLocation(int port, std::string url) const;
+		// Setters
+		void	setServerIp(const Json& json);
+		void	addServerListen(const Json& json);
+		void	addServerName(const Json& json);
+		void	setServerClientBodySize(const Json& json);
+		void	setServerErrorPage(const Json& json);
+		void	setServerSocket(int server_socket);
 
-	// Setters
-	void	setServerIp(const Json& json);
-	void	addServerListen(const Json& json);
-	void	addServerName(const Json& json);
-	void	setServerClientBodySize(const Json& json);
-	void	setServerErrorPage(const Json& json);
-//	void	setServerRoot(std::string root);
-	void	setServerSocket(int server_socket);
+		typedef void (Server::* Func )(const Json&);
+		//Table to check which function to jump in
+		typedef struct s_table
+		{
+			std::string	key;
+			Json::Token	type;
+			Func		map_values;
+		}	t_table;
 
-	// Member Functions
-	// void	addLocationToServer(std::string location_dir);
-	void	addLocationToServer(std::string location_dir, Location *loc);
-
-	typedef void (Server::* Func )(const Json&);
-	//Table to check which function to jump in
-	typedef struct s_table {
-		std::string	key;
-		Json::Token	type;
-		Func		map_values;
-	}	t_table;
-
-	Func setValues(const std::string name, const Json& json);
-
-	Location	*loc = NULL;
-	
-private:
-	int					_client_body_size;
-	std::vector<int>	_server_fd;
-	std::vector<int>	_server_listen;
-	t_vecstr			_error_page;
-	t_vecstr			_server_name;
-	t_locmap			_location;
-//	std::string			_root;
-	std::string			_server_ip;
+		// Member Functions
+		void	addLocationToServer(std::string location_dir, Location *loc);
+		Func setValues(const std::string name, const Json& json);
+		
+	private:
+		int					_client_body_size;
+		std::vector<int>	_server_fd;
+		std::vector<int>	_server_listen;
+		t_vecstr			_error_page;
+		t_vecstr			_server_name;
+		t_locmap			_location;
+		std::string			_server_ip;
 };
 
 #endif

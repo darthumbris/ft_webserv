@@ -14,34 +14,38 @@ using jsonList = std::vector<Json*>;
 
 class Json
 {
-public:
-	enum Token
-	{
-		STRING,
-		NUMBER,
-		BOOLEAN,
-		ARRAY,
-		OBJECT,
-		NULL_TYPE
-	};
-public:
-	Token type;
-	struct values
-	{
-		values() {}
-		jsonList	list;
-		jsonObject	object;
-		std::string str;
-		int			number;
-		bool		boolean;
-		~values() {}
-	}		values;
+	public:
 
-	void print() const;
+		// Constructor
+		Json();
 
-public:
-	Json();
-	~Json();
+		// Destructor
+		~Json();
+
+		// Member Function
+		void print() const;
+
+		enum Token
+		{
+			STRING,
+			NUMBER,
+			BOOLEAN,
+			ARRAY,
+			OBJECT,
+			NULL_TYPE
+		};
+
+		Token type;
+		struct values
+		{
+			values() {}
+			jsonList	list;
+			jsonObject	object;
+			std::string str;
+			int			number;
+			bool		boolean;
+			~values() {}
+		}		values;
 };
 
 std::ostream& operator<<(std::ostream& out, const Json::Token& t);
