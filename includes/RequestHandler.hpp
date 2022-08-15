@@ -51,11 +51,12 @@ class RequestHandler
 		int			getPort() const;
 		std::string	getClientIp() const;
 		std::string	getCompleteRequest() const;
+		std::string&	getRequestBody();
 
 		// Setters
 		void	setResponse();
 		void	addToRequestMsg(const std::string &msg);
-		void	setSocket(int socket); //temp function for testing stuff
+		void	setSocket(int socket);
 		void	setPort(int port);
 		void	setUrlStruct(std::string full_url);
 		void	setClientIp(std::string ip);
@@ -74,7 +75,7 @@ class RequestHandler
 		std::string	_request_body;
 		std::string _request_method; //set this, this is used for the cgihandler 
 		std::string	_method_header;
-		std::string	_client_ip;
+		std::string	_client_ip;	
 
 		t_url		_url;
 		bool		_is_request_complete;

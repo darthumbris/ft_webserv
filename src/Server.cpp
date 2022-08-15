@@ -34,7 +34,7 @@ void Server::setServerErrorPage(const Json &json) {
 	}
 }
 
-Server::Func Server::set_values(const std::string name, const Json& json) {
+Server::Func Server::setValues(const std::string name, const Json& json) {
 	t_table	map[] = {
 			{"listen", Json::ARRAY, &Server::addServerListen},
 			{"error_page", Json::ARRAY, &Server::setServerErrorPage},
@@ -90,6 +90,7 @@ Location *Server::getLocation(int port, std::string url) const
 	{
 		if (_server_listen[i] == port)
 		{
+			std::cout << "looking at port:" << port << " and url: " << url << std::endl;
 			if (_location.find(url) != _location.end())
 				return (_location.find(url)->second);
 		}
@@ -98,4 +99,9 @@ Location *Server::getLocation(int port, std::string url) const
 }
 
 Server::~Server() {}
+
+void	Server::addLocationToServer(std::string location_dir, Location *loc)
+{
+	this->_location.insert(std::make_pair(location_dir, loc));
+}
 

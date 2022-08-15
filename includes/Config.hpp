@@ -24,15 +24,15 @@ public:
 	Config(const Json* json);
 	~Config();
 
-	void test(const Json* json);
-	void set_servers(const Json* json);
-	void set_server_name(const std::string name, const Json &json);
+	void addServer(const Json* json);
+	void setServers(const Json* json);
+	void setServerName(const std::string name, const Json &json);
 
 	t_servmap	getServerMap() const;
 	Server		getLastServer();
 
 
-	void	set_listen(const Json& json);
+	// void	setListenPort(const Json& json);
 
 	class wrongKey: public std::exception {
 	private:

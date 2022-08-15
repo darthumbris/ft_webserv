@@ -108,7 +108,7 @@ void Location::setAllowedMethod(const Json& json) {
 	}
 }
 
-std::string Location::get_path(const std::string& path) {
+std::string Location::getPath(const std::string& path) {
 	int i = 0;
 	while (path[i] && !isspace(path[i])) {
 		i++;
@@ -118,23 +118,23 @@ std::string Location::get_path(const std::string& path) {
 	return path.substr(++i);
 }
 
-void Location::set_location(const Json& json) {
+void Location::setLocation(const Json& json) {
 	for (const auto &x: json.values.object) {
 		Location::Func f = which(x.first, *x.second);
 		(*this.*f)(*x.second);
 	}
 }
 
-void Location::get_location(const std::string& name, const Json& json) {
+void Location::getParsedLocation(const std::string& name, const Json& json) {
 	if (json.type != Json::OBJECT) {
 		throw wrongType("expected <" + getEnumValue(Json::OBJECT) + "> after a location");
 	}
-	std::string path = get_path(name);
+	std::string path = getPath(name);
 	if (path.empty()) {
 		wrongType("path cannot be empty");
 	}
 	_upload_path = path;
-	set_location(json);
+	setLocation(json);
 }
 
 Location::Func	Location::which(const std::string& name, const Json &json) {

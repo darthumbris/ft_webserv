@@ -123,6 +123,7 @@ Location	*RequestHandler::getLocation(std::string url) const
 		if (_srv_map[it].getLocation(_port, url))
 			return (_srv_map[it].getLocation(_port, url));
 	}
+	std::cout << "loc not found?" << std::endl;
 	return NULL;
 }
 
@@ -233,8 +234,12 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 				path = root + "test/welcome.html";
 			else if ((loc = this->getLocation(url)))
 			{
+				std::cout << "hello ?\n\n\n" << std::endl;
 				if (!loc->getAutoIndex())
+				{
+					std::cout << "\n\n\n========autoindex is false============\n" << std::endl;
 					return;
+				}
 				std::size_t start = _complete_request.find("GET /") + 5;
 				std::size_t end = _complete_request.find("HTTP/1.1") - 1;
 				std::string path = _complete_request.substr(start, end - start);
@@ -246,6 +251,7 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 			}
 			else
 				path = root + "index.html";
+			std::cout << "\n\n=======Path: " << path << std::endl;
 			std::ifstream infile(path, std::ios::in);
 			if (!infile.is_open())
 			{

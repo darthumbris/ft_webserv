@@ -1,14 +1,15 @@
 {
     "server": [
       {
-        "client_body_size": 10,
+        "client_body_size": 1000,
         "listen": [
-          8080,
-          4242
+          4242,
+          4343
         ],
         "server_name": [
-          "localhost",
-          "localhost.home"
+          "test.com",
+          "test2.com",
+          "test3.com"
         ],
         "error_page": [
           "404something"
@@ -19,17 +20,25 @@
             "POST",
             "DELETE"
           ],
-          "return": "301http://localhost:8080/Redirection/301.html",
+          "return": "301http://localhost:4242/Redirection/301.html",
           "auto_index": true,
-          "index": "homepage"
+          "index": "index.html",
+          "root": "var/www/html"
         },
         "location /upload/": {
           "return": "301",
-          "root": "website/html",
+          "root": "var/www/html",
           "allowed_method": [
             "GET"
           ]
-        }
+        },
+        "location /images/": {
+            "return": "301",
+            "root": "var/www/html",
+            "allowed_method": [
+              "GET"
+            ]
+          }
       }
     ]
   }

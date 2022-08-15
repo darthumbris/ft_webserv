@@ -56,13 +56,13 @@ public:
 	void	setDeleteMethod(const Json& json);
 	void	setAllowedMethod(const Json& json);
 
-	std::string get_path(const std::string& path);
+	std::string getPath(const std::string& path);
 
 	// Operators
 	Location & operator=(const Location& assign);
 
-	void	get_location(const std::string& name, const Json& json);
-	void 	set_location(const Json& json);
+	void	getParsedLocation(const std::string& name, const Json& json);
+	void 	setLocation(const Json& json);
 	Func	which(const std::string& name, const Json& json);
 
 	std::string	getEnumValue(Json::Token type);

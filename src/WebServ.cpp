@@ -25,6 +25,7 @@ WebServ::WebServ(Config *config) : _config(config)
 		{
 			if (!listeningToPort(ports[i]))
 			{
+				std::cout << "locmap size: " << server_map[it].getLocationMap().size() << std::endl;
 				std::cout << "setting socket for port: " << ports[i] << std::endl;
 				setNewServerSocket(server_map[it], ports[i]);
 				addPortToList(ports[i]);
@@ -97,8 +98,6 @@ void	WebServ::setNewServerSocket(Server server, int port)
 	srvr_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	srvr_addr.sin_port = htons(port);
 
-	std::cout << "port: " << port << std::endl;
-	std::cout << "serverip: " << srvr_addr.sin_addr.s_addr << std::endl;
 	// Binding and listening to the new socket using the address struct data
 	if (bind(srvr_sckt, (t_sckadr *)&srvr_addr, sizeof(srvr_addr)) == -1)
 	{

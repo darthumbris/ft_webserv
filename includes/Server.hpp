@@ -47,7 +47,8 @@ public:
 	void	setServerSocket(int server_socket);
 
 	// Member Functions
-	void	addLocationToServer(std::string location_dir);
+	// void	addLocationToServer(std::string location_dir);
+	void	addLocationToServer(std::string location_dir, Location *loc);
 
 	typedef void (Server::* Func )(const Json&);
 	//Table to check which function to jump in
@@ -57,7 +58,7 @@ public:
 		Func		map_values;
 	}	t_table;
 
-	Func set_values(const std::string name, const Json& json);
+	Func setValues(const std::string name, const Json& json);
 
 	Location	*loc = NULL;
 	
