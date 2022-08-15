@@ -6,13 +6,13 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/08/09 11:16:01 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/15 11:12:41 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "WebServ.hpp"
-#include "../json/includes/parse.hpp"
-#include "../includes/Config.hpp"
+#include "Parse.hpp"
+#include "Config.hpp"
 
 int	main(int argc, char *argv[])
 {

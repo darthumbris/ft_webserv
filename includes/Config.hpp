@@ -1,7 +1,7 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include "../json/includes/json.hpp"
+# include "Json.hpp"
 
 # include "Location.hpp"
 # include "Server.hpp"
@@ -10,12 +10,12 @@ class Config {
 
 //	FOR TESTING
 private:
-	t_servmap	_server;
+	t_servmap	_servers;
 
-public:
+// public:
 	Location	*loc = NULL;
 	Server		*server = NULL;
-	std::vector<Location> location;
+	// std::vector<Location> location;
 
 public:
 	// Constructors
@@ -27,6 +27,10 @@ public:
 	void test(const Json* json);
 	void set_servers(const Json* json);
 	void set_server_name(const std::string name, const Json &json);
+
+	t_servmap	getServerMap() const;
+	Server		getLastServer();
+
 
 	void	set_listen(const Json& json);
 

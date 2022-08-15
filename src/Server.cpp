@@ -52,11 +52,21 @@ Server::Func Server::set_values(const std::string name, const Json& json) {
 	throw Config::wrongKey("invalid name or key for <" + name);
 }
 
+void	Server::setServerSocket(int server_socket)
+{
+	this->_server_fd.push_back(server_socket);
+}
+
 int Server::getClientBodySize() const {
 	return _client_body_size;
 }
 
-const std::vector<int> &Server::getServerListen() const {
+const std::string&		Server::getServerIp() const
+{
+	return this->_server_ip;
+}
+
+const std::vector<int> &Server::getServerPort() const {
 	return _server_listen;
 }
 
@@ -67,6 +77,24 @@ const t_vecstr &Server::getErrorPage() const {
 
 const t_vecstr &Server::getServerNames() const {
 	return _server_name;
+}
+
+t_locmap	Server::getLocationMap() const
+{
+	return this->_location;
+}
+
+Location *Server::getLocation(int port, std::string url) const
+{
+	for (std::size_t i = 0; i < _server_listen.size(); i++)
+	{
+		if (_server_listen[i] == port)
+		{
+			if (_location.find(url) != _location.end())
+				return (_location.find(url)->second);
+		}
+	}
+	return NULL;
 }
 
 Server::~Server() {}

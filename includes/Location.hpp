@@ -4,7 +4,7 @@
 # include <iostream>
 # include <string>
 # include <vector>
-#include "../json/includes/json.hpp"
+#include "Json.hpp"
 
 struct accepted_methods
 {
@@ -22,19 +22,19 @@ public:
 	Location();
 //	Location(const Location &copy);
 
-	Location *_values;
+	// Location *_values;
 
 	// Destructor
 	~Location();
 
 	// Getters
-	bool		getAutoIndex() const;
+	bool				getAutoIndex() const;
 	const std::string&	getUploadPath() const;
 	const std::string&	getReturnUrl() const;
 	const std::string&	getRootPath() const;
-	bool		getMethodGet() const;
-	bool		getMethodPost() const;
-	bool		getMethodDel() const;
+	bool				getMethodGet() const;
+	bool				getMethodPost() const;
+	bool				getMethodDel() const;
 
 	typedef void (Location::* Func )(const Json&);
 

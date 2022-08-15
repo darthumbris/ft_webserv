@@ -120,8 +120,8 @@ Location	*RequestHandler::getLocation(std::string url) const
 {
 	for (std::size_t it = 0; it < _srv_map.size(); it++)
 	{
-		if (_srv_map[it]->getLocation(_port, url))
-			return (_srv_map[it]->getLocation(_port, url));
+		if (_srv_map[it].getLocation(_port, url))
+			return (_srv_map[it].getLocation(_port, url));
 	}
 	return NULL;
 }

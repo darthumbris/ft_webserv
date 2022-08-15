@@ -1,5 +1,5 @@
-#include "../includes/json.hpp"
-#include "../includes/config.hpp"
+#include "Json.hpp"
+#include "Config.hpp"
 
 Json::Json() {}
 

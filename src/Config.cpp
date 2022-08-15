@@ -1,92 +1,64 @@
-#include "Config.hpp"
+#include "../includes/Config.hpp"
+#include "../includes/Location.hpp"
 
-// Constructors
-//TODO in constructor check if file can be opened.
-//Map for server, string part is ip + port for easy checking
-// for duplicates etc.
-Config::Config(std::string config_path)
-{
-	std::cout << "config path: " << config_path << std::endl;
-	//After this should parse the config
-	std::ifstream file(config_path, std::ifstream::binary);
-	if (!file)
-	{
-		std::cout << "wrong file" << std::endl;
-		exit(1);
+Config::Config() {}
+
+Config::Config(const Json *json) {
+	set_servers(json);
+	for (auto x : _servers) {
+		std::cout << "testing lol " << x.getClientBodySize() << std::endl;
+		for (auto x : server->getLocationMap()) {
+			std::cout << x.first << std::endl;
+		}
 	}
-	std::string line;
-
-	//Examples for the parsing:
-	// Config parsed new server with listen 127.0.0.1 8080
-//	addServer("127.0.0.1", "8080");
-//	// Config sees server_name test.com
-//	getLastServer()->setServerName("test.com");
-//
-//	// Config parsed new location with dir: "/images"
-//	addLocation("/images");
-//
-//	// Config parsed new server with listen 0.0.0.0 80
-//	addServer("0.0.0.0", "80");
 }
 
-Config::Config(const Config &copy)
-{
-	(void) copy;
+void Config::set_servers(const Json *json) {
+	for (const auto &x: json->values.object) {
+		set_server_name(x.first, *x.second);
+	}
+	if (loc) {
+		std::cout << "RET URL: " << loc->getReturnUrl() << std::endl;
+	}
 }
 
-
-// Destructor
-Config::~Config()
-{
+void Config::set_server_name(const std::string name, const Json &json) {
+	(void)name;
+	if (json.type != Json::ARRAY) {
+		throw wrongKey("expected an <" + loc->getEnumValue(Json::ARRAY) + "> and got " + loc->getEnumValue(json.type));
+	}
+	for (const Json *x: json.values.list) {
+		test(x);
+	}
 }
 
-
-// Operators
-Config & Config::operator=(const Config &assign)
-{
-	(void) assign;
-	return *this;
+void Config::test(const Json *json) {
+	server = new Server();
+	for (const auto &x: json->values.object) {
+		if(x.first.find("location") != std::string::npos) {
+			loc = new Location();
+			loc->get_location(x.first, *x.second);
+			server->getLocationMap().emplace(x.first, loc);
+		} else {
+			Server::Func f = server->set_values(x.first, *x.second);
+			(*server.*f)(*x.second);
+		}
+	}
+	_servers.push_back(*server);
 }
-
-//TODO make proper getter/setter and member functions.
-
-//TODO make a parseconfig function which goes through the config
-// and adds new servers and locations (to the corresponding servers)
 
 // Getters
-std::map<std::string, Server*>	Config::getServerMap() const
+t_servmap	Config::getServerMap() const
 {
-	return this->_server;
+	return this->_servers;
 }
 
-Server	*Config::getLastServer()
+Server	Config::getLastServer()
 {
-	std::map<std::string, Server *>::const_iterator it = _server.end();
-	it--;
-	return (it->second);
+	return (_servers.back());
 }
 
-
-
-// Member Functions
-void	Config::addServer(std::string ip, std::string port)
+Config::~Config()
 {
-	std::string	new_server_key = ip + ":" +  port;
-	if (_server.find(new_server_key) != _server.end())
-		std::cout << "Error: duplicate server in config" << std::endl; //Should be a throw
-	_server.insert(std::make_pair(new_server_key, new Server()));
-	_server.at(new_server_key)->setServerIp(ip);
-	_server.at(new_server_key)->setServerPort(std::stoi(port));
-}
-
-void	Config::addLocation(std::string location_dir)
-{
-	Server								*server;
-	std::map<std::string, Location*>	location;
-
-	server = getLastServer();
-	location = server->getLocationMap();
-	if (location.size() && location.find(location_dir) != location.end())
-		std::cout << "Error: duplicate location in config" << std::endl; // Should throw
-	server->addLocationToServer(location_dir);
+	delete loc;
 }

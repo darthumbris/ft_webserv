@@ -1,7 +1,7 @@
 #ifndef PARSE_HPP
 #define PARSE_HPP
 
-#include "json.hpp"
+#include "Json.hpp"
 #include <stdlib.h>
 
 class Json;

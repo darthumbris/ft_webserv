@@ -1,0 +1,35 @@
+{
+    "server": [
+      {
+        "client_body_size": 10,
+        "listen": [
+          8080,
+          4242
+        ],
+        "server_name": [
+          "localhost",
+          "localhost.home"
+        ],
+        "error_page": [
+          "404something"
+        ],
+        "location /": {
+          "allowed_method": [
+            "GET",
+            "POST",
+            "DELETE"
+          ],
+          "return": "301http://localhost:8080/Redirection/301.html",
+          "auto_index": true,
+          "index": "homepage"
+        },
+        "location /upload/": {
+          "return": "301",
+          "root": "website/html",
+          "allowed_method": [
+            "GET"
+          ]
+        }
+      }
+    ]
+  }

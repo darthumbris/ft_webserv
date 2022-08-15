@@ -18,9 +18,9 @@ WebServ::WebServ(Config *config) : _config(config)
 	std::cout << "servers: " << server_map.size() << std::endl;
 	for (std::size_t it = 0; it < server_map.size(); it++)
 	{
-		std::vector<int> ports = server_map[it]->getServerPort();
-		for (std::size_t j = 0; j < server_map[it]->getServerNames().size(); j++)
-			std::cout << "server " << it << " server_name: " << server_map[it]->getServerNames()[j] << std::endl;
+		std::vector<int> ports = server_map[it].getServerPort();
+		for (std::size_t j = 0; j < server_map[it].getServerNames().size(); j++)
+			std::cout << "server " << it << " server_name: " << server_map[it].getServerNames()[j] << std::endl;
 		for (std::size_t i = 0; i < ports.size(); i++)
 		{
 			if (!listeningToPort(ports[i]))
@@ -73,7 +73,7 @@ void	WebServ::addPortToList(int port)
 }
 
 // Member Functions
-void	WebServ::setNewServerSocket(Server *server, int port)
+void	WebServ::setNewServerSocket(Server server, int port)
 {
 	int			srvr_sckt;
 	int			option = 1;
@@ -88,15 +88,17 @@ void	WebServ::setNewServerSocket(Server *server, int port)
 		std::cout << "Error: socket failed" << std::endl;
 		perror("socket");
 	}
-	server->setServerSocket(srvr_sckt);
+	server.setServerSocket(srvr_sckt);
 	setsockopt(srvr_sckt, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
 	// Setting the address struct
 	memset((char *)&srvr_addr, 0, sizeof(srvr_addr));
 	srvr_addr.sin_family = AF_INET;
-	srvr_addr.sin_addr.s_addr = inet_addr(server->getServerIp().c_str());
+	srvr_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	srvr_addr.sin_port = htons(port);
 
+	std::cout << "port: " << port << std::endl;
+	std::cout << "serverip: " << srvr_addr.sin_addr.s_addr << std::endl;
 	// Binding and listening to the new socket using the address struct data
 	if (bind(srvr_sckt, (t_sckadr *)&srvr_addr, sizeof(srvr_addr)) == -1)
 	{
@@ -113,7 +115,7 @@ void	WebServ::setNewServerSocket(Server *server, int port)
 	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
 
 	//Setting the udata for the event and adding it to the changelst.
-	ev_udat->ip = server->getServerIp();
+	ev_udat->ip = server.getServerIp();
 	ev_udat->port = port;
 	EV_SET(&event, srvr_sckt, EVFILT_READ, EV_ADD, 0, 0, ev_udat);
 	_change_ev.push_back(event);

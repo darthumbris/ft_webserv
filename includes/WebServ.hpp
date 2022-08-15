@@ -62,7 +62,7 @@ class WebServ
 		void	addPortToList(int port);
 
 		// Member functions
-		void	setNewServerSocket(Server *server, int port);
+		void	setNewServerSocket(Server server, int port);
 		bool	isListenSocket(int fd);
 		void	addConnection(t_event event, t_evudat *old_udat);
 		void	readFromSocket(t_event &event);

@@ -5,8 +5,9 @@
 # include "Location.hpp"
 
 class Server;
+class Location;
 
-using t_locmap = std::map<std::string, Location>;
+using t_locmap = std::map<std::string, Location*>;
 using t_servmap =  std::vector<Server>;
 using t_vecstr = std::vector<std::string>;
 
@@ -27,14 +28,14 @@ public:
 
 	// Getters
 //	std::vector<int>	getServerSocket() const;
-//	const std::string&			getServerIp() const;
-	int					getClientBodySize() const;
-	const std::vector<int>&	getServerListen() const;
+	const std::string&		getServerIp() const;
+	int						getClientBodySize() const;
+	const std::vector<int>&	getServerPort() const;
 	const t_vecstr&			getErrorPage() const;
 	const t_vecstr&			getServerNames() const;
-//	t_locmap			getLocationMap() const;
-//	std::string			getServerRoot() const;
-//	Location			*getLocation(int port, std::string url) const;
+	t_locmap				getLocationMap() const;
+//	std::string				getServerRoot() const;
+	Location				*getLocation(int port, std::string url) const;
 
 	// Setters
 	void	setServerIp(const Json& json);
@@ -43,7 +44,7 @@ public:
 	void	setServerClientBodySize(const Json& json);
 	void	setServerErrorPage(const Json& json);
 //	void	setServerRoot(std::string root);
-//	void	setServerSocket(int server_socket);
+	void	setServerSocket(int server_socket);
 
 	// Member Functions
 	void	addLocationToServer(std::string location_dir);
@@ -59,16 +60,16 @@ public:
 	Func set_values(const std::string name, const Json& json);
 
 	Location	*loc = NULL;
-public:
-	t_locmap			_location;
+	
 private:
 	int					_client_body_size;
 	std::vector<int>	_server_fd;
 	std::vector<int>	_server_listen;
 	t_vecstr			_error_page;
 	t_vecstr			_server_name;
+	t_locmap			_location;
 //	std::string			_root;
-//	std::string			_server_ip;
+	std::string			_server_ip;
 };
 
 #endif

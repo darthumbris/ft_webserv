@@ -6,17 +6,17 @@ CXXFLAGS = -Wall -Werror -Wextra -pedantic -std=c++11
 SRC_DIR = src
 OBJ_DIR = obj
 INC_DIR = includes
-JSON_DIR = json
-JSON = $(JSON_DIR)/json
 
 SRC =	main.cpp \
         WebServ.cpp \
-        parser/Config.cpp \
-        parser/Server.cpp \
-        parser/Location.cpp \
+        Config.cpp \
+        Server.cpp \
+        Location.cpp \
         RequestHandler.cpp \
         AutoIndexGenerator.cpp \
         CgiHandler.cpp \
+        Json.cpp \
+        Parse.cpp \
 
 SRC_EXT = cpp
 
@@ -49,8 +49,8 @@ endif
 
 all: $(NAME)
 
-$(NAME): $(OBJ) $(JSON)
-	@$(CXX) $(CXXFLAGS) $(OBJ) $(JSON)-o $(NAME) 2> $@.log; \
+$(NAME): $(OBJ)
+	@$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) 2> $@.log; \
         RESULT=$$?; \
         if [ $$RESULT -ne 0 ]; then \
             printf "%-60b%b" "$(COM_COLOR)$(COM_STRING)$(PRG_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
@@ -80,9 +80,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.$(SRC_EXT) | $(OBJ_DIR)
         cat $@.log; \
         rm -f $@.log; \
         exit $$RESULT
-
-$(JSON):
-	$(MAKE) -C $(JSON_DIR)
 
 clean:
 	@printf "%b" "$(ERROR_COLOR)Removing $(OBJ_COLOR)object files\n"
