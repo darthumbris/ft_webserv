@@ -108,7 +108,7 @@ Location *Server::getLocation(int port, std::string url) const
 	{
 		if (_server_listen[i] == port)
 		{
-			std::cout << "looking at port:" << port << " and url: " << url << std::endl;
+			// std::cout << "looking at port:" << port << " and url: " << url << std::endl;
 			if (_location.find(url) != _location.end())
 				return (_location.find(url)->second);
 		}

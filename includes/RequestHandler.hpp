@@ -55,7 +55,7 @@ class RequestHandler
 
 		// Setters
 		void	setResponse();
-		void	addToRequestMsg(const std::string &msg);
+		void	addToRequestMsg(char *msg, int bytes_received);
 		void	setSocket(int socket);
 		void	setPort(int port);
 		void	setUrlStruct(std::string full_url);

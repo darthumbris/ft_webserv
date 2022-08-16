@@ -195,8 +195,9 @@ void	WebServ::receiveRequest(t_event &event)
 	else
 	{
 		buf[bytes_read] = 0;
-		evudat->req->addToRequestMsg(buf);
+		evudat->req->addToRequestMsg(buf, bytes_read);
 	}
+	
 	// std::cout << "total_bytes: " <<  total_bytes << std::endl;
 	// fflush(stdout);
 }

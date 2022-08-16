@@ -25,8 +25,8 @@ CgiHandler::CgiHandler(RequestHandler &req) : _req(&req)
 	std::string	request = _req->getCompleteRequest();
 	std::size_t	body_start = request.find("\r\n\r\n");
 	_input_body = request.substr(body_start + 4);
-	std::cout << "input_body: " << _input_body << std::endl;
-	std::cout << "length: " << _input_body.length() << std::endl;
+	// std::cout << "input_body: " << _input_body << std::endl;
+	// std::cout << "length: " << _input_body.length() << std::endl;
 }
 
 

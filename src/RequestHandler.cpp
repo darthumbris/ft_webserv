@@ -183,7 +183,14 @@ void	RequestHandler::makeHeaderMap()
 #include <sys/stat.h>
 #include <mach-o/dyld.h>
 
-static bool	isFile(std::string path)
+enum	path
+{
+	IS_DIR,
+	IS_FILE,
+	IS_OTHER
+};
+
+static int	checkPath(std::string path, std::string root)
 {
 	struct stat s;
 
@@ -196,17 +203,29 @@ static bool	isFile(std::string path)
 		_NSGetExecutablePath(&buffer[0], &bufferSize);
 	}
 	std::string cur_dir = &buffer[0];
-	cur_dir.resize(cur_dir.length() - 10);
-	std::string	total_path = cur_dir + "/var/www/html" + path;
+	cur_dir.resize(cur_dir.length() - 9);
+	std::string	total_path = cur_dir + root + path;
 
 	if (stat(total_path.c_str(), &s) == 0)
 	{
-		std::cout << "stat" << std::endl;
-		if (s.st_mode & S_IFREG)
-			return true;
+		if (s.st_mode & S_IFDIR)
+		{
+			std::cout << "is a directory" << std::endl;
+			return IS_DIR;
+		}
+		else if (s.st_mode & S_IFREG)
+		{
+			std::cout << "is a file" << std::endl;
+			return IS_FILE;
+		}
+		else
+		{
+			std::cout << "is something else" << std::endl;
+			return IS_OTHER;
+		}
 	}
-	std::cout << total_path << " is not a file" << std::endl;
-	return false;
+	std::cout << total_path << " is not a file or directory" << std::endl;
+	return IS_OTHER;
 }
 
 static void	setServerError(std::string *body, std::string *header)
@@ -228,17 +247,17 @@ void	RequestHandler::testFunction()
 	std::string	file = "";
 	std::string url = _url.path.substr(0, _url.path.find_last_of('/') + 1);
 	std::string root;
-	if (isFile(_url.path))
-		file += _url.path.substr(_url.path.find_last_of('/') + 1, _url.path.length());
-	else
-		url = _url.path;
-	if (url.length() > 1 && !isFile(_url.path))
-		url += "/";
 	if (getLocation(url))
 		root = getLocation(url)->getRootPath();
 	else
 		return (setServerError(&_response_body, &_response_header));
-	root.append("/");
+	// root.append("/");
+	if (checkPath(_url.path, root) == IS_FILE)
+		file += _url.path.substr(_url.path.find_last_of('/') + 1, _url.path.length());
+	else
+		url = _url.path;
+	if (url.length() > 1 && checkPath(_url.path, root) == IS_DIR)
+		url += "/";	
 	std::cout << "root: " << root << std::endl;
 	std::cout << "url: " << url << std::endl;
 	std::cout << "file: " << file << std::endl;
@@ -275,7 +294,7 @@ void	RequestHandler::testFunction()
 			path = root + url + loc->getIndex();
 		else
 			return (setServerError(&_response_body, &_response_header));
-		std::cout << "\n\n=======Path: " << path << std::endl;
+		std::cout << "\n\n=======Path:" << path << std::endl;
 		std::ifstream infile(path, std::ios::in);
 		if (!infile.is_open())
 		{
@@ -312,22 +331,23 @@ void	RequestHandler::testFunction()
 }
 
 //TODO if there is a POST request it might have a body. Need to save that too for cgi handler
-//TODO remove all the stuff and move it to different function (testFunction or something)
-void	RequestHandler::addToRequestMsg(const std::string &msg)
+void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 {
 	size_t	crlf_pos;
-	size_t	size_req;
 
-	_complete_request += msg;
+	_complete_request.append(msg, bytes_received);
+	if (!isprint(_complete_request[0]))
+	{
+		_is_request_complete = true;
+		std::cout << "bad request" << std::endl;
+		return (setServerError(&_response_body, &_response_header));
+	}
 	crlf_pos = _complete_request.find("\r\n\r\n");
-	size_req = _complete_request.size();
-	if (crlf_pos != std::string::npos)
+	if (crlf_pos != std::string::npos) //TODO might need a need to see if the msg is done being received? Especially with POST requests
 	{
 		std::cout << _complete_request << std::endl;
 		std::cout << "\n------end of complete request--------" << std::endl;
 		_is_request_complete = true;
 		testFunction();
 	}
-
-	//TODO might need a need to see if the msg is done being received? Especially with POST requests
 }
