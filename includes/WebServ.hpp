@@ -71,6 +71,17 @@ class WebServ
 		void	receiveRequest(t_event &event);
 		void	sendResponse(t_event &event);
 		void	runServer();
+
+		//Exception
+		class WebServerExcpetion: public std::exception {
+		private:
+			std::string _msg;
+		public:
+			WebServerExcpetion(const std::string& msg) : _msg(msg) {}
+			virtual const char* what() const throw() {
+				return _msg.c_str();
+			}
+		};
 		
 	private:
 		

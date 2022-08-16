@@ -26,7 +26,14 @@ WebServ::WebServ(Config *config) : _config(config)
 			if (!listeningToPort(ports[i]))
 			{
 				std::cout << "setting socket for port: " << ports[i] << std::endl;
-				setNewServerSocket(server_map[it], ports[i]);
+				try
+				{
+					setNewServerSocket(server_map[it], ports[i]);
+				}
+				catch(const std::exception& e)
+				{
+					std::cerr << e.what() << '\n';
+				}
 				addPortToList(ports[i]);
 				_n_servers++;
 			}
@@ -84,10 +91,7 @@ void	WebServ::setNewServerSocket(Server server, int port)
 	// Creating the socket
 	srvr_sckt = socket(AF_INET, SOCK_STREAM, 0);
 	if (srvr_sckt == -1)
-	{
-		std::cout << "Error: socket failed" << std::endl;
-		perror("socket");
-	}
+		throw WebServerExcpetion{"Error: creating socket for server failed"};
 	server.setServerSocket(srvr_sckt);
 	setsockopt(srvr_sckt, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
@@ -99,15 +103,9 @@ void	WebServ::setNewServerSocket(Server server, int port)
 
 	// Binding and listening to the new socket using the address struct data
 	if (bind(srvr_sckt, (t_sckadr *)&srvr_addr, sizeof(srvr_addr)) == -1)
-	{
-		std::cout << "Error: bind failed" << std::endl;
-		perror("bind");
-	}
+		throw WebServerExcpetion{"Error: bind() failed"};
 	if (listen(srvr_sckt, BACKLOG) == -1)
-	{
-		std::cout << "Error: listen() failed" << std::endl;
-		perror("listen");
-	}
+		throw WebServerExcpetion{"Error: listen() failed"};
 	
 	// Setting the server socket as nonblocking
 	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
@@ -144,10 +142,7 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 
 	clnt_sckt = accept(event.ident, (t_sckadr *)(&newaddr), &socklen);
 	if (clnt_sckt == -1)
-	{
-		std::cout << "accept error" << std::endl;
-		perror("accept");
-	}
+		throw WebServerExcpetion{"Error: accept() failed"};
 	setsockopt(clnt_sckt, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(opt_value));
 
 	//setting initial values for the new_udat
@@ -186,20 +181,14 @@ void	WebServ::receiveRequest(t_event &event)
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	total_bytes += bytes_read;
 	if (bytes_read < 0)
-		std::cout << "receive error" << std::endl;
+		std::cout << "recv error" << std::endl;
 	else if (bytes_read == 0 && evudat->flag != 2)
-	{
 		evudat->flag = 1;
-		// std::cout << "bytes_read is 0" << std::endl;
-	}
 	else
 	{
 		buf[bytes_read] = 0;
 		evudat->req->addToRequestMsg(buf, bytes_read);
 	}
-	
-	// std::cout << "total_bytes: " <<  total_bytes << std::endl;
-	// fflush(stdout);
 }
 
 void	WebServ::sendResponse(t_event &event)
@@ -210,10 +199,8 @@ void	WebServ::sendResponse(t_event &event)
 
 	fd = evudat->req->getFileDescriptor();
 	if (evudat->flag != 2)
-	{
-		// get response
+	{		
 		response = evudat->req->getResponse();
-		// Sending response header (might contain the body too in case of autoindex?)
 		send(event.ident, response.c_str(), response.size(), 0);
 	}
 	if (fd > 0)
@@ -237,7 +224,6 @@ void	WebServ::sendResponse(t_event &event)
 		evudat->req = new RequestHandler(_config->getServerMap());
 		evudat->req->setPort(evudat->port);
 	}
-	// system("leaks webserv");
 }
 
 bool	WebServ::isListenSocket(int fd)
@@ -285,7 +271,10 @@ void	WebServ::runServer()
 			if (events[i].flags & EV_ERROR)
 				std::cout << "Error: Socket got deleted" << std::endl;
 			if (isListenSocket(events[i].ident))
-				addConnection(events[i], (t_evudat *)(events[i].udata));
+			{
+				try {addConnection(events[i], (t_evudat *)(events[i].udata));}
+				catch(const std::exception& e) {std::cerr << e.what() << '\n';}
+			}
 			else if (events[i].filter == EVFILT_READ)
 				readFromSocket(events[i]);
 			else if (events[i].filter == EVFILT_WRITE)

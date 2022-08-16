@@ -7,7 +7,6 @@
 */
 
 // Constructors
-//TODO server is necesarry to check for location , accepted methods etc.
 RequestHandler::RequestHandler(const t_servmap &srv_map) : 
 		_srv_map(srv_map), _is_request_complete(false), 
 		_has_remaining_request(false), _send_file(false), _fd(0),
@@ -196,10 +195,11 @@ static void	setServerError(std::string *body, std::string *header, std::string e
 void	RequestHandler::testFunction()
 {
 	
-	std::cout << "urlpath: " << _url.path << std::endl;
+	// std::cout << "urlpath: " << _url.path << std::endl;
 	std::string	file = "";
 	std::string url = _url.path.substr(0, _url.path.find_last_of('/') + 1);
 	std::string root;
+	std::string path;
 	if (getLocation(url))
 		root = getLocation(url)->getRootPath();
 	else
@@ -211,24 +211,24 @@ void	RequestHandler::testFunction()
 		url = _url.path;
 	if (url.length() > 1 && checkPath(_url.path, root) == IS_DIR)
 		url += "/";	
-	std::cout << "root: " << root << std::endl;
-	std::cout << "url: " << url << std::endl;
-	std::cout << "file: " << file << std::endl;
-	if (_complete_request.find("GET /") != std::string::npos || _complete_request.find("POST /") != std::string::npos) // testing how image things are handled
+	// std::cout << "root: " << root << std::endl;
+	// std::cout << "url: " << url << std::endl;
+	// std::cout << "file: " << file << std::endl;
+	if (_complete_request.find("GET /") != std::string::npos || _complete_request.find("POST /") != std::string::npos)
 	{
 		if (_url.path.find(".php") != std::string::npos)
 		{
 			CgiHandler	cgi(*this);
 			_response_body = cgi.execute();
+			std::cout << _response_body << std::endl;
 			_response_body.append("\r\n\r\n");
 			//TODO response header needs to be properly made based on the response body?
 			_response_header = "HTTP/1.1 200 OK\r\nContent-Length: ";
 			_response_header += std::to_string(_response_body.length());
 			_response_header += "\r\nConnection: keep-alive\r\nContent-Type: ";
-			_response_header += "Content-type: text/html; charset=UTF-8\r\n\r\n";
+			_response_header += "Content-type: text/plain; charset=UTF-8\r\n\r\n";
 			return;
 		}
-		std::string path;
 		Location *loc;
 		if (file != "")
 			path = root + url + file;
