@@ -329,7 +329,7 @@ void	RequestHandler::testFunction()
 	}
 }
 
-//TODO if there is a POST request it might have a body. Need to save that too for cgi handler
+//TODO after parsing the request need to check for which server it is (first using port, then if multiple servers on same port the servername/host and then location)
 void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 {
 	size_t	crlf_pos;
@@ -341,7 +341,7 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 		return (setServerError(&_response_body, &_response_header));
 	}
 	crlf_pos = _complete_request.find("\r\n\r\n");
-	if (crlf_pos != std::string::npos) //TODO might need a need to see if the msg is done being received? Especially with POST requests
+	if (crlf_pos != std::string::npos)
 	{
 		if (_is_request_header_done == false)
 		{
@@ -349,8 +349,6 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 			_is_request_header_done = true;
 		}
 		_request_body = _complete_request.substr(crlf_pos, std::string::npos);
-		// std::cout << _complete_request << std::endl;
-		// std::cout << "\n------end of complete request--------" << std::endl;
 		if (_headermap["Content-Length"].length() == 0)
 			_is_request_complete = true;
 		else if (_request_body.size() >= std::stoul(_headermap["Content-Length"]))

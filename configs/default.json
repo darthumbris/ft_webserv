@@ -40,6 +40,47 @@
               "GET"
             ]
           }
+      },
+      {
+        "client_body_size": 10000,
+        "listen": [
+          4242,
+          8080
+        ],
+        "server_name": [
+          "other.com",
+          "other2.com",
+          "other3.com"
+        ],
+        "error_page": [
+          "404something"
+        ],
+        "location /": {
+          "allowed_method": [
+            "GET"
+          ],
+          "return": "301http://localhost:4242/Redirection/301.html",
+          "auto_index": true,
+          "index": "index.html",
+          "root": "var/www/html"
+        },
+        "location /test/": {
+          "return": "301",
+          "root": "var/www/html",
+          "auto_index": true,
+          "allowed_method": [
+            "GET",
+            "POST"
+          ],
+          "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi"
+        },
+        "location /images/": {
+            "return": "301",
+            "root": "var/www/html",
+            "allowed_method": [
+              "GET"
+            ]
+          }
       }
     ]
   }
