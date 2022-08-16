@@ -242,24 +242,29 @@ void	WebServ::runServer()
 	int		new_evnt;
 	t_event	events[MAX_EVENTS];
 
-	while (true)
+	try
 	{
-		new_evnt = kevent(_kqueue, NULL, 0, events, _n_servers, NULL);
-		if (new_evnt == -1)
-			std::cout << "Error: kevent failure" << std::endl;
-		for (int i = 0; i < new_evnt; i++)
+		while (true)
 		{
-			if (events[i].flags & EV_ERROR)
-				std::cout << "Error: Socket got deleted" << std::endl;
-			if (isListenSocket(events[i].ident))
+			new_evnt = kevent(_kqueue, NULL, 0, events, _n_servers, NULL);
+			if (new_evnt == -1)
+				throw WebServerExcpetion("Error: kevent failed");
+			for (int i = 0; i < new_evnt; i++)
 			{
-				try {addConnection(events[i], (t_evudat *)(events[i].udata));}
-				catch(const std::exception& e) {std::cerr << e.what() << '\n';}
+				if (events[i].flags & EV_ERROR)
+					std::cout << "Error: Socket got deleted" << std::endl;
+				if (isListenSocket(events[i].ident))
+					addConnection(events[i], (t_evudat *)(events[i].udata));
+				else if (events[i].filter == EVFILT_READ)
+					readFromSocket(events[i]);
+				else if (events[i].filter == EVFILT_WRITE)
+					writeToSocket(events[i]);
 			}
-			else if (events[i].filter == EVFILT_READ)
-				readFromSocket(events[i]);
-			else if (events[i].filter == EVFILT_WRITE)
-				writeToSocket(events[i]);
 		}
 	}
+	catch(const std::exception& e) 
+	{
+		std::cerr << e.what() << '\n';
+	}
+	exit(1);
 }
