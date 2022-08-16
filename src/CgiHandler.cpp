@@ -1,23 +1,5 @@
 #include "CgiHandler.hpp"
-#include <mach-o/dyld.h>
-
-//TODO fix this, now doesnt properly give a return that makes sense
-
-static std::string getCurDir()
-{
-	unsigned int bufferSize = 512;
-	std::vector<char> buffer(bufferSize + 1);
-
-	if(_NSGetExecutablePath(&buffer[0], &bufferSize))
-	{
-		buffer.resize(bufferSize);
-		_NSGetExecutablePath(&buffer[0], &bufferSize);
-	}
-	std::string cur_dir = &buffer[0];
-	cur_dir.resize(cur_dir.length() - 10);
-	return cur_dir;
-}
-
+#include "Utils.hpp"
 
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(&req)

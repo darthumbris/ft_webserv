@@ -1,5 +1,6 @@
 #include "RequestHandler.hpp"
 #include "CgiHandler.hpp"
+#include "Utils.hpp"
 
 /*TODO need to have a check here for post to check how big the upload is
 // and compare it to the client_body_size variable of the server
@@ -179,61 +180,14 @@ void	RequestHandler::makeHeaderMap()
 	}
 }
 
-// 3 functions below this just for a bit of testing stuff
-#include <sys/stat.h>
-#include <mach-o/dyld.h>
-
-enum	path
+// 2 functions below just for a bit of testing stuff
+static void	setServerError(std::string *body, std::string *header, std::string error)
 {
-	IS_DIR,
-	IS_FILE,
-	IS_OTHER
-};
-
-static int	checkPath(std::string path, std::string root)
-{
-	struct stat s;
-
-	unsigned int bufferSize = 512;
-	std::vector<char> buffer(bufferSize + 1);
-
-	if(_NSGetExecutablePath(&buffer[0], &bufferSize))
-	{
-		buffer.resize(bufferSize);
-		_NSGetExecutablePath(&buffer[0], &bufferSize);
-	}
-	std::string cur_dir = &buffer[0];
-	cur_dir.resize(cur_dir.length() - 9);
-	std::string	total_path = cur_dir + root + path;
-
-	if (stat(total_path.c_str(), &s) == 0)
-	{
-		if (s.st_mode & S_IFDIR)
-		{
-			std::cout << "is a directory" << std::endl;
-			return IS_DIR;
-		}
-		else if (s.st_mode & S_IFREG)
-		{
-			std::cout << "is a file" << std::endl;
-			return IS_FILE;
-		}
-		else
-		{
-			std::cout << "is something else" << std::endl;
-			return IS_OTHER;
-		}
-	}
-	std::cout << total_path << " is not a file or directory" << std::endl;
-	return IS_OTHER;
-}
-
-static void	setServerError(std::string *body, std::string *header)
-{
+	std::cout << "Server Error:"<< error << std::endl;
 	*body = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
-	*body += "<title>500 Internal Server Error</title>\n</head>\n<body bgcolor=\"white\">";
-	*body += "<center><h1>500 Internal Server Error</h1></center>\n</body>\n</html>";
-	*header = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: ";
+	*body += "<title>" + error + "</title>\n</head>\n<body bgcolor=\"white\">";
+	*body += "<center><h1>" + error + "</h1></center>\n</body>\n</html>";
+	*header = "HTTP/1.1 " + error + "\r\nContent-Length: ";
 	*header += std::to_string((*body).length());
 	*header += "\r\nConnection: keep-alive\r\nContent-Type: ";
 	*header += "text/html\r\n\r\n";
@@ -249,7 +203,7 @@ void	RequestHandler::testFunction()
 	if (getLocation(url))
 		root = getLocation(url)->getRootPath();
 	else
-		return (setServerError(&_response_body, &_response_header));
+		return (setServerError(&_response_body, &_response_header, "404 File not Found"));
 	// root.append("/");
 	if (checkPath(_url.path, root) == IS_FILE)
 		file += _url.path.substr(_url.path.find_last_of('/') + 1, _url.path.length());
@@ -282,7 +236,7 @@ void	RequestHandler::testFunction()
 		{
 			std::cout << "auto indexing" << std::endl;
 			if (!loc->getAutoIndex())
-				return (setServerError(&_response_body, &_response_header));
+				return (setServerError(&_response_body, &_response_header, "500 Internal Server Error"));
 			_response_body = AutoIndexGenerator(url, root + url).getDirectoryIndex();
 			_response_header = "HTTP/1.1 200 OK\r\nContent-Length: ";
 			_response_header += std::to_string(_response_body.length());
@@ -292,7 +246,7 @@ void	RequestHandler::testFunction()
 		else if (loc)
 			path = root + url + loc->getIndex();
 		else
-			return (setServerError(&_response_body, &_response_header));
+			return (setServerError(&_response_body, &_response_header, "500 Internal Server Errorasd"));
 		std::cout << "\n\n=======Path:" << path << std::endl;
 		std::ifstream infile(path, std::ios::in);
 		if (!infile.is_open())
@@ -317,7 +271,7 @@ void	RequestHandler::testFunction()
 			if (infile.fail())
 			{
 				std::cout << "failed to get size of file" << std::endl;
-				return (setServerError(&_response_body, &_response_header));
+				return (setServerError(&_response_body, &_response_header, "500 Internal Server Error"));
 			}
 			else if (length > 0)
 			{
@@ -335,10 +289,10 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	size_t	crlf_pos;
 
 	_complete_request.append(msg, bytes_received);
-	if (!isprint(_complete_request[0]))
+	if (!isprint(_complete_request[0])) // this is for https and bad requests
 	{
 		_is_request_complete = true;
-		return (setServerError(&_response_body, &_response_header));
+		return (setServerError(&_response_body, &_response_header, "400 Bad Request")); // need to change this to bad request error
 	}
 	crlf_pos = _complete_request.find("\r\n\r\n");
 	if (crlf_pos != std::string::npos)

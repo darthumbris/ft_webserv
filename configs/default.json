@@ -1,5 +1,6 @@
 {
-    "server": [
+    "server": 
+    [
       {
         "client_body_size": 1000,
         "listen": [

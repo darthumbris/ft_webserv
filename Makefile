@@ -17,6 +17,7 @@ SRC =	main.cpp \
         CgiHandler.cpp \
         Json.cpp \
         Parse.cpp \
+        Utils.cpp \
 
 SRC_EXT = cpp
 
