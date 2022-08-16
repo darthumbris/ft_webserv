@@ -1,21 +1,16 @@
 #include "WebServ.hpp"
 
-//TODO throw for somethings and make a error handler for those
-//TODO cleanup some of the code here
-//TODO maybe do setNewServerSocket so that each server listening on same port does get a socket ? check this
-
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
 {
-	t_servmap	server_map;
-
 	// Starting the kqueue
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
-	server_map = _config->getServerMap();
+	t_servmap server_map = _config->getServerMap();
 	_n_servers = 0;
+
 	// Going through the config and making a socket and event for all servers in it.
-	std::cout << "servers: " << server_map.size() << std::endl;
+	std::cout << "servers in config: " << server_map.size() << std::endl;
 	for (std::size_t it = 0; it < server_map.size(); it++)
 	{
 		std::vector<int> ports = server_map[it].getServerPort();
@@ -26,14 +21,8 @@ WebServ::WebServ(Config *config) : _config(config)
 			if (!listeningToPort(ports[i]))
 			{
 				std::cout << "setting socket for port: " << ports[i] << std::endl;
-				try
-				{
-					setNewServerSocket(server_map[it], ports[i]);
-				}
-				catch(const std::exception& e)
-				{
-					std::cerr << e.what() << '\n';
-				}
+				try	{setNewServerSocket(server_map[it], ports[i]);}
+				catch(const std::exception& e) {std::cerr << e.what() << std::endl;}
 				addPortToList(ports[i]);
 				_n_servers++;
 			}
