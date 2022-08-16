@@ -133,21 +133,18 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 //TODO maybe needs a check for the udat if it needs to be deleted?
 void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 {
-	int			clnt_sckt;
 	int			opt_value = 1;
 	t_addr_in	newaddr;
 	socklen_t	socklen = sizeof(newaddr);
-	char		host[1024];
-	char		service[20];
 
-	clnt_sckt = accept(event.ident, (t_sckadr *)(&newaddr), &socklen);
+	int clnt_sckt = accept(event.ident, (t_sckadr *)(&newaddr), &socklen);
 	if (clnt_sckt == -1)
 		throw WebServerExcpetion{"Error: accept() failed"};
 	setsockopt(clnt_sckt, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(opt_value));
 
 	//setting initial values for the new_udat
 	t_evudat	*new_udat = new t_evudat;
-	new_udat->flag = 0;
+	memset(new_udat, 0, sizeof(t_evudat));
 	new_udat->addr = newaddr;
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
@@ -155,9 +152,6 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->req->setSocket(clnt_sckt);
 	new_udat->req->setPort(old_udat->port);
 	new_udat->req->setClientIp(inet_ntoa(newaddr.sin_addr));
-	new_udat->datalen = 0;
-	new_udat->total_size = 0;
-	getnameinfo((const t_sckadr *)&newaddr, socklen, host, sizeof host, service, sizeof service, 0);
 
 	//putting the read and write event for the new client in the kqueue
 	t_event		new_event[2];
@@ -165,10 +159,8 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	EV_SET(&new_event[1], clnt_sckt, EVFILT_WRITE, EV_ADD, 0, 0, new_udat);
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
 
-	//Debug messages
-	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr);
-	std::cout << " and client port: " << ntohs(newaddr.sin_port) << std::endl;
-	std::cout << "Client connected to server with ip: " << old_udat->ip << " and port: " << old_udat->port << std::endl;
+	//Debug message
+	std::cout << "New client connected to server with port: " << old_udat->port << std::endl;
 }
 
 void	WebServ::receiveRequest(t_event &event)
