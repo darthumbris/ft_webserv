@@ -83,8 +83,8 @@ void	CgiHandler::setEnvValues()
 	// std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
 	// std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
 	// std::cout << "REQUEST_METHOD: " << _env["REQUEST_METHOD="] << std::endl;
-	// for (auto it = _env.begin(); it != _env.end(); it++)
-	// 	std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
+	for (auto it = _env.begin(); it != _env.end(); it++)
+		std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
 
 
 	// std::cout << "\n-----end of cgihandler env setter--------" << std::endl;

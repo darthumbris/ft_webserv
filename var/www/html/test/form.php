@@ -18,6 +18,11 @@ $uploaddir = __DIR__ . '/upload/';
 $uploadfile = $uploaddir . basename($_FILES['userfile']['name']);
 $tmp_name = $_FILES['userfile']['tmp_name'];
 echo $tmp_name;
+echo "\n";
+echo $uploaddir;
+echo "\n";
+echo $uploadfile;
+echo "\n";
 echo '<pre>';
 if (move_uploaded_file($tmp_name, $uploadfile)) {
 	echo "File upload successfully\n";
