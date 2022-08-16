@@ -241,7 +241,6 @@ static void	setServerError(std::string *body, std::string *header)
 
 void	RequestHandler::testFunction()
 {
-	makeHeaderMap();
 	
 	std::cout << "urlpath: " << _url.path << std::endl;
 	std::string	file = "";
@@ -339,15 +338,24 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	if (!isprint(_complete_request[0]))
 	{
 		_is_request_complete = true;
-		std::cout << "bad request" << std::endl;
 		return (setServerError(&_response_body, &_response_header));
 	}
 	crlf_pos = _complete_request.find("\r\n\r\n");
 	if (crlf_pos != std::string::npos) //TODO might need a need to see if the msg is done being received? Especially with POST requests
 	{
-		std::cout << _complete_request << std::endl;
-		std::cout << "\n------end of complete request--------" << std::endl;
-		_is_request_complete = true;
-		testFunction();
+		if (_is_request_header_done == false)
+		{
+			makeHeaderMap();
+			_is_request_header_done = true;
+		}
+		_request_body = _complete_request.substr(crlf_pos, std::string::npos);
+		// std::cout << _complete_request << std::endl;
+		// std::cout << "\n------end of complete request--------" << std::endl;
+		if (_headermap["Content-Length"].length() == 0)
+			_is_request_complete = true;
+		else if (_request_body.size() >= std::stoul(_headermap["Content-Length"]))
+			_is_request_complete = true;
+		if (_is_request_complete)
+			testFunction();
 	}
 }

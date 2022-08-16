@@ -80,6 +80,7 @@ class RequestHandler
 
 		t_url		_url;
 		bool		_is_request_complete;
+		bool		_is_request_header_done;
 		bool		_has_remaining_request;
 		bool		_send_file;
 		int			_client_socket;

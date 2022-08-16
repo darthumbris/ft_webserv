@@ -83,8 +83,8 @@ void	CgiHandler::setEnvValues()
 	// std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
 	// std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
 	// std::cout << "REQUEST_METHOD: " << _env["REQUEST_METHOD="] << std::endl;
-	for (auto it = _env.begin(); it != _env.end(); it++)
-		std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
+	// for (auto it = _env.begin(); it != _env.end(); it++)
+	// 	std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
 
 
 	// std::cout << "\n-----end of cgihandler env setter--------" << std::endl;
@@ -192,7 +192,7 @@ std::string	CgiHandler::execute()
 	std::size_t	start_content_type = _output_body.find("Content-type");
 	std::size_t	start_body = _output_body.find('\n', start_content_type);
 	_output_body = _output_body.substr(start_body, std::string::npos);
-	std::cout << "output: " << _output_body << std::endl;
+	// std::cout << "output: " << _output_body << std::endl;
 	return _output_body;
 }
 
