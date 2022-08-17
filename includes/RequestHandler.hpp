@@ -60,6 +60,7 @@ class RequestHandler
 		void	setPort(int port);
 		void	setUrlStruct(std::string full_url);
 		void	setClientIp(std::string ip);
+		void	setCgiError();
 
 		// Member Functions
 		void	makeHeaderMap();
@@ -83,6 +84,7 @@ class RequestHandler
 		bool		_is_request_header_done;
 		bool		_has_remaining_request;
 		bool		_send_file;
+		bool		_cgi_error;
 		int			_client_socket;
 		int			_fd;
 		int			_port;

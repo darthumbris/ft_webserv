@@ -26,7 +26,7 @@ void	CgiHandler::setCgiPaths()
 	if (_req->getLocation(_folder))
 		_cgi_path = _req->getLocation(_folder)->getCgiPath();
 	else
-		_cgi_path = "";
+		_cgi_path = ""; // TODO might need to give a server error in this case
 	
 	// std::cout << "root: " << _root << std::endl;
 	// std::cout << "folder: " << _folder << std::endl;
@@ -52,7 +52,7 @@ void	CgiHandler::setEnvValues()
 	_env["REMOTE_USER="] = _req->getHeaderMap()["Authorization"];
 	_env["REQUEST_METHOD="] = _req->getRequestMethod();
 	_env["SCRIPT_NAME="] = _cgi_path;
-	_env["SERVER_NAME="] = "test_server"; // TODO get correct name from _req
+	_env["SERVER_NAME="] = "test_server"; // TODO get correct name from _req or from the headermap?
 	_env["SERVER_PORT="] = std::to_string(_req->getPort());
 	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
 	_env["SERVER_SOFTWARE="] = "test_server";
@@ -95,6 +95,7 @@ void	CgiHandler::executeScript(char **envp)
 	dup2(_in_file_fd, STDIN_FILENO);
 	dup2(_out_file_fd, STDOUT_FILENO);
 	execve(_cgi_path.c_str(), NULL, envp);
+	_req->setCgiError();
 	write(STDOUT_FILENO, "Status: 500\r\n", 14);
 }
 
@@ -153,7 +154,10 @@ std::string	CgiHandler::execute()
 	//forking for executing script
 	pid = fork();
 	if (pid == -1)
+	{
+		_req->setCgiError();
 		return ("Status: 500\r\n");
+	}
 	else if (pid == 0)
 		executeScript(envp);
 	else
@@ -171,6 +175,7 @@ std::string	CgiHandler::execute()
 	std::cout << "finished executing " << std::endl;
 
 	//TODO check if this works always or needs to be done differently
+	//TODO might need to remove this part later so the requesthandler can see what content-type to set for the response header
 	std::size_t	start_content_type = _output_body.find("Content-type");
 	std::size_t	start_body = _output_body.find('\n', start_content_type);
 	_output_body = _output_body.substr(start_body, std::string::npos);

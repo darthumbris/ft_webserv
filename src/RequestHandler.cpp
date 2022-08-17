@@ -10,7 +10,7 @@
 RequestHandler::RequestHandler(const t_servmap &srv_map) : 
 		_srv_map(srv_map), _is_request_complete(false), 
 		_has_remaining_request(false), _send_file(false), _fd(0),
-		_file_size(0)
+		_file_size(0), _cgi_error(false)
 {
 }
 
@@ -116,6 +116,7 @@ void	RequestHandler::setPort(int port)
 	this->_port = port;
 }
 
+//TODO fix this so if it can't find the location it starts looking at parent directories until it finds it
 Location	*RequestHandler::getLocation(std::string url) const
 {
 	for (std::size_t it = 0; it < _srv_map.size(); it++)
@@ -138,6 +139,11 @@ void	RequestHandler::setUrlStruct(std::string full_url)
 void	RequestHandler::setClientIp(std::string ip)
 {
 	_client_ip = ip;
+}
+
+void	RequestHandler::setCgiError()
+{
+	_cgi_error = true;
 }
 
 // Member functions
@@ -226,7 +232,7 @@ void	RequestHandler::testFunction()
 			_response_header = "HTTP/1.1 200 OK\r\nContent-Length: ";
 			_response_header += std::to_string(_response_body.length());
 			_response_header += "\r\nConnection: keep-alive\r\n";
-			_response_header += "Content-type: text/plain; charset=UTF-8\r\n\r\n";
+			_response_header += "Content-type: text/html; charset=UTF-8\r\n\r\n";
 			return;
 		}
 		Location *loc;
