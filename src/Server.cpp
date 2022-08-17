@@ -4,7 +4,8 @@
 // Constructor
 Server::Server()
 {
-	std::cout << BLUE << "\nAdded a new server." << std::endl;
+	if (DEBUG_MODE)
+		std::cout << BLUE << "\nAdded a new server." << std::endl;
 }
 
 // Destructor
@@ -37,7 +38,8 @@ void Server::addServerName(const Json &json)
 
 void Server::setServerClientBodySize(const Json &json)
 {
-	std::cout << BLUE << "Set the client_body_size to: " << json.values.number << " for the server." << RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << BLUE << "Set the client_body_size to: " << json.values.number << " for the server." << RESET_COLOR << std::endl;
 	_client_body_size = json.values.number;
 }
 

@@ -43,7 +43,6 @@ void Config::addServer(const Json *json)
 
 			loc->ParseLocation(x.first, *x.second);
 			server->addLocationToServer(loc->getPath(x.first), loc);
-			std::cout << std::endl;
 		}
 		else
 		{
