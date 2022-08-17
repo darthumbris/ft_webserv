@@ -75,7 +75,7 @@ class RequestHandler
 		std::string	_response_body;
 		std::string	_request_body;
 		std::string _request_method; //set this, this is used for the cgihandler 
-		std::string	_method_header;
+		// std::string	_method_header;
 		std::string	_client_ip;	
 
 		t_url		_url;

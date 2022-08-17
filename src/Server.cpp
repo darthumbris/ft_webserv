@@ -17,7 +17,8 @@ void Server::addServerListen(const Json &json)
 	{
 		if (x->type != Json::NUMBER)
 			throw Config::wrongKey("expected <NUMBER>");
-		std::cout << BLUE << "Added port: " << x->values.number << " to the server." << RESET_COLOR << std::endl;
+		if (DEBUG_MODE)
+			std::cout << BLUE << "Added port: " << x->values.number << " to the server." << RESET_COLOR << std::endl;
 		_server_listen.push_back(x->values.number);
 	}
 }
@@ -28,7 +29,8 @@ void Server::addServerName(const Json &json)
 	{
 		if (x->type != Json::STRING)
 			throw Config::wrongKey("expected <STRING>");
-		std::cout << BLUE << "Added server_name: " << x->values.str << " to the server." << RESET_COLOR << std::endl;
+		if (DEBUG_MODE)
+			std::cout << BLUE << "Added server_name: " << x->values.str << " to the server." << RESET_COLOR << std::endl;
 		_server_name.push_back(x->values.str);
 	}
 }
@@ -45,7 +47,8 @@ void Server::setServerErrorPage(const Json &json)
 	{
 		if (x->type != Json::STRING)
 			throw Config::wrongKey("expected <STRING>");
-		std::cout << BLUE << "Added error_page: " << x->values.str << " to the server" << RESET_COLOR << std::endl;	
+		if (DEBUG_MODE)
+			std::cout << BLUE << "Added error_page: " << x->values.str << " to the server" << RESET_COLOR << std::endl;	
 		_error_page.push_back(json.values.str);
 	}
 }

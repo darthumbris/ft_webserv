@@ -11,6 +11,10 @@
 # define RESET_COLOR	"\033[0m"
 # define BLUE    		"\033[34m"
 
+# ifndef DEBUG_MODE
+#  define DEBUG_MODE	0
+# endif
+
 class Json;
 
 using jsonObject = std::map<std::string, Json*>;

@@ -88,57 +88,67 @@ std::string			Location::getCgiPath() const
 void Location::setAutoIndex(const Json& json)
 {
 	_auto_index = json.values.boolean;
-	std::cout << GREEN << "set the directory listing to: ";
-	if (_auto_index)
-		std::cout << "be enabled";
-	else
-		std::cout << "be disabled";
-	std::cout << " for this location." <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+	{
+		std::cout << GREEN << "set the directory listing to: ";
+		if (_auto_index)
+			std::cout << "be enabled";
+		else
+			std::cout << "be disabled";
+		std::cout << " for this location." <<  RESET_COLOR << std::endl;
+	}
 }
 
 void Location::setUploadPath(const Json& json)
 {
 	_upload_path = json.values.str;
-	std::cout << GREEN << "set the upload_path: " << _upload_path << " for this location" <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "set the upload_path: " << _upload_path << " for this location" <<  RESET_COLOR << std::endl;
 }
 
 void Location::setReturnUrl(const Json& json)
 {
 	_return_url = json.values.str;
-	std::cout << GREEN << "set return url: " << _return_url << " for this location." <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "set return url: " << _return_url << " for this location." <<  RESET_COLOR << std::endl;
 }
 
 void Location::setRootFolder(const Json& json)
 {
 	_root = json.values.str;
-	std::cout << GREEN << "set the root_folder: " << _root << " for this location" <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "set the root_folder: " << _root << " for this location" <<  RESET_COLOR << std::endl;
 }
 
 void Location::setGetMethod(const Json& json)
 {
 	(void)json;
 	_allowed_methods.get = true;
-	std::cout << GREEN << "Enabled the GET method for this location" <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "Enabled the GET method for this location" <<  RESET_COLOR << std::endl;
 }
 
 void Location::setPostMethod(const Json& json)
 {
 	(void)json;
 	_allowed_methods.post = true;
-	std::cout << GREEN << "Enabled the POST method for this location" <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "Enabled the POST method for this location" <<  RESET_COLOR << std::endl;
 }
 
 void Location::setDeleteMethod(const Json& json)
 {
 	(void)json;
 	_allowed_methods.del = true;
-	std::cout << GREEN << "Enabled the DELETE method for this location" <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "Enabled the DELETE method for this location" <<  RESET_COLOR << std::endl;
 }
 
 void Location::setIndex(const Json& json)
 {
 	_index = json.values.str;
-	std::cout << GREEN << "set the index_file: " << _index << " for this location" <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "set the index_file: " << _index << " for this location" <<  RESET_COLOR << std::endl;
 }
 
 void Location::setAllowedMethod(const Json& json)
@@ -183,8 +193,11 @@ void	Location::setCgi(const Json& json)
 {
 	_cgi_file_type = json.values.str.substr(0, json.values.str.find_first_of(" "));
 	_cgi_path = json.values.str.substr(json.values.str.find_first_of(" ") + 1, std::string::npos);
-	std::cout << GREEN  << "set the CGI file type: " << _cgi_file_type << " and the Cgi path: " << _cgi_path;
-	std::cout << " for this location." <<  RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+	{
+		std::cout << GREEN  << "set the CGI file type: " << _cgi_file_type << " and the Cgi path: " << _cgi_path;
+		std::cout << " for this location." <<  RESET_COLOR << std::endl;
+	}
 }
 
 
@@ -220,6 +233,7 @@ void Location::ParseLocation(const std::string& name, const Json& json)
 	std::string path = getPath(name);
 	if (path.empty())
 		wrongType("path cannot be empty");
-	std::cout << GREEN << "\nAdding new location with dir: " << path << " to the server." << RESET_COLOR << std::endl;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "\nAdding new location with dir: " << path << " to the server." << RESET_COLOR << std::endl;
 	setLocation(json);
 }

@@ -164,7 +164,7 @@ void	RequestHandler::makeHeaderMap()
 	std::size_t	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
 	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
 	_request_method = _complete_request.substr(0, first_pos - 1);
-	_method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
+	// _method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
 
 	//making a map of all the request headers
 	if (split.size() > 1)
@@ -292,7 +292,7 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	if (!isprint(_complete_request[0])) // this is for https and bad requests
 	{
 		_is_request_complete = true;
-		return (setServerError(&_response_body, &_response_header, "400 Bad Request")); // need to change this to bad request error
+		return (setServerError(&_response_body, &_response_header, "400 Bad Request"));
 	}
 	crlf_pos = _complete_request.find("\r\n\r\n");
 	if (crlf_pos != std::string::npos)
