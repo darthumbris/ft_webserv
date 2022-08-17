@@ -1,92 +1,79 @@
-#include "Server.hpp"
+# include "../includes/Server.hpp"
+# include "../includes/Config.hpp"
 
-// Constructors
-Server::Server() : _server_ip("127.0.0.1")
+// Constructor
+Server::Server()
 {
+	if (DEBUG_MODE)
+		std::cout << BLUE << "\nAdded a new server." << std::endl;
 }
-
-Server::Server(const Server &copy)
-{
-	(void) copy;
-}
-
 
 // Destructor
-Server::~Server()
-{
-}
-
-
-// Operators
-Server & Server::operator=(const Server &assign)
-{
-	(void) assign;
-	return *this;
-}
-
-// Getters
-std::string	Server::getServerIp() const
-{
-	return this->_server_ip;
-}
-
-std::vector<int>	Server::getServerPort() const
-{
-	return this->_server_port;
-}
-
-t_vecstr	Server::getServerNames() const
-{
-	return this->_server_name;
-}
-
-t_locmap	Server::getLocationMap() const
-{
-	return this->_location;
-}
-
-t_vecstr	Server::getErrorPage() const
-{
-	return this->_error_page;
-}
-
-int	Server::getClientBodySize() const
-{
-	return this->_client_body_size;
-}
-
-std::vector<int>	Server::getServerSocket() const
-{
-	return this->_server_fd;
-}
-
-Location *Server::getLocation(int port, std::string url) const
-{
-	for (std::size_t i = 0; i < _server_port.size(); i++)
-	{
-		if (_server_port[i] == port)
-		{
-			if (_location.find(url) != _location.end())
-				return (_location.find(url)->second);
-		}
-	}
-	return NULL;
-}
+Server::~Server() {}
 
 // Setters
-void	Server::setServerIp(const std::string& ip)
+void Server::addServerListen(const Json &json)
 {
-	this->_server_ip = ip;
+	for (const Json *x: json.values.list)
+	{
+		if (x->type != Json::NUMBER)
+			throw Config::wrongKey("expected <NUMBER>");
+		if (DEBUG_MODE)
+			std::cout << BLUE << "Added port: " << x->values.number << " to the server." << RESET_COLOR << std::endl;
+		_server_listen.push_back(x->values.number);
+	}
 }
 
-void	Server::addServerPort(int port)
+void Server::addServerName(const Json &json)
 {
-	this->_server_port.push_back(port);
+	for (const auto *x : json.values.list)
+	{
+		if (x->type != Json::STRING)
+			throw Config::wrongKey("expected <STRING>");
+		if (DEBUG_MODE)
+			std::cout << BLUE << "Added server_name: " << x->values.str << " to the server." << RESET_COLOR << std::endl;
+		_server_name.push_back(x->values.str);
+	}
 }
 
-void	Server::addServerName(std::string server_name)
+void Server::setServerClientBodySize(const Json &json)
 {
-	this->_server_name.push_back(server_name);
+	if (DEBUG_MODE)
+		std::cout << BLUE << "Set the client_body_size to: " << json.values.number << " for the server." << RESET_COLOR << std::endl;
+	_client_body_size = json.values.number;
+}
+
+void Server::setServerErrorPage(const Json &json)
+{
+	for (const auto *x : json.values.list)
+	{
+		if (x->type != Json::STRING)
+			throw Config::wrongKey("expected <STRING>");
+		if (DEBUG_MODE)
+			std::cout << BLUE << "Added error_page: " << x->values.str << " to the server" << RESET_COLOR << std::endl;	
+		_error_page.push_back(json.values.str);
+	}
+}
+
+Server::Func Server::setValues(const std::string name, const Json& json)
+{
+	t_table	map[] =
+	{
+			{"listen", Json::ARRAY, &Server::addServerListen},
+			{"error_page", Json::ARRAY, &Server::setServerErrorPage},
+			{"server_name", Json::ARRAY, &Server::addServerName},
+			{"client_body_size", Json::NUMBER, &Server::setServerClientBodySize}
+	};
+
+	for (const t_table& entry : map)
+	{
+		if (entry.type == json.type)
+		{
+			if (entry.key == name)
+				return (entry.map_values);
+		}
+	}
+	throw Config::wrongKey("invalid name or key for <" + name);
 }
 
 void	Server::setServerSocket(int server_socket)
@@ -94,18 +81,56 @@ void	Server::setServerSocket(int server_socket)
 	this->_server_fd.push_back(server_socket);
 }
 
-void	Server::setServerClientBodySize(int size)
+
+// Getters
+int Server::getClientBodySize() const
 {
-	this->_client_body_size = size;
+	return _client_body_size;
 }
 
-void	Server::setServerErrorPage(std::string error_page)
+const std::string&		Server::getServerIp() const
 {
-	this->_error_page.push_back(error_page);
+	return this->_server_ip;
 }
 
-// Member Functions
-void	Server::addLocationToServer(std::string location_dir)
+const std::vector<int> &Server::getServerPort() const
 {
-	this->_location.insert(std::make_pair(location_dir, new Location()));
+	return _server_listen;
 }
+
+
+const t_vecstr &Server::getErrorPage() const
+{
+	return _error_page;
+}
+
+const t_vecstr &Server::getServerNames() const
+{
+	return _server_name;
+}
+
+t_locmap	Server::getLocationMap() const
+{
+	return this->_location;
+}
+
+Location *Server::getLocation(int port, std::string url) const
+{
+	for (std::size_t i = 0; i < _server_listen.size(); i++)
+	{
+		if (_server_listen[i] == port)
+		{
+			// std::cout << "looking at port:" << port << " and url: " << url << std::endl;
+			if (_location.find(url) != _location.end())
+				return (_location.find(url)->second);
+		}
+	}
+	return NULL;
+}
+
+// Member Function
+void	Server::addLocationToServer(std::string location_dir, Location *loc)
+{
+	this->_location.insert(std::make_pair(location_dir, loc));
+}
+

@@ -3,6 +3,7 @@
 // Constructors
 AutoIndexGenerator::AutoIndexGenerator(const std::string root, const std::string path) : _path(path)
 {
+	// std::cout << "making autoindex for dir: " << _path << std::endl;
 	DIR	*dir = opendir(_path.c_str());
 
 	//Making the start of directory listing.

@@ -1,6 +1,8 @@
-#include "Config.hpp"
+#include "../includes/Config.hpp"
+#include "../includes/Location.hpp"
 
 // Constructors
+<<<<<<< HEAD
 //TODO in constructor check if file can be opened.
 // TODO maybe needs to be a check if there are no duplicate server_names?
 Config::Config(std::string config_path)
@@ -22,66 +24,66 @@ Config::Config(std::string config_path)
 	addLocation("/");
 	// Setting autoindex for location / to true (default is off)
 	getLastServer()->getLocationMap()["/"]->setAutoIndex(true);
+=======
+Config::Config() {}
+>>>>>>> master
 
-	// Config parsed new server with listen 0.0.0.0 4242
-	addServer("0.0.0.0", "7575");
-	getLastServer()->addServerPort(4343);
-	getLastServer()->addServerName("different.com");
-}
-
-Config::Config(const Config &copy)
+Config::Config(const Json *json)
 {
-	(void) copy;
+	setServers(json);
 }
-
 
 // Destructor
 Config::~Config()
 {
 }
 
-
-// Operators
-Config & Config::operator=(const Config &assign)
+// Setters
+void Config::setServers(const Json *json)
 {
-	(void) assign;
-	return *this;
+	for (const auto &x: json->values.object)
+		setServerName(x.first, *x.second);
 }
 
-//TODO make a parseconfig function which goes through the config
-// and adds new servers and locations (to the corresponding servers) (for ABBA)
+void Config::setServerName(const std::string name, const Json &json)
+{
+	(void)name;
+	Location	loc;
+	if (json.type != Json::ARRAY)
+		throw wrongKey("expected an <" + loc.getEnumValue(Json::ARRAY) + "> and got " + loc.getEnumValue(json.type));
+	for (const Json *x: json.values.list)
+		addServer(x);
+}
+
+void Config::addServer(const Json *json)
+{
+	Server		*server = new Server();
+
+	for (const auto &x: json->values.object)
+	{
+		if(x.first.find("location") != std::string::npos)
+		{
+			Location	*loc = new Location();
+
+			loc->ParseLocation(x.first, *x.second);
+			server->addLocationToServer(loc->getPath(x.first), loc);
+		}
+		else
+		{
+			Server::Func f = server->setValues(x.first, *x.second);
+			(*server.*f)(*x.second);
+		}
+	}
+	_servers.push_back(*server);
+}
 
 // Getters
 t_servmap	Config::getServerMap() const
 {
-	return this->_server;
+	return this->_servers;
 }
 
-Server	*Config::getLastServer()
+Server	Config::getLastServer()
 {
-	return (_server.back());
-}
-
-
-
-// Member Functions
-void	Config::addServer(std::string ip, std::string port)
-{
-	//Ip can probably just be always 127.0.0.1 ?
-	std::string	server_key = ip + ":" +  port;
-	_server.push_back(new Server());
-	_server.back()->setServerIp(ip);
-	_server.back()->addServerPort(std::stoi(port));
-}
-
-void	Config::addLocation(std::string location_dir)
-{
-	Server		*server;
-	t_locmap	location;
-
-	server = getLastServer();
-	location = server->getLocationMap();
-	if (location.size() && location.find(location_dir) != location.end())
-		std::cout << "Error: duplicate location in config" << std::endl; // Should throw ?, can of course be a different server with same location
-	server->addLocationToServer(location_dir);
+	return _servers.back();
 }

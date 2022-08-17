@@ -6,11 +6,14 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/14 20:23:23 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/17 19:00:23 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "RequestHandler.hpp"
+#include "CgiHandler.hpp"
+#include "Utils.hpp"
+
 #include <fcntl.h>
 #include <fstream>
 #include <unistd.h>
@@ -38,21 +41,10 @@ std::string trim(const std::string &s) {
 bool RequestHandler::fileExists(const std::string& path)
 {
 	std::ifstream fstream(path);
-
 	return (fstream.good());
 }
-
-/*
-bool RequestHandler::filePremissions(const std::string& path)
-{
-	std::filesystem::premissions(path);
-
-	return (fstream.good());
-}
-*/
 
 // Constructors
-//TODO server is necesarry to check for location , accepted methods etc.
 RequestHandler::RequestHandler(const t_servmap &srv_map) : 
 		_srv_map(srv_map), _is_request_complete(false), 
 		_has_remaining_request(false), _send_file(false), _fd_response(0),
@@ -70,7 +62,6 @@ RequestHandler::RequestHandler(const RequestHandler &copy)
 RequestHandler::~RequestHandler()
 {
 }
-
 
 // Operators
 RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
@@ -194,10 +185,12 @@ int	RequestHandler::ParseRequestLine(std::string line)
 {
 	const std::vector<std::string>	wordVector = cpp_split(line);
 
+	//hex for space %20
 	if (wordVector.size() != 3)
 		return BuildResponse("400 BAD REQUEST");
 	if (wordVector[0] != "GET" && wordVector[0] != "DELETE" && wordVector[0] != "POST")
 		return BuildResponse("400 BAD REQUEST");
+	// Special characters ! * ' ( ) ; : @ & = + $ , / ? % # [ ] 
 	if (wordVector[1][0] != '/')
 		return BuildResponse("400 BAD REQUEST");
 	if (wordVector[2] != "HTTP/1.1")
@@ -256,27 +249,6 @@ void	RequestHandler::setRequestMsg(std::string msg)
 	_msg = msg;
 }
 
-/*
- * these ones are deffines
- * request-header = Accept
-				| Accept-Charset
-				| Accept-Encoding
-				| Accept-Language
-				| Authorization
-				| Expect
-				| From
-				| Host
-				| If-Match
-				| If-Modified-Since
-				| If-None-Match
-				| If-Range
-				| If-Unmodified-Since | Max-Forwards
-				| Proxy-Authorization | Range
-				| Referer
-				| TE
-				| User-Agent
- */
-
 int	RequestHandler::ParseRequestMsg(void)
 {
 	std::istringstream	iss;
@@ -325,6 +297,41 @@ std::size_t	RequestHandler::getFileSize() const
 	return this->_file_size;
 }
 
+std::string	RequestHandler::getRequestMethod() const
+{
+	return this->_request_method;
+}
+
+std::string RequestHandler::getResponseBody() const
+{
+	return this->_response_body;
+}
+
+t_strmap	RequestHandler::getHeaderMap() const
+{
+	return this->_headermap;
+}
+
+t_url	RequestHandler::getUrl() const
+{
+	return this->_url;
+}
+
+int	RequestHandler::getPort() const
+{
+	return this->_port;
+}
+
+std::string	RequestHandler::getClientIp() const
+{
+	return this->_client_ip;
+}
+
+std::string RequestHandler::getCompleteRequest() const
+{
+	return this->_complete_request;
+}
+
 // Setters
 void	RequestHandler::setResponse()
 {
@@ -348,86 +355,28 @@ std::string	RequestHandler::getResponse(void) const
 }
 
 // Member functions
+
 Location	*RequestHandler::getLocation(std::string url) const
 {
 	for (std::size_t it = 0; it < _srv_map.size(); it++)
 	{
-		if (_srv_map[it]->getLocation(_port, url))
-			return (_srv_map[it]->getLocation(_port, url));
+		if (_srv_map[it].getLocation(_port, url))
+			return (_srv_map[it].getLocation(_port, url));
 	}
 	return NULL;
 }
 
-void	RequestHandler::test(void)
-{
-	std::string root = "var/www/html/";
-	std::string	url = "/";
-	std::string path;
-	Location *loc;
-	if (_complete_request.find("/favicon.ico") != std::string::npos)
-		path = root + "favicon.ico";
-	else if (_complete_request.find("/cheese.png") != std::string::npos)
-		path = root + "cheese.png";
-	else if (_complete_request.find("/index.html") != std::string::npos)
-		path = root + "index.html";
-	else if (_complete_request.find("/dirtest.html") != std::string::npos)
-		path = root + "dirtest.html";
-	else if ((loc = this->getLocation(url)))
-	{
-		if (!loc->getAutoIndex())
-			return;
-		std::size_t start = _complete_request.find("GET /") + 5;
-		std::size_t end = _complete_request.find("HTTP/1.1") - 1;
-		std::string path = _complete_request.substr(start, end - start);
-		_response_body = AutoIndexGenerator(path, root + path).getDirectoryIndex();
-		std::size_t length = _response_body.length();
-		std::string content_type = "text/html";
-		_response_header = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
-		return ;
-	}
-	else
-		path = root + "index.html";
-	std::ifstream infile(path, std::ios::in);
-	if (!infile.is_open())
-	{
-		std::cout << "failed to open file" << std::endl;
-		_response_header = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
-	}
-	else
-	{
-		std::string content_type;
-		if (_complete_request.find("/favicon.ico") != std::string::npos)
-			content_type = "image/x-icon";
-		else if (_complete_request.find("/cheese.png") != std::string::npos)
-			content_type = "image/png";
-		else
-			content_type = "text/html";
-		infile.seekg(0, std::ios::end);
-		std::size_t length = infile.tellg();
-		// std::cout << "length of file: " << length << std::endl;
-		infile.seekg(0, std::ios::beg);
-		_file_size = length;
-		_response_header = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
-		if (infile.fail())
-		{
-			std::cout << "failed to get size of file" << std::endl;
-			_response_header.empty();
-			_response_header = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
-		}
-		else if (length > 0)
-		{
-			_send_file = true;
-			infile.close();
-			_fd_response = open(path.c_str(), O_RDONLY);
-		}
-	}
-}
-
 //TODO remove all the stuff and move it to different function (testFunction or something)
-void	RequestHandler::addToRequestMsg(const std::string &msg)
+void	RequestHandler::addToRequestMsg(const std::string &msg);
+
+void	RequestHandler::setUrlStruct(std::string full_url)
 {
-	size_t	crlf_pos;
-	size_t	size_req;
+	std::size_t	q_pos = full_url.find('?');
+	if (q_pos == std::string::npos)
+		q_pos = full_url.length();
+	_url.path = full_url.substr(0, q_pos);
+	_url.querry = full_url.substr(q_pos, full_url.length());//
+}
 
 	_complete_request += msg;
 	crlf_pos = _complete_request.find("\r\n\r\n");
@@ -438,5 +387,84 @@ void	RequestHandler::addToRequestMsg(const std::string &msg)
 	{
 		setRequestMsg(_complete_request);
 		ParseRequestMsg();
+	}
+void	RequestHandler::setClientIp(std::string ip)
+{
+	_client_ip = ip;
+}
+
+void	RequestHandler::setCgiError()
+{
+	_cgi_error = true;
+}
+
+
+// Member functions
+void	RequestHandler::makeHeaderMap()
+{
+	std::vector<std::string>	split;
+	std::size_t	pos;
+	std::size_t	last_pos;
+	std::size_t	len;
+
+	//splitting the request on \r\n
+	len = _complete_request.length();
+	last_pos = 0;
+	while (last_pos < len + 1)
+	{
+		pos = _complete_request.find_first_of("\r\n", last_pos);
+		if (pos == std::string::npos)
+			pos = len;
+		if (pos != last_pos)
+			split.push_back(std::string(_complete_request.data() + last_pos, pos - last_pos));
+		last_pos = pos + 1;
+	}
+	std::size_t	first_pos = _complete_request.find_first_of(' ') + 1;
+	std::size_t	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
+	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
+	_request_method = _complete_request.substr(0, first_pos - 1);
+	// _method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
+
+	//making a map of all the request headers
+	if (split.size() > 1)
+	{
+		for (std::size_t i = 1; i < split.size(); i++)
+		{
+			if (split[i] == "\r\n")
+				break ;
+			pos = split[i].find_first_of(':');
+			_headermap[split[i].substr(0, pos)] = split[i].substr(pos + 2, split[i].length());
+		}
+	}
+}
+
+// 2 functions below just for a bit of testing stuff
+
+//TODO after parsing the request need to check for which server it is (first using port, then if multiple servers on same port the servername/host and then location)
+void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
+{
+	size_t	crlf_pos;
+
+	_complete_request.append(msg, bytes_received);
+	if (!isprint(_complete_request[0])) // this is for https and bad requests
+	{
+		_is_request_complete = true;
+		return (setServerError(&_response_body, &_response_header, "400 Bad Request"));
+	}
+	crlf_pos = _complete_request.find("\r\n\r\n");
+	if (crlf_pos != std::string::npos)
+	{
+		if (_is_request_header_done == false)
+		{
+			makeHeaderMap();
+			_is_request_header_done = true;
+		}
+		_request_body = _complete_request.substr(crlf_pos, std::string::npos);
+		if (_headermap["Content-Length"].length() == 0)
+			_is_request_complete = true;
+		else if (_request_body.size() >= std::stoul(_headermap["Content-Length"]))
+			_is_request_complete = true;
+		if (_is_request_complete)
+			testFunction();
 	}
 }

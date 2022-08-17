@@ -1,32 +1,46 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
+# include "Json.hpp"
+
+# include "Location.hpp"
 # include "Server.hpp"
 
 class Config
 {
 	public:
 		// Constructors
-		Config(std::string config_path);
+		Config();
 		Config(const Config &copy);
-		
+		Config(const Json* json);
+
 		// Destructor
 		~Config();
-		
-		// Operators
-		Config & operator=(const Config &assign);
+
+		// Setters
+		void addServer(const Json* json);
+		void setServers(const Json* json);
+		void setServerName(const std::string name, const Json &json);
 
 		// Getters
 		t_servmap	getServerMap() const;
-		Server		*getLastServer();
+		Server		getLastServer();
 
-		// Member Functions
-		void	addServer(std::string ip, std::string port);
-		void	addLocation(std::string location_dir);
+		// Exception
+		class wrongKey: public std::exception
+		{
+			private:
+				std::string _msg;
+			public:
+				wrongKey(const std::string& msg) : _msg(msg) {}
+				virtual const char* what() const throw() {
+					return _msg.c_str();
+				}
+		};
 
 	private:
-		t_servmap	_server;
 
+		t_servmap	_servers;
 };
 
 #endif

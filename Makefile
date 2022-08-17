@@ -14,6 +14,10 @@ SRC =	main.cpp \
         Location.cpp \
         RequestHandler.cpp \
         AutoIndexGenerator.cpp \
+        CgiHandler.cpp \
+        Json.cpp \
+        Parse.cpp \
+        Utils.cpp \
 
 SRC_EXT = cpp
 
@@ -36,11 +40,11 @@ WARN_STRING  = "[WARNING]"
 COM_STRING   = "Compiling"
 
 ifeq ($(DEBUG),1)
-	CXXFLAGS += -g3
+	CXXFLAGS += -g3 -D DEBUG_MODE=1
     COM_STRING = "Compiling[DEBUG]"
 endif
 ifeq ($(DEBUG),2)
-	CXXFLAGS += -g3 -fsanitize=address
+	CXXFLAGS += -g3 -fsanitize=address -D DEBUG_MODE=1
     COM_STRING = "Compiling[LEAKS]"
 endif
 
