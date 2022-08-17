@@ -1,11 +1,15 @@
 #ifndef JSON_HPP
-#define JSON_HPP
+# define JSON_HPP
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <map>
+# include <iostream>
+# include <fstream>
+# include <vector>
+# include <string>
+# include <map>
+
+# define GREEN   		"\033[32m"
+# define RESET_COLOR	"\033[0m"
+# define BLUE    		"\033[34m"
 
 class Json;
 

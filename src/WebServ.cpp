@@ -10,12 +10,10 @@ WebServ::WebServ(Config *config) : _config(config)
 	_n_servers = 0;
 
 	// Going through the config and making a socket and event for all servers in it.
-	std::cout << "servers in config: " << server_map.size() << std::endl;
+	std::cout << "\n\nServers loaded from config: " << server_map.size() << "\n" << std::endl;
 	for (std::size_t it = 0; it < server_map.size(); it++)
 	{
 		std::vector<int> ports = server_map[it].getServerPort();
-		for (std::size_t j = 0; j < server_map[it].getServerNames().size(); j++)
-			std::cout << "server " << it << " server_name: " << server_map[it].getServerNames()[j] << std::endl;
 		for (std::size_t i = 0; i < ports.size(); i++)
 		{
 			if (!listeningToPort(ports[i]))

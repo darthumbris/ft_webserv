@@ -4,7 +4,7 @@
 # include <iostream>
 # include <string>
 # include <vector>
-#include "Json.hpp"
+# include "Json.hpp"
 
 struct accepted_methods
 {
@@ -49,7 +49,6 @@ class Location
 
 		// Setters
 		void	setCgi(const Json& json);
-		// void	setCgiFileType(std::string file_type);
 		void 	setLocation(const Json& json);
 		void	setAutoIndex(const Json& json);
 		void	setUploadPath(const Json& json);

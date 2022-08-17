@@ -42,8 +42,8 @@ void Config::addServer(const Json *json)
 			Location	*loc = new Location();
 
 			loc->ParseLocation(x.first, *x.second);
-			std::cout << "adding location dir: " << x.first << std::endl;
 			server->addLocationToServer(loc->getPath(x.first), loc);
+			std::cout << std::endl;
 		}
 		else
 		{

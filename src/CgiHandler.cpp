@@ -36,6 +36,7 @@ void	CgiHandler::setCgiPaths()
 	_cur_dir = getCurDir();
 }
 
+//TODO for fileupload maybe have the redirect status be 303?
 void	CgiHandler::setEnvValues()
 {
 	setCgiPaths();

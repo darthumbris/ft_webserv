@@ -13,19 +13,18 @@
           "test3.com"
         ],
         "error_page": [
-          "404something"
+          "404.html",
+          "403.html"
         ],
         "location /": {
           "allowed_method": [
             "GET"
           ],
-          "return": "301http://localhost:4242/Redirection/301.html",
           "auto_index": true,
           "index": "index.html",
           "root": "var/www/html"
         },
         "location /test/": {
-          "return": "301",
           "root": "var/www/html",
           "auto_index": true,
           "allowed_method": [
@@ -42,12 +41,19 @@
               "GET",
               "DELETE"
             ]
-          }
+        },
+        "location /old": {
+          "allowed_method": [
+            "GET"
+          ],
+          "root": "var/www/html",
+          "return": "301 http://localhost:4242/Redirection/301.html"
+        }
       },
       {
-        "client_body_size": 10000,
+        "client_body_size": 1000,
         "listen": [
-          4242,
+          7575,
           8080
         ],
         "server_name": [
@@ -56,34 +62,42 @@
           "other3.com"
         ],
         "error_page": [
-          "404something"
+          "404.html",
+          "403.html"
         ],
         "location /": {
           "allowed_method": [
             "GET"
           ],
-          "return": "301http://localhost:4242/Redirection/301.html",
           "auto_index": true,
           "index": "index.html",
           "root": "var/www/html"
         },
         "location /test/": {
-          "return": "301",
           "root": "var/www/html",
           "auto_index": true,
           "allowed_method": [
             "GET",
             "POST"
           ],
-          "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi"
+          "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi",
+          "upload": "/images"
         },
-        "location /images/": {
-            "return": "301",
+        "location /test/images/": {
             "root": "var/www/html",
+            "auto_index": true,
             "allowed_method": [
-              "GET"
+              "GET",
+              "DELETE"
             ]
-          }
+        },
+        "location /old": {
+          "allowed_method": [
+            "GET"
+          ],
+          "root": "var/www/html",
+          "return": "301 http://localhost:4242/Redirection/301.html"
+        }
       }
     ]
   }

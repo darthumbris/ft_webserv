@@ -2,7 +2,10 @@
 # include "../includes/Config.hpp"
 
 // Constructor
-Server::Server() {}
+Server::Server()
+{
+	std::cout << BLUE << "\nAdded a new server." << std::endl;
+}
 
 // Destructor
 Server::~Server() {}
@@ -14,6 +17,7 @@ void Server::addServerListen(const Json &json)
 	{
 		if (x->type != Json::NUMBER)
 			throw Config::wrongKey("expected <NUMBER>");
+		std::cout << BLUE << "Added port: " << x->values.number << " to the server." << RESET_COLOR << std::endl;
 		_server_listen.push_back(x->values.number);
 	}
 }
@@ -24,12 +28,14 @@ void Server::addServerName(const Json &json)
 	{
 		if (x->type != Json::STRING)
 			throw Config::wrongKey("expected <STRING>");
+		std::cout << BLUE << "Added server_name: " << x->values.str << " to the server." << RESET_COLOR << std::endl;
 		_server_name.push_back(x->values.str);
 	}
 }
 
 void Server::setServerClientBodySize(const Json &json)
 {
+	std::cout << BLUE << "Set the client_body_size to: " << json.values.number << " for the server." << RESET_COLOR << std::endl;
 	_client_body_size = json.values.number;
 }
 
@@ -39,6 +45,7 @@ void Server::setServerErrorPage(const Json &json)
 	{
 		if (x->type != Json::STRING)
 			throw Config::wrongKey("expected <STRING>");
+		std::cout << BLUE << "Added error_page: " << x->values.str << " to the server" << RESET_COLOR << std::endl;	
 		_error_page.push_back(json.values.str);
 	}
 }
