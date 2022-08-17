@@ -177,7 +177,7 @@ void	Location::setCgi(const Json& json)
 // Member Function
 Location::Func	Location::which(const std::string& name, const Json &json)
 {
-	t_table	map[6] =
+	t_table	map[7] =
 	{
 			{"return", Json::STRING, &Location::setReturnUrl},
 			{"auto_index", Json::BOOLEAN, &Location::setAutoIndex},
@@ -185,6 +185,7 @@ Location::Func	Location::which(const std::string& name, const Json &json)
 			{"root", Json::STRING, &Location::setRootFolder},
 			{"allowed_method", Json::ARRAY,&Location::setAllowedMethod},
 			{"CGI", Json::STRING,&Location::setCgi},
+			{"upload", Json::STRING,&Location::setUploadPath},
 	};
 
 	for (const t_table& entry : map)

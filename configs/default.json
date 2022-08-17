@@ -32,13 +32,15 @@
             "GET",
             "POST"
           ],
-          "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi"
+          "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi",
+          "upload": "/images"
         },
-        "location /images/": {
-            "return": "301",
+        "location /test/images/": {
             "root": "var/www/html",
+            "auto_index": true,
             "allowed_method": [
-              "GET"
+              "GET",
+              "DELETE"
             ]
           }
       },

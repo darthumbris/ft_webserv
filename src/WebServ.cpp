@@ -186,6 +186,7 @@ void	WebServ::sendResponse(t_event &event)
 	}
 	if (fd > 0)
 	{
+		std::cout << "file descriptor open" << std::endl;
 		int bytes = sendfile(fd, event.ident, evudat->total_size, &evudat->datalen, NULL, 0);
 		evudat->total_size += evudat->datalen;
 		if (bytes == -1 || evudat->total_size < evudat->req->getFileSize())

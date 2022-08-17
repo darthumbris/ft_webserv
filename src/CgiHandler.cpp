@@ -135,6 +135,7 @@ void	CgiHandler::closeFileDescriptors()
 	close(_temp_out_fd);
 }
 
+//TODO make sure to make the folder if request is post (look at the config for where to upload)
 std::string	CgiHandler::execute()
 {
 	char		**envp;

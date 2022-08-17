@@ -225,7 +225,7 @@ void	RequestHandler::testFunction()
 			//TODO response header needs to be properly made based on the response body?
 			_response_header = "HTTP/1.1 200 OK\r\nContent-Length: ";
 			_response_header += std::to_string(_response_body.length());
-			_response_header += "\r\nConnection: keep-alive\r\nContent-Type: ";
+			_response_header += "\r\nConnection: keep-alive\r\n";
 			_response_header += "Content-type: text/plain; charset=UTF-8\r\n\r\n";
 			return;
 		}
