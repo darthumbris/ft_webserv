@@ -47,7 +47,7 @@
             "GET"
           ],
           "root": "var/www/html",
-          "return": "301 http://localhost:4242/Redirection/301.html"
+          "return": "http://localhost:4242/Redirection/301.html"
         }
       },
       {
@@ -96,7 +96,7 @@
             "GET"
           ],
           "root": "var/www/html",
-          "return": "301 http://localhost:4242/Redirection/301.html"
+          "return": "http://localhost:4242/Redirection/301.html"
         }
       }
     ]
