@@ -228,7 +228,7 @@ void	RequestHandler::testFunction()
 			_response_body = cgi.execute();
 			std::cout << _response_body << std::endl;
 			_response_body.append("\r\n\r\n");
-			//TODO response header needs to be properly made based on the response body?
+			//TODO response header needs to be properly made based on the response body? for alkrust or abba
 			_response_header = "HTTP/1.1 200 OK\r\nContent-Length: ";
 			_response_header += std::to_string(_response_body.length());
 			_response_header += "\r\nConnection: keep-alive\r\n";

@@ -11,9 +11,6 @@
 # include <sstream>
 # include "AutoIndexGenerator.hpp"
 
-//TODO make all the request handling stuff. (parsing etc) for alkrust
-//TODO check if remaining request stuff is actually needed
-
 struct	url
 {
 	std::string	path;

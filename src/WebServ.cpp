@@ -1,5 +1,7 @@
 #include "WebServ.hpp"
 
+//TODO check for memory leaks and proper delete etc usage
+
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
 {
