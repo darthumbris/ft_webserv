@@ -43,6 +43,7 @@ void Server::setServerClientBodySize(const Json &json)
 	_client_body_size = json.values.number;
 }
 
+//TODO might need to parse what error the error_page it corresponds to and maybe make it a map instead?
 void Server::setServerErrorPage(const Json &json)
 {
 	for (const auto *x : json.values.list)

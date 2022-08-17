@@ -178,6 +178,7 @@ std::string	CgiHandler::execute()
 	//TODO might need to remove this part later so the requesthandler can see what content-type to set for the response header
 	std::size_t	start_content_type = _output_body.find("Content-type");
 	std::size_t	start_body = _output_body.find('\n', start_content_type);
+	std::cout << _output_body.substr(0, start_body);
 	_output_body = _output_body.substr(start_body, std::string::npos);
 	// std::cout << "output: " << _output_body << std::endl;
 	return _output_body;

@@ -9,8 +9,8 @@
 // Constructors
 RequestHandler::RequestHandler(const t_servmap &srv_map) : 
 		_srv_map(srv_map), _is_request_complete(false), 
-		_has_remaining_request(false), _send_file(false), _fd(0),
-		_file_size(0), _cgi_error(false)
+		_has_remaining_request(false), _send_file(false),
+		_cgi_error(false), _fd(0), _file_size(0)
 {
 }
 
@@ -232,7 +232,7 @@ void	RequestHandler::testFunction()
 			_response_header = "HTTP/1.1 200 OK\r\nContent-Length: ";
 			_response_header += std::to_string(_response_body.length());
 			_response_header += "\r\nConnection: keep-alive\r\n";
-			_response_header += "Content-type: text/html; charset=UTF-8\r\n\r\n";
+			_response_header += "Content-type: text/plain\r\n\r\n";
 			return;
 		}
 		Location *loc;
