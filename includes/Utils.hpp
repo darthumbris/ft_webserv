@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 enum	path
 {
@@ -16,5 +17,6 @@ enum	path
 
 std::string getCurDir();
 int	        checkPath(std::string path, std::string root);
+std::string	getContentType(std::string file_name);
 
 # endif

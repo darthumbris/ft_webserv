@@ -6,7 +6,7 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/08/16 11:43:03 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/17 10:01:30 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ int	main(int argc, char *argv[])
 	catch (std::exception const &e)
 	{
 		std::cerr << e.what() << std::endl;
-		std::cout << "errrrrasda" << std::endl;
+		std::cout << "Exiting webserv." << std::endl;
 		return 1;
 	}
 	return (EXIT_SUCCESS);
