@@ -38,20 +38,22 @@ void Server::addServerName(const Json &json)
 
 void Server::setServerClientBodySize(const Json &json)
 {
-	if (DEBUG_MODE)
+#ifdef DEBUG_MODE
 		std::cout << BLUE << "Set the client_body_size to: " << json.values.number << " for the server." << RESET_COLOR << std::endl;
+#endif
 	_client_body_size = json.values.number;
 }
 
 void Server::setServerErrorPage(const Json &json)
 {
-	for (const auto *x : json.values.list)
+	for (const auto &x : json.values.object)
 	{
-		if (x->type != Json::STRING)
-			throw Config::wrongKey("expected <STRING>");
-		if (DEBUG_MODE)
-			std::cout << BLUE << "Added error_page: " << x->values.str << " to the server" << RESET_COLOR << std::endl;	
-		_error_page.push_back(json.values.str);
+		if (x.second->type != Json::STRING)
+			throw Config::wrongKey("Expected STRING type");
+		if (_error_page.find(x.first) != _error_page.end())
+			throw Config::wrongKey("error_code duplicate");
+		std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
+		_error_page.emplace(x.first, x.second->values.str);
 	}
 }
 
@@ -60,7 +62,7 @@ Server::Func Server::setValues(const std::string name, const Json& json)
 	t_table	map[] =
 	{
 			{"listen", Json::ARRAY, &Server::addServerListen},
-			{"error_page", Json::ARRAY, &Server::setServerErrorPage},
+			{"error_page", Json::OBJECT, &Server::setServerErrorPage},
 			{"server_name", Json::ARRAY, &Server::addServerName},
 			{"client_body_size", Json::NUMBER, &Server::setServerClientBodySize}
 	};
@@ -99,7 +101,7 @@ const std::vector<int> &Server::getServerPort() const
 }
 
 
-const t_vecstr &Server::getErrorPage() const
+const t_strmap &Server::getErrorPage() const
 {
 	return _error_page;
 }
@@ -109,9 +111,9 @@ const t_vecstr &Server::getServerNames() const
 	return _server_name;
 }
 
-t_locmap	Server::getLocationMap() const
+const t_locmap	&Server::getLocationMap() const
 {
-	return this->_location;
+	return _location;
 }
 
 Location *Server::getLocation(int port, std::string url) const
@@ -133,4 +135,3 @@ void	Server::addLocationToServer(std::string location_dir, Location *loc)
 {
 	this->_location.insert(std::make_pair(location_dir, loc));
 }
-

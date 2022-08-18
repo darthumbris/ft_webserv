@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/18 13:42:53 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/18 17:05:11 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,86 +98,79 @@ int			RequestHandler::getBody(void) const
 	return (_fd_response);
 }
 
-int	RequestHandler::BuildResponse(std::string request)
+void	RequestHandler::BuildHeader(const std::string &response_status, int body_length)
 {
-	/*
-	 * 2xx: Success 
-	 */
-	if (request == "200 OK")
-	{
-		_response_header += "HTTP/1.1 200 OK\r\n";
-		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Length: " + std::to_string(_fd_length) + "\r\n";
-		_response_header += "Content-Type: text/html\r\n\r\n";
-	}
-	/*
-	 * CLIENT ERROR 4xx
-	 */
-	else if (request == "400 BAD REQUEST")
-	{
-		std::ifstream infile("var/www/400.html", std::ios::in);
-		if (infile.fail())
-			return BuildResponse("INTERNAL SERVER ERROR 500");
-		infile.seekg(0, std::ios::end);
-		std::size_t length = infile.tellg();
-		infile.seekg(0, std::ios::beg);
-		infile.close();
-		_fd_response = open("var/www/400.html", O_RDONLY);
-		if (_fd_response == -1)
-			return BuildResponse("INTERNAL SERVER ERROR 500");
-		_response_header += "HTTP/1.1 Bad Request 400\r\n";
-		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Length: " + std::to_string(length) + "\r\n";
-		_response_header += "Content-Type: text/html\r\n\r\n";
-	}
-	else if (request == "401 UNAUTHORIZED")
-	{
-		_fd_response = open("var/www/401.html", O_RDONLY);
-		if (_fd_response == -1)
-			return BuildResponse("INTERNAL SERVER ERROR 500");
-		_response_header += "HTTP/1.1 Bad Request 401\r\n";
-		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Type: text/html\r\n";
-	}
-	else if (request == "402 PAYMENT REQUIRED") //this code is reserver for future use XD rfc2626
-	{
-		_fd_response = open("var/www/402.html", O_RDONLY);
-		if (_fd_response == -1)
-			return BuildResponse("INTERNAL SERVER ERROR 500");
-		_response_header += "HTTP/1.1 Payment Required 402\r\n";
-		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Type: text/html\r\n";
-	}
-	else if (request == "403 NOT FOUND")
-	{
-		_fd_response = open("var/www/403.html", O_RDONLY);
-		if (_fd_response == -1)
-			return BuildResponse("INTERNAL SERVER ERROR 500");
-		_response_header += "HTTP/1.1 Not Found 404\r\n";
-		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Type: text/html\r\n";
-	}	
-	else if (request == "404 NOT FOUND")
-	{
-		_fd_response = open("var/www/404.html", O_RDONLY);
-		if (_fd_response == -1)
-			return BuildResponse("INTERNAL SERVER ERROR 500");
-		_response_header += "HTTP/1.1 Not Found 404\r\n";
-		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Type: text/html\r\n";
-	}
-	/*
-	 * SERVER ERROR 5xx
-	 */
-	else if (request ==  "500 INTERNAL SERVER ERROR")
-	{
-		_response_header += "HTTP/1.1 Internal Server Error 500\r\n";
-		_response_header += "Server: ft_webserver\r\n";
-		_response_header += "Content-Length: " + std::to_string(INTERNAL_SERVER_ERROR_500.length()) + "\r\n";
-		_response_header += "Content-Type: text/html\r\n\r\n";
-		_response_header += INTERNAL_SERVER_ERROR_500;
-	}
+	_response_header += "HTTP/1.1 " + response_status + "\r\n";
+	_response_header += "Server: ft_webserver\r\n";
+	_response_header += "Content-Length: " + std::to_string(body_length) + "\r\n";
+	_response_header += "Content-Type: text/html\r\n\r\n";
 	_is_request_complete = true;
+}
+
+int	RequestHandler::BuildResponse(const std::string &response_status)
+{
+	for (t_servmap::const_iterator serv_iterator = _srv_map.begin(); serv_iterator != _srv_map.end(); serv_iterator++)
+	{
+		const std::vector<int>	&ports = serv_iterator->getServerPort();
+		const t_vecstr 			&server_names = serv_iterator->getServerNames();
+
+		for (std::vector<int>::const_iterator port_iter = ports.begin(); port_iter != ports.end(); port_iter++)
+		{
+			if (*port_iter == _port)
+			{
+				const t_strmap &custom_error_pages = serv_iterator->getErrorPage();
+
+				for (std::vector<std::string>::const_iterator server_name_iter = server_names.begin(); server_name_iter != server_names.end(); server_name_iter++)
+				{
+					if (_host == *server_name_iter)
+					{
+						for (t_strmap::const_iterator error_page_iter = custom_error_pages.begin(); error_page_iter != custom_error_pages.end(); error_page_iter++)
+						{
+							if (response_status.substr(0, 3) == error_page_iter->first)
+							{
+								std::ifstream infile(("error_pages/" + error_page_iter->second).c_str(), std::ios::in);
+
+								if (infile.fail())
+								{
+									BuildDefaultResponseBody(response_status);
+									BuildHeader(response_status, _request_header.length());
+									infile.close();
+									return (0);
+								}
+								infile.seekg(0, std::ios::end);
+								std::size_t length = infile.tellg();
+								infile.seekg(0, std::ios::beg);
+								infile.close();
+								BuildHeader(response_status, length);
+								return (1);
+							}
+						}
+					}
+				}
+				for (t_strmap::const_iterator error_page_iter = custom_error_pages.begin(); error_page_iter != custom_error_pages.end(); error_page_iter++)
+				{
+					if (response_status.substr(0, 3) == error_page_iter->first)
+					{
+						std::ifstream infile(("error_pages/" + error_page_iter->second).c_str(), std::ios::in);
+
+						if (infile.fail())
+						{
+							BuildDefaultResponseBody(response_status);
+							BuildHeader(response_status, _request_header.length());
+							infile.close();
+							return (0);
+						}
+						infile.seekg(0, std::ios::end);
+						std::size_t length = infile.tellg();
+						infile.seekg(0, std::ios::beg);
+						infile.close();
+						BuildHeader(response_status, length);
+						return (1);
+					}
+				}
+			}
+		}
+	}
 	return (1);
 }
 

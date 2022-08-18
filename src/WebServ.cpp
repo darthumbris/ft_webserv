@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/18 13:26:12 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/18 16:49:38 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ WebServ::WebServ(Config *config) : _config(config)
 	for (t_servmap::iterator iter = server_map.begin(); iter != server_map.end(); iter++)
 	{
 		std::vector<int> ports = iter->getServerPort();
-		for (std::vector<int>::iterator ports_iter = ports.begin(); ports_iter != ports.end(); ports_iter++)
+		for (std::vector<int>::const_iterator ports_iter = ports.begin(); ports_iter != ports.end(); ports_iter++)
 		{
 			if (!listeningToPort(*ports_iter))
 			{
