@@ -1,6 +1,8 @@
 #include "CgiHandler.hpp"
 #include "Utils.hpp"
 
+//TODO make it work also with python scripts for bonus
+
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _error(false)
 {
@@ -39,6 +41,12 @@ void	CgiHandler::setCgiPaths()
 	// std::cout << "folder: " << _folder << std::endl;
 	// std::cout << "file: " << _file << std::endl;
 	_cur_dir = getCurDir();
+	if (_file.find(".py") != std::string::npos)
+	{
+		//TODO fix this so it does this properly. might also need to look at the config?
+		_cgi_path = "/Users/shoogenb/Documents/Circle6/webserv/ft_webvserv/var/www/html/cgi_bin/pythontest.py";
+		std::cout << "cgipath: " << _cgi_path << std::endl;
+	}
 }
 
 //TODO for fileupload maybe have the redirect status be 303?
@@ -182,13 +190,11 @@ std::string	CgiHandler::execute()
 	if (pid == 0)
 		exit(0);
 	std::cout << "finished executing " << std::endl;
-
-	//TODO check if this works always or needs to be done differently
 	//TODO might need to remove this part later so the requesthandler can see what content-type to set for the response header
-	std::size_t	start_content_type = _output_body.find("Content-type");
-	std::size_t	start_body = _output_body.find('\n', start_content_type);
-	std::cout << _output_body.substr(0, start_body);
-	_output_body = _output_body.substr(start_body, std::string::npos);
+	// std::size_t	start_content_type = _output_body.find("Content-type");
+	// std::size_t	start_body = _output_body.find('\n', start_content_type);
+	// std::cout << _output_body.substr(0, start_body);
+	// _output_body = _output_body.substr(start_body, std::string::npos);
 	// std::cout << "output: " << _output_body << std::endl;
 	return _output_body;
 }
