@@ -67,13 +67,12 @@ class RequestHandler
 
 		t_servmap	_srv_map;
 		std::string	_complete_request;
-		std::string	_remaining_request;
-		std::string	_response_header;
-		t_strmap	_headermap;
-		std::string	_response_body;
+		std::string	_request_header;
 		std::string	_request_body;
 		std::string _request_method; //set this, this is used for the cgihandler 
-		// std::string	_method_header;
+		t_strmap	_headermap;
+		std::string	_response_header;
+		std::string	_response_body;
 		std::string	_client_ip;	
 
 		t_url		_url;

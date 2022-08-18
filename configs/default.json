@@ -32,9 +32,9 @@
             "POST"
           ],
           "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi",
-          "upload": "/images"
+          "upload": "/images/"
         },
-        "location /test/images/": {
+        "location /test/upload/": {
             "root": "var/www/html",
             "auto_index": true,
             "allowed_method": [

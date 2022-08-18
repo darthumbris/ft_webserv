@@ -44,11 +44,6 @@ bool	RequestHandler::isRequestComplete() const
 	return this->_is_request_complete;
 }
 
-std::string	RequestHandler::getRemainingRequestMsg() const
-{
-	return this->_remaining_request;
-}
-
 bool	RequestHandler::hasRemainingRequestMsg() const
 {
 	return this->_has_remaining_request;
@@ -89,14 +84,14 @@ int	RequestHandler::getPort() const
 	return this->_port;
 }
 
-std::string	RequestHandler::getClientIp() const
-{
-	return this->_client_ip;
-}
-
 std::string RequestHandler::getCompleteRequest() const
 {
 	return this->_complete_request;
+}
+
+std::string	RequestHandler::getClientIp() const
+{
+	return this->_client_ip;
 }
 
 // Setters
@@ -116,9 +111,15 @@ void	RequestHandler::setPort(int port)
 	this->_port = port;
 }
 
+void	RequestHandler::setClientIp(std::string ip)
+{
+	this->_client_ip = ip;
+}
+
 //TODO fix this so if it can't find the location it starts looking at parent directories until it finds it
 Location	*RequestHandler::getLocation(std::string url) const
 {
+	std::cout << "trying to get the location class for the url: " << url << std::endl;
 	for (std::size_t it = 0; it < _srv_map.size(); it++)
 	{
 		if (_srv_map[it].getLocation(_port, url))
@@ -136,11 +137,6 @@ void	RequestHandler::setUrlStruct(std::string full_url)
 	_url.querry = full_url.substr(q_pos, full_url.length());
 }
 
-void	RequestHandler::setClientIp(std::string ip)
-{
-	_client_ip = ip;
-}
-
 void	RequestHandler::setCgiError()
 {
 	_cgi_error = true;
@@ -155,22 +151,21 @@ void	RequestHandler::makeHeaderMap()
 	std::size_t	len;
 
 	//splitting the request on \r\n
-	len = _complete_request.length();
+	len = _request_header.length();
 	last_pos = 0;
 	while (last_pos < len + 1)
 	{
-		pos = _complete_request.find_first_of("\r\n", last_pos);
+		pos = _request_header.find_first_of("\r\n", last_pos);
 		if (pos == std::string::npos)
 			pos = len;
 		if (pos != last_pos)
-			split.push_back(std::string(_complete_request.data() + last_pos, pos - last_pos));
+			split.push_back(std::string(_request_header.data() + last_pos, pos - last_pos));
 		last_pos = pos + 1;
 	}
-	std::size_t	first_pos = _complete_request.find_first_of(' ') + 1;
-	std::size_t	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
-	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
-	_request_method = _complete_request.substr(0, first_pos - 1);
-	// _method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
+	std::size_t	first_pos = _request_header.find_first_of(' ') + 1;
+	std::size_t	end_pos = _request_header.find_first_of(' ', first_pos + 1);
+	setUrlStruct(_request_header.substr(first_pos, end_pos - first_pos));
+	_request_method = _request_header.substr(0, first_pos - 1);
 
 	//making a map of all the request headers
 	if (split.size() > 1)
@@ -200,7 +195,7 @@ static void	setServerError(std::string *body, std::string *header, std::string e
 
 void	RequestHandler::testFunction()
 {
-	
+	// std::cout << "request header: " << _request_header << std::endl;
 	// std::cout << "urlpath: " << _url.path << std::endl;
 	std::string	file = "";
 	std::string url = _url.path.substr(0, _url.path.find_last_of('/') + 1);
@@ -215,11 +210,11 @@ void	RequestHandler::testFunction()
 		file += _url.path.substr(_url.path.find_last_of('/') + 1, _url.path.length());
 	else
 		url = _url.path;
-	if (url.length() > 1 && checkPath(_url.path, root) == IS_DIR)
+	if (url.length() > 1 && checkPath(_url.path, root) == IS_DIR && _url.path.find_last_of('/') != _url.path.length() - 1)
 		url += "/";	
-	// std::cout << "root: " << root << std::endl;
-	// std::cout << "url: " << url << std::endl;
-	// std::cout << "file: " << file << std::endl;
+	std::cout << "root: " << root << std::endl;
+	std::cout << "url: " << url << std::endl;
+	std::cout << "file: " << file << std::endl;
 	if (_complete_request.find("GET /") != std::string::npos || _complete_request.find("POST /") != std::string::npos)
 	{
 		if (_url.path.find(".php") != std::string::npos)
@@ -229,10 +224,14 @@ void	RequestHandler::testFunction()
 			std::cout << _response_body << std::endl;
 			_response_body.append("\r\n\r\n");
 			//TODO response header needs to be properly made based on the response body? for alkrust or abba
-			_response_header = "HTTP/1.1 200 OK\r\nContent-Length: ";
+			_response_header = "HTTP/1.1 303 See Other\r\n";
+			_response_header += "Location: /test/upload/\r\n";
+			_response_header += "Content-Length: ";
 			_response_header += std::to_string(_response_body.length());
 			_response_header += "\r\nConnection: keep-alive\r\n";
-			_response_header += "Content-type: text/plain\r\n\r\n";
+			_response_header += "Content-type: text/html\r\n\r\n";
+			_complete_request.clear();
+			_request_header.clear();
 			return;
 		}
 		Location *loc;
@@ -263,12 +262,14 @@ void	RequestHandler::testFunction()
 		else
 		{
 			std::string content_type;
-			if (_complete_request.find("/favicon.ico") != std::string::npos)
-				content_type = "image/x-icon";
-			else if (_complete_request.find("/cheese.png") != std::string::npos)
-				content_type = "image/png";
-			else
-				content_type = "text/html";
+			content_type = getContentType(file);
+			// if (_complete_request.find("/favicon.ico") != std::string::npos)
+			// 	content_type = "image/x-icon";
+			// else if (_complete_request.find("/cheese.png") != std::string::npos)
+			// 	content_type = "image/png";
+			// else
+			// 	content_type = "text/html";
+			std::cout << "content-type: " << content_type << std::endl;
 			infile.seekg(0, std::ios::end);
 			std::size_t length  = infile.tellg();
 			infile.seekg(0, std::ios::beg);
@@ -305,15 +306,19 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	{
 		if (_is_request_header_done == false)
 		{
+			_request_header = _complete_request.substr(0, crlf_pos);
 			makeHeaderMap();
 			_is_request_header_done = true;
 		}
-		_request_body = _complete_request.substr(crlf_pos, std::string::npos);
-		if (_headermap["Content-Length"].length() == 0)
-			_is_request_complete = true;
-		else if (_request_body.size() >= std::stoul(_headermap["Content-Length"]))
-			_is_request_complete = true;
-		if (_is_request_complete)
-			testFunction();
+		if (_is_request_header_done)
+		{
+			_request_body = _complete_request.substr(crlf_pos, std::string::npos);
+			if (_headermap.find("Content-Length")  == _headermap.end())
+				_is_request_complete = true;
+			else if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
+				_is_request_complete = true;
+			if (_is_request_complete)
+				testFunction();
+		}
 	}
 }

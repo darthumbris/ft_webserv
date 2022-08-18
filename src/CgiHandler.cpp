@@ -4,6 +4,7 @@
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(&req)
 {
+	std::cout << "Cgi made" << std::endl;
 	std::string	request = _req->getCompleteRequest();
 	std::size_t	body_start = request.find("\r\n\r\n");
 	_input_body = request.substr(body_start + 4);
@@ -58,7 +59,8 @@ void	CgiHandler::setEnvValues()
 	_env["SERVER_SOFTWARE="] = "test_server";
 	_env["REDIRECT_STATUS="] = "200";
 	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
-
+	if (_req->getLocation(_folder)->getUploadPath() != "")
+		_env["UPLOAD_PATH="] = _req->getLocation(_folder)->getUploadPath();
 	// std::cout << "current dir:" << _cur_dir << std::endl;
 	// std::cout << "path_info:" << _env["PATH_INFO="] << std::endl;
 	// std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;

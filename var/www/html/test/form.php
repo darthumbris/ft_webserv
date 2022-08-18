@@ -2,20 +2,30 @@
 
 if (!empty($_POST))
 {
-	echo ("Input:" . "\n" . "text1:" . $_POST["text1"] . " text2: " . htmlspecialchars($_POST["text2"]) . "!\n");
+	echo ("text1: " . htmlspecialchars($_POST["text1"]) . "<br>
+			text2: " . htmlspecialchars($_POST["text2"]));
 }
 else
 {
-	echo "\$_POST is empty\n";
+	echo "\$_POST is empty<br>";
 }
-echo "\n";
+
 // UPLOAD
-$uploaddir = __DIR__ . '/upload/';
+if ($_SERVER["UPLOAD_PATH"])
+	$uploaddir = __DIR__ . $_SERVER["UPLOAD_PATH"];
+else
+	$uploaddir = __DIR__ . '/upload/';
+mkdir($uploaddir, 0700);
 $uploadfile = $uploaddir . basename($_FILES['userfile']['name']);
 $tmp_name = $_FILES['userfile']['tmp_name'];
-if (move_uploaded_file($tmp_name, $uploadfile)) {
-	echo "File " . $uploadfile . " uploaded successfully\n";
-} else {
-	echo "Couldn't upload the file.\n";
+echo "<br>File: " . basename($_FILES['userfile']['name']) . "<br>";
+echo "Upload path: " . $uploaddir . "<br><br>";
+if (move_uploaded_file($tmp_name, $uploadfile))
+{
+	echo "File uploaded successfully!<br>";
+}
+else
+{
+	echo "Couldn't upload the file.<br>";
 }
 ?>
