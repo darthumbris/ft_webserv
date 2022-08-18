@@ -52,8 +52,9 @@ class RequestHandler
 
 		// Getters
 
-		int			getBody(void) const;
-		const char	*getHeader(void) const;
+		std::string	getResponse(void);
+		int					getBody(void) const;
+		const char			*getHeader(void) const;
 		//std::string	make
 
 		// Setters
@@ -62,16 +63,18 @@ class RequestHandler
 		bool	parseFirstLine(std::string method);
 		bool	isMethodImplimented(std::string line, std::string availableMethod);
 		bool	isMethodFollowedBySpace(std::string line, std::string availableMethod);
-		int		BuildResponse(std::string);
+		int		BuildResponse(std::string request);
 		int		ParseRequestLine(std::string line);
 		bool	fileExists(const std::string &path);
 		int		OpenFile(void);
 		int		ParseRequestMsg(void);
 
 		//utils
+		std::string	HexToStr(std::string hex);
 		std::string	ltrim(const std::string &s);
 		std::string	rtrim(const std::string &s);
 		std::string trim(const std::string &s);
+
 		int			getResponseBody(void) const;
 		bool		isRequestComplete() const;
 		std::string	getRemainingRequestMsg() const;
@@ -98,6 +101,7 @@ class RequestHandler
 		std::string	getClientIp(void) const;
 
 		// Member Functions
+		void	BuildDefaultResponseBody(const std::string &msg);
 		void	makeHeaderMap();
 		void	testFunction();
 		

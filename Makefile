@@ -94,9 +94,9 @@ re: fclean all
 
 TEST_NAME = test.out
 
-test: $(TEST_NAME)
+testp:
 	c++ $(CXXFLAGS) -I includes -I Unity/src -c tests/test.cpp -o obj/test.o
-	c++ $(CXXFLAGS) -L Unity -lunity -I includes -I Unity/src obj/test.o obj/WebServ.o obj/Config.o obj/Server.o obj/Location.o obj/RequestHandler.o -o test.out
+	c++ $(CXXFLAGS) -L Unity -lunity -I includes -I Unity/src obj/test.o obj/WebServ.o obj/Config.o obj/Server.o obj/Location.o obj/RequestHandler.o obj/AutoIndexGenerator.o obj/CgiHandler.o obj/Json.o obj/Parse.o obj/Utils.o -o test.out
 	./test.out
 
 testd: $(TEST_NAME)

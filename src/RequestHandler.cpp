@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/18 11:58:37 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/18 13:42:53 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,22 +181,54 @@ int	RequestHandler::BuildResponse(std::string request)
 	return (1);
 }
 
+std::string	RequestHandler::HexToStr(std::string hex)
+{
+	char 		chr;
+	std::string newString;
+	std::string hexValue;
+	std::string	tmpUri;
+
+	for (std::string::const_iterator uri_char = hex.begin(); uri_char != hex.end(); uri_char++)
+	{
+		if (*uri_char == '%')
+		{
+			uri_char++;
+			if (uri_char == hex.end())
+			{
+				return ("");
+			}
+			hexValue += *uri_char;
+			uri_char++;
+			if (uri_char == hex.end())
+			{
+				return ("");
+			}
+			hexValue += *uri_char;
+			chr = (char) (int)strtol(hexValue.c_str(), NULL, 16);
+			tmpUri.push_back(chr);
+			hexValue.clear();
+		}
+		tmpUri.push_back(*uri_char);
+	}
+	return (tmpUri);
+}
+
 int	RequestHandler::ParseRequestLine(std::string line)
 {
 	const std::vector<std::string>	wordVector = cpp_split(line);
 
-	//hex for space %20
 	if (wordVector.size() != 3)
 		return BuildResponse("400 BAD REQUEST");
 	if (wordVector[0] != "GET" && wordVector[0] != "DELETE" && wordVector[0] != "POST")
 		return BuildResponse("400 BAD REQUEST");
-	// Special characters ! * ' ( ) ; : @ & = + $ , / ? % # [ ] 
 	if (wordVector[1][0] != '/')
 		return BuildResponse("400 BAD REQUEST");
 	if (wordVector[2] != "HTTP/1.1")
 		return BuildResponse("400 BAD REQUEST");
 	_method = wordVector[0];
-	_uri = wordVector[1];
+	_uri = HexToStr(wordVector[1]);
+	if (_uri == "")
+		return BuildResponse("400 BAD REQUEST");
 	_protocol = wordVector[2];
 	return (0);
 }
@@ -307,6 +339,11 @@ int	RequestHandler::getResponseBody(void) const
 	return this->_response_body;
 }
 
+std::string	RequestHandler::getResponse(void)
+{
+	return ("");
+}
+
 t_strmap	RequestHandler::getHeaderMap() const
 {
 	return this->_headermap;
@@ -363,9 +400,11 @@ void	RequestHandler::setCgiError(void)
 void	RequestHandler::makeHeaderMap()
 {
 	std::vector<std::string>	split;
-	std::size_t	pos;
-	std::size_t	last_pos;
-	std::size_t	len;
+	std::size_t					pos;
+	std::size_t					last_pos;
+	std::size_t					len;
+	std::size_t					first_pos;
+	std::size_t					end_pos;
 
 	len = _complete_request.length();
 	last_pos = 0;
@@ -378,11 +417,11 @@ void	RequestHandler::makeHeaderMap()
 			split.push_back(std::string(_complete_request.data() + last_pos, pos - last_pos));
 		last_pos = pos + 1;
 	}
-	std::size_t	first_pos = _complete_request.find_first_of(' ') + 1;
-	std::size_t	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
+	first_pos = _complete_request.find_first_of(' ') + 1;
+	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
 	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
 	_request_method = _complete_request.substr(0, first_pos - 1);
-	// _method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
+	//_method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
 
 	//making a map of all the request headers
 	if (split.size() > 1)
@@ -395,6 +434,24 @@ void	RequestHandler::makeHeaderMap()
 			_headermap[split[i].substr(0, pos)] = split[i].substr(pos + 2, split[i].length());
 		}
 	}
+}
+
+void	RequestHandler::BuildDefaultResponseBody(const std::string &msg)
+{
+	_request_header += "<!DOCTYPE html> \
+	<html lang='en'> \
+	  <head> \
+		<meta charset='UTF-8'> \
+		<title>";
+	_request_header += msg;
+	_request_header += "</title> \
+	  </head> \
+	  <body bgcolor='white'> \
+		<center><h1>";
+	_request_header += msg;
+	_request_header += "</h1></center> \
+	  </body> \
+	</html>\r\n\r\n";
 }
 
 std::string	RequestHandler::getClientIp() const

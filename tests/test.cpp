@@ -1,4 +1,8 @@
 #include "unity.h"
+#include "Config.hpp"
+#include "Server.hpp"
+#include "WebServ.hpp"
+#include "RequestHandler.hpp"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -9,8 +13,19 @@ void setUp(void) {
     // set stuff up here
 }
 
-void tearDown(void) {
+void tearDown(void)
+{
     // clean stuff up here
+}
+
+void	StrToHex(void)
+{
+	Server serv;
+	t_servmap	map;
+
+	map.push_back(serv);
+	RequestHandler	rq(map);
+	rq.HexToStr("%20");
 }
 
 void	access_test(void)

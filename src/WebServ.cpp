@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   WebServ.cpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: alkrusts <marvin@codam.nl>                   +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
+/*   Updated: 2022/08/18 13:26:12 by alkrusts      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "WebServ.hpp"
 
 // Constructors
@@ -178,7 +190,7 @@ void	WebServ::sendResponse(t_event &event)
 	fd = evudat->req->getFileDescriptor();
 	if (evudat->flag != 2)
 	{		
-		//response = evudat->req->getResponse();
+		response = evudat->req->getResponse();
 		send(event.ident, response.c_str(), response.size(), 0);
 	}
 	if (fd > 0)
