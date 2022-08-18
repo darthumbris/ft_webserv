@@ -59,7 +59,7 @@ Server::Func Server::setValues(const std::string name, const Json& json)
 	t_table	map[] =
 	{
 			{"listen", Json::ARRAY, &Server::addServerListen},
-			{"error_page", Json::ARRAY, &Server::setServerErrorPage},
+			{"error_page", Json::OBJECT, &Server::setServerErrorPage},
 			{"server_name", Json::ARRAY, &Server::addServerName},
 			{"client_body_size", Json::NUMBER, &Server::setServerClientBodySize}
 	};

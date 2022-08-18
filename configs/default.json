@@ -10,9 +10,9 @@
           "test3.com"
         ],
         "error_page": {
-          "404" : "404.html",
-          "403" : "403.html",
-          "500" : "error.html"
+          "404": "404.html",
+          "403": "403.html",
+          "500": "error.html"
         },
         "location /": {
           "allowed_method": ["GET"],
@@ -28,9 +28,9 @@
           "upload": "/images/"
         },
         "location /test/upload/": {
-            "root": "var/www/html",
-            "auto_index": true,
-            "allowed_method": ["GET", "DELETE"]
+          "root": "var/www/html",
+          "auto_index": true,
+          "allowed_method": ["GET", "DELETE"]
         },
         "location /old": {
           "allowed_method": ["GET"],
@@ -46,10 +46,11 @@
           "other2.com",
           "other3.com"
         ],
-        "error_page": [
-          "404.html",
-          "403.html"
-        ],
+        "error_page": {
+          "404": "404.html",
+          "403": "403.html",
+          "500": "error.html"
+        },
         "location /": {
           "allowed_method": ["GET"],
           "auto_index": true,
