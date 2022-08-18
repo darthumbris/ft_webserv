@@ -50,6 +50,9 @@ void Server::setServerErrorPage(const Json &json)
 	{
 		if (x.second->type != Json::STRING)
 			throw Config::wrongKey("Expected STRING type");
+		if (_error_page.find(x.first) != _error_page.end())
+			throw Config::wrongKey("error_code duplicate");
+		std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
 		_error_page.emplace(x.first, x.second->values.str);
 	}
 }
