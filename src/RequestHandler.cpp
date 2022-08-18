@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/17 19:00:23 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/18 11:58:37 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,10 +255,10 @@ int	RequestHandler::ParseRequestMsg(void)
 	std::string			line;
 
 	iss.str(_msg);
-	std::getline(iss, line);//firs line is special in HTTP it contains the method uri and protocol
+	std::getline(iss, line); //firs line is special in HTTP it contains the method uri and protocol
 	if (ParseRequestLine(line))
 		return (1);
-	while (1)//this loop just gets all the header values
+	while (1) //this loop just gets all the header values
 	{
 		std::getline(iss, line);
 		_request_header += line;
@@ -302,7 +302,7 @@ std::string	RequestHandler::getRequestMethod() const
 	return this->_request_method;
 }
 
-std::string RequestHandler::getResponseBody() const
+int	RequestHandler::getResponseBody(void) const
 {
 	return this->_response_body;
 }
@@ -320,11 +320,6 @@ t_url	RequestHandler::getUrl() const
 int	RequestHandler::getPort() const
 {
 	return this->_port;
-}
-
-std::string	RequestHandler::getClientIp() const
-{
-	return this->_client_ip;
 }
 
 std::string RequestHandler::getCompleteRequest() const
@@ -349,13 +344,6 @@ void	RequestHandler::setPort(int port)
 	this->_port = port;
 }
 
-std::string	RequestHandler::getResponse(void) const
-{
-	return (_response_header + _response_body);
-}
-
-// Member functions
-
 Location	*RequestHandler::getLocation(std::string url) const
 {
 	for (std::size_t it = 0; it < _srv_map.size(); it++)
@@ -366,38 +354,10 @@ Location	*RequestHandler::getLocation(std::string url) const
 	return NULL;
 }
 
-//TODO remove all the stuff and move it to different function (testFunction or something)
-void	RequestHandler::addToRequestMsg(const std::string &msg);
-
-void	RequestHandler::setUrlStruct(std::string full_url)
-{
-	std::size_t	q_pos = full_url.find('?');
-	if (q_pos == std::string::npos)
-		q_pos = full_url.length();
-	_url.path = full_url.substr(0, q_pos);
-	_url.querry = full_url.substr(q_pos, full_url.length());//
-}
-
-	_complete_request += msg;
-	crlf_pos = _complete_request.find("\r\n\r\n");
-	//return BuildResponse("Bad response\r\n");does the server w to recive \r\n\r\n or does it see it every time even if the reqeust is really big
-	std::cout << "Important: " << crlf_pos << std::endl;
-	size_req = _complete_request.size();
-	if (crlf_pos != std::string::npos)
-	{
-		setRequestMsg(_complete_request);
-		ParseRequestMsg();
-	}
-void	RequestHandler::setClientIp(std::string ip)
-{
-	_client_ip = ip;
-}
-
-void	RequestHandler::setCgiError()
+void	RequestHandler::setCgiError(void)
 {
 	_cgi_error = true;
 }
-
 
 // Member functions
 void	RequestHandler::makeHeaderMap()
@@ -407,7 +367,6 @@ void	RequestHandler::makeHeaderMap()
 	std::size_t	last_pos;
 	std::size_t	len;
 
-	//splitting the request on \r\n
 	len = _complete_request.length();
 	last_pos = 0;
 	while (last_pos < len + 1)
@@ -438,7 +397,19 @@ void	RequestHandler::makeHeaderMap()
 	}
 }
 
-// 2 functions below just for a bit of testing stuff
+std::string	RequestHandler::getClientIp() const
+{
+	return this->_client_ip;
+}
+
+void	RequestHandler::setUrlStruct(std::string full_url)
+{
+	std::size_t	q_pos = full_url.find('?');
+	if (q_pos == std::string::npos)
+		q_pos = full_url.length();
+	_url.path = full_url.substr(0, q_pos);
+	_url.querry = full_url.substr(q_pos, full_url.length());
+}
 
 //TODO after parsing the request need to check for which server it is (first using port, then if multiple servers on same port the servername/host and then location)
 void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
@@ -449,7 +420,8 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	if (!isprint(_complete_request[0])) // this is for https and bad requests
 	{
 		_is_request_complete = true;
-		return (setServerError(&_response_body, &_response_header, "400 Bad Request"));
+		BuildResponse("400 Bad Request");
+		return ;
 	}
 	crlf_pos = _complete_request.find("\r\n\r\n");
 	if (crlf_pos != std::string::npos)
@@ -465,6 +437,9 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 		else if (_request_body.size() >= std::stoul(_headermap["Content-Length"]))
 			_is_request_complete = true;
 		if (_is_request_complete)
-			testFunction();
+		{
+			setRequestMsg(_complete_request);
+			ParseRequestMsg();
+		}
 	}
 }

@@ -67,13 +67,12 @@ class RequestHandler
 		bool	fileExists(const std::string &path);
 		int		OpenFile(void);
 		int		ParseRequestMsg(void);
-		//void		(std::string name, );
 
 		//utils
 		std::string	ltrim(const std::string &s);
 		std::string	rtrim(const std::string &s);
 		std::string trim(const std::string &s);
-		std::string	getResponse(void) const;
+		int			getResponseBody(void) const;
 		bool		isRequestComplete() const;
 		std::string	getRemainingRequestMsg() const;
 		bool		hasRemainingRequestMsg() const;
@@ -82,58 +81,57 @@ class RequestHandler
 		void		test(void);
 		Location	*getLocation(std::string url) const;
 		std::string	getRequestMethod() const;
-		std::string	getResponseBody() const;
 		t_strmap	getHeaderMap() const;
 		t_url		getUrl() const;
 		int			getPort() const;
-		std::string	getClientIp() const;
 		std::string	getCompleteRequest() const;
 		std::string&	getRequestBody();
 
 		// Setters
+		void	setCgiError(void);
 		void	setResponse();
 		void	addToRequestMsg(char *msg, int bytes_received);
 		void	setSocket(int socket);
 		void	setPort(int port);
 		void	setUrlStruct(std::string full_url);
 		void	setClientIp(std::string ip);
+		std::string	getClientIp(void) const;
 
 		// Member Functions
 		void	makeHeaderMap();
 		void	testFunction();
 		
 	private:
-		std::string		_msg;
+		t_servmap		_srv_map;
+		bool			_is_request_complete;
+		bool			_has_remaining_request;
+		bool			_send_file;
+		int				_fd_response;
 		int				_response_body;
+		std::size_t		_file_size;
+
+		std::string		_client_ip;
+		std::string		_msg;
 		std::string		_request_header;
 		std::string		_method;
 		std::string		_protocol;
 		std::string		_uri;
 
-		t_servmap		_srv_map;
 		std::string		_complete_request;
 		std::string		_remaining_request;
 		std::string		_response_header;
 
-		bool			_is_request_complete;
-		bool			_has_remaining_request;
-		bool			_send_file;
 		int				_client_socket;
-		int				_fd_response;
-		int				_port;
 		std::size_t		_fd_length;
-		std::size_t		_file_size;
 
-		t_strmap	_headermap;
+		t_strmap		_headermap;
 		std::string		_request_body;
-		std::string _request_method; //set this, this is used for the cgihandler 
+		std::string 	_request_method; //set this, this is used for the cgihandler 
 
-		t_url		_url;
-		bool		_is_request_complete;
-		bool		_is_request_header_done;
-		bool		_has_remaining_request;
-		bool		_send_file;
-		int			_port;
+		t_url			_url;
+		bool			_is_request_header_done;
+		bool			_cgi_error;
+		int				_port;
 };
 
 #endif

@@ -2,31 +2,7 @@
 #include "../includes/Location.hpp"
 
 // Constructors
-<<<<<<< HEAD
-//TODO in constructor check if file can be opened.
-// TODO maybe needs to be a check if there are no duplicate server_names?
-Config::Config(std::string config_path)
-{
-	std::cout << "config filename: " << config_path << std::endl;
-	//After this should parse the config
-
-	//Examples for the parsing:
-	// Config parsed new server with listen 127.0.0.1 8080
-	addServer("127.0.0.1", "4242");
-	// Config sees server_name test.com
-	getLastServer()->addServerName("test.com");
-	getLastServer()->addServerName("test2.com");
-	getLastServer()->addServerName("test3.com");
-	getLastServer()->addServerPort(4343);
-
-	// Config parsed new location with dir: "/images"
-	addLocation("/images");
-	addLocation("/");
-	// Setting autoindex for location / to true (default is off)
-	getLastServer()->getLocationMap()["/"]->setAutoIndex(true);
-=======
 Config::Config() {}
->>>>>>> master
 
 Config::Config(const Json *json)
 {
