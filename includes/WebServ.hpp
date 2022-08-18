@@ -62,7 +62,7 @@ class WebServ
 		void	addPortToList(int port);
 
 		// Member functions
-		void	setNewServerSocket(Server *server, int port);
+		void	setNewServerSocket(Server server, int port);
 		bool	isListenSocket(int fd);
 		void	addConnection(t_event event, t_evudat *old_udat);
 		void	readFromSocket(t_event &event);
@@ -71,6 +71,17 @@ class WebServ
 		void	receiveRequest(t_event &event);
 		void	sendResponse(t_event &event);
 		void	runServer();
+
+		//Exception
+		class WebServerExcpetion: public std::exception {
+		private:
+			std::string _msg;
+		public:
+			WebServerExcpetion(const std::string& msg) : _msg(msg) {}
+			virtual const char* what() const throw() {
+				return _msg.c_str();
+			}
+		};
 		
 	private:
 		

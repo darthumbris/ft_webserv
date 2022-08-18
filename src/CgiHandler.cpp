@@ -1,34 +1,13 @@
 #include "CgiHandler.hpp"
-#include <mach-o/dyld.h>
-
-//TODO fix this, now doesnt properly give a return that makes sense
-
-static std::string getCurDir()
-{
-	unsigned int bufferSize = 512;
-	std::vector<char> buffer(bufferSize + 1);
-
-	if(_NSGetExecutablePath(&buffer[0], &bufferSize))
-	{
-		buffer.resize(bufferSize);
-		_NSGetExecutablePath(&buffer[0], &bufferSize);
-	}
-	std::string cur_dir = &buffer[0];
-	cur_dir.resize(cur_dir.length() - 10);
-	return cur_dir;
-}
-
+#include "Utils.hpp"
 
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(&req)
 {
-	_cgi_path = "/Users/shoogenb/.brew/bin/php-cgi"; //TODO load this from config
-
+	std::cout << "Cgi made" << std::endl;
 	std::string	request = _req->getCompleteRequest();
 	std::size_t	body_start = request.find("\r\n\r\n");
 	_input_body = request.substr(body_start + 4);
-	std::cout << "input_body: " << _input_body << std::endl;
-	std::cout << "length: " << _input_body.length() << std::endl;
 }
 
 
@@ -40,18 +19,23 @@ CgiHandler::~CgiHandler()
 // Setter
 void	CgiHandler::setCgiPaths()
 {
-	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/'));
+	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/') + 1);
 	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
+	_root = "/";
 	if (_req->getLocation(_folder))
-		_root = _req->getLocation(_folder)->getRootPath();
+		_root += _req->getLocation(_folder)->getRootPath();
+	if (_req->getLocation(_folder))
+		_cgi_path = _req->getLocation(_folder)->getCgiPath();
 	else
-		_root = "";
+		_cgi_path = ""; // TODO might need to give a server error in this case
 	
-	_root.pop_back();
-	_folder.push_back('/');
+	// std::cout << "root: " << _root << std::endl;
+	// std::cout << "folder: " << _folder << std::endl;
+	// std::cout << "file: " << _file << std::endl;
 	_cur_dir = getCurDir();
 }
 
+//TODO for fileupload maybe have the redirect status be 303?
 void	CgiHandler::setEnvValues()
 {
 	setCgiPaths();
@@ -69,20 +53,21 @@ void	CgiHandler::setEnvValues()
 	_env["REMOTE_USER="] = _req->getHeaderMap()["Authorization"];
 	_env["REQUEST_METHOD="] = _req->getRequestMethod();
 	_env["SCRIPT_NAME="] = _cgi_path;
-	_env["SERVER_NAME="] = "test_server"; // TODO get correct name from _req
+	_env["SERVER_NAME="] = "test_server"; // TODO get correct name from _req or from the headermap?
 	_env["SERVER_PORT="] = std::to_string(_req->getPort());
 	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
 	_env["SERVER_SOFTWARE="] = "test_server";
 	_env["REDIRECT_STATUS="] = "200";
 	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
-
+	if (_req->getLocation(_folder)->getUploadPath() != "")
+		_env["UPLOAD_PATH="] = _req->getLocation(_folder)->getUploadPath();
 	// std::cout << "current dir:" << _cur_dir << std::endl;
 	// std::cout << "path_info:" << _env["PATH_INFO="] << std::endl;
 	// std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
 	// std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
 	// std::cout << "REQUEST_METHOD: " << _env["REQUEST_METHOD="] << std::endl;
-	// for (auto it = _env.begin(); it != _env.end(); it++)
-	// 	std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
+	for (auto it = _env.begin(); it != _env.end(); it++)
+		std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
 
 
 	// std::cout << "\n-----end of cgihandler env setter--------" << std::endl;
@@ -112,7 +97,8 @@ void	CgiHandler::executeScript(char **envp)
 	dup2(_in_file_fd, STDIN_FILENO);
 	dup2(_out_file_fd, STDOUT_FILENO);
 	execve(_cgi_path.c_str(), NULL, envp);
-	write(STDOUT_FILENO, "Status: 500\r\n", 15);
+	_req->setCgiError();
+	write(STDOUT_FILENO, "Status: 500\r\n", 14);
 }
 
 void	CgiHandler::readScriptOutput(pid_t pid)
@@ -151,6 +137,7 @@ void	CgiHandler::closeFileDescriptors()
 	close(_temp_out_fd);
 }
 
+//TODO make sure to make the folder if request is post (look at the config for where to upload)
 std::string	CgiHandler::execute()
 {
 	char		**envp;
@@ -169,7 +156,10 @@ std::string	CgiHandler::execute()
 	//forking for executing script
 	pid = fork();
 	if (pid == -1)
+	{
+		_req->setCgiError();
 		return ("Status: 500\r\n");
+	}
 	else if (pid == 0)
 		executeScript(envp);
 	else
@@ -187,9 +177,12 @@ std::string	CgiHandler::execute()
 	std::cout << "finished executing " << std::endl;
 
 	//TODO check if this works always or needs to be done differently
+	//TODO might need to remove this part later so the requesthandler can see what content-type to set for the response header
 	std::size_t	start_content_type = _output_body.find("Content-type");
 	std::size_t	start_body = _output_body.find('\n', start_content_type);
+	std::cout << _output_body.substr(0, start_body);
 	_output_body = _output_body.substr(start_body, std::string::npos);
+	// std::cout << "output: " << _output_body << std::endl;
 	return _output_body;
 }
 

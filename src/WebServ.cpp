@@ -1,32 +1,29 @@
 #include "WebServ.hpp"
 
-//TODO throw for somethings and make a error handler for those
-//TODO cleanup some of the code here
-//TODO maybe do setNewServerSocket so that each server listening on same port does get a socket ? check this
+//TODO check for memory leaks and proper delete etc usage
+//TODO make a index.html that shows all stuff we need to handle (file uploading redirect etc)
 
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
 {
-	t_servmap	server_map;
-
 	// Starting the kqueue
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
-	server_map = _config->getServerMap();
+	t_servmap server_map = _config->getServerMap();
 	_n_servers = 0;
+
 	// Going through the config and making a socket and event for all servers in it.
-	std::cout << "servers: " << server_map.size() << std::endl;
+	std::cout << "\n\nServers loaded from config: " << server_map.size() << "\n" << std::endl;
 	for (std::size_t it = 0; it < server_map.size(); it++)
 	{
-		std::vector<int> ports = server_map[it]->getServerPort();
-		for (std::size_t j = 0; j < server_map[it]->getServerNames().size(); j++)
-			std::cout << "server " << it << " server_name: " << server_map[it]->getServerNames()[j] << std::endl;
+		std::vector<int> ports = server_map[it].getServerPort();
 		for (std::size_t i = 0; i < ports.size(); i++)
 		{
 			if (!listeningToPort(ports[i]))
 			{
 				std::cout << "setting socket for port: " << ports[i] << std::endl;
-				setNewServerSocket(server_map[it], ports[i]);
+				try	{setNewServerSocket(server_map[it], ports[i]);}
+				catch(const std::exception& e) {std::cerr << e.what() << std::endl;}
 				addPortToList(ports[i]);
 				_n_servers++;
 			}
@@ -73,7 +70,7 @@ void	WebServ::addPortToList(int port)
 }
 
 // Member Functions
-void	WebServ::setNewServerSocket(Server *server, int port)
+void	WebServ::setNewServerSocket(Server server, int port)
 {
 	int			srvr_sckt;
 	int			option = 1;
@@ -84,36 +81,27 @@ void	WebServ::setNewServerSocket(Server *server, int port)
 	// Creating the socket
 	srvr_sckt = socket(AF_INET, SOCK_STREAM, 0);
 	if (srvr_sckt == -1)
-	{
-		std::cout << "Error: socket failed" << std::endl;
-		perror("socket");
-	}
-	server->setServerSocket(srvr_sckt);
+		throw WebServerExcpetion{"Error: creating socket for server failed"};
+	server.setServerSocket(srvr_sckt);
 	setsockopt(srvr_sckt, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
 	// Setting the address struct
 	memset((char *)&srvr_addr, 0, sizeof(srvr_addr));
 	srvr_addr.sin_family = AF_INET;
-	srvr_addr.sin_addr.s_addr = inet_addr(server->getServerIp().c_str());
+	srvr_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	srvr_addr.sin_port = htons(port);
 
 	// Binding and listening to the new socket using the address struct data
 	if (bind(srvr_sckt, (t_sckadr *)&srvr_addr, sizeof(srvr_addr)) == -1)
-	{
-		std::cout << "Error: bind failed" << std::endl;
-		perror("bind");
-	}
+		throw WebServerExcpetion{"Error: bind() failed"};
 	if (listen(srvr_sckt, BACKLOG) == -1)
-	{
-		std::cout << "Error: listen() failed" << std::endl;
-		perror("listen");
-	}
+		throw WebServerExcpetion{"Error: listen() failed"};
 	
 	// Setting the server socket as nonblocking
 	fcntl(srvr_sckt, F_SETFL, O_NONBLOCK);
 
 	//Setting the udata for the event and adding it to the changelst.
-	ev_udat->ip = server->getServerIp();
+	ev_udat->ip = server.getServerIp();
 	ev_udat->port = port;
 	EV_SET(&event, srvr_sckt, EVFILT_READ, EV_ADD, 0, 0, ev_udat);
 	_change_ev.push_back(event);
@@ -135,24 +123,18 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 //TODO maybe needs a check for the udat if it needs to be deleted?
 void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 {
-	int			clnt_sckt;
 	int			opt_value = 1;
 	t_addr_in	newaddr;
 	socklen_t	socklen = sizeof(newaddr);
-	char		host[1024];
-	char		service[20];
 
-	clnt_sckt = accept(event.ident, (t_sckadr *)(&newaddr), &socklen);
+	int clnt_sckt = accept(event.ident, (t_sckadr *)(&newaddr), &socklen);
 	if (clnt_sckt == -1)
-	{
-		std::cout << "accept error" << std::endl;
-		perror("accept");
-	}
+		throw WebServerExcpetion{"Error: accept() failed"};
 	setsockopt(clnt_sckt, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(opt_value));
 
 	//setting initial values for the new_udat
 	t_evudat	*new_udat = new t_evudat;
-	new_udat->flag = 0;
+	memset(new_udat, 0, sizeof(t_evudat));
 	new_udat->addr = newaddr;
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
@@ -160,9 +142,6 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->req->setSocket(clnt_sckt);
 	new_udat->req->setPort(old_udat->port);
 	new_udat->req->setClientIp(inet_ntoa(newaddr.sin_addr));
-	new_udat->datalen = 0;
-	new_udat->total_size = 0;
-	getnameinfo((const t_sckadr *)&newaddr, socklen, host, sizeof host, service, sizeof service, 0);
 
 	//putting the read and write event for the new client in the kqueue
 	t_event		new_event[2];
@@ -170,10 +149,8 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	EV_SET(&new_event[1], clnt_sckt, EVFILT_WRITE, EV_ADD, 0, 0, new_udat);
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
 
-	//Debug messages
-	std::cout << "Added new client connecting from ip: " << inet_ntoa(newaddr.sin_addr);
-	std::cout << " and client port: " << ntohs(newaddr.sin_port) << std::endl;
-	std::cout << "Client connected to server with ip: " << old_udat->ip << " and port: " << old_udat->port << std::endl;
+	//Debug message
+	std::cout << "New client connected to server with port: " << old_udat->port << std::endl;
 }
 
 void	WebServ::receiveRequest(t_event &event)
@@ -181,21 +158,19 @@ void	WebServ::receiveRequest(t_event &event)
 	t_evudat	*evudat = (t_evudat *)event.udata;
 	char		buf[MAX_MSG_SIZE];
 	int			bytes_read;
+	static int	total_bytes = 0;
 
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
+	total_bytes += bytes_read;
 	if (bytes_read < 0)
-		std::cout << "receive error" << std::endl;
+		std::cout << "recv error" << std::endl;
 	else if (bytes_read == 0 && evudat->flag != 2)
-	{
 		evudat->flag = 1;
-		// std::cout << "bytes_read is 0" << std::endl;
-	}
 	else
 	{
 		buf[bytes_read] = 0;
-		evudat->req->addToRequestMsg(buf);
+		evudat->req->addToRequestMsg(buf, bytes_read);
 	}
-	// fflush(stdout);
 }
 
 void	WebServ::sendResponse(t_event &event)
@@ -206,14 +181,13 @@ void	WebServ::sendResponse(t_event &event)
 
 	fd = evudat->req->getFileDescriptor();
 	if (evudat->flag != 2)
-	{
-		// get response
+	{		
 		response = evudat->req->getResponse();
-		// Sending response header (might contain the body too in case of autoindex?)
 		send(event.ident, response.c_str(), response.size(), 0);
 	}
 	if (fd > 0)
 	{
+		std::cout << "file descriptor open" << std::endl;
 		int bytes = sendfile(fd, event.ident, evudat->total_size, &evudat->datalen, NULL, 0);
 		evudat->total_size += evudat->datalen;
 		if (bytes == -1 || evudat->total_size < evudat->req->getFileSize())
@@ -233,7 +207,6 @@ void	WebServ::sendResponse(t_event &event)
 		evudat->req = new RequestHandler(_config->getServerMap());
 		evudat->req->setPort(evudat->port);
 	}
-	// system("leaks webserv");
 }
 
 bool	WebServ::isListenSocket(int fd)
@@ -271,21 +244,29 @@ void	WebServ::runServer()
 	int		new_evnt;
 	t_event	events[MAX_EVENTS];
 
-	while (true)
+	try
 	{
-		new_evnt = kevent(_kqueue, NULL, 0, events, _n_servers, NULL);
-		if (new_evnt == -1)
-			std::cout << "Error: kevent failure" << std::endl;
-		for (int i = 0; i < new_evnt; i++)
+		while (true)
 		{
-			if (events[i].flags & EV_ERROR)
-				std::cout << "Error: Socket got deleted" << std::endl;
-			if (isListenSocket(events[i].ident))
-				addConnection(events[i], (t_evudat *)(events[i].udata));
-			else if (events[i].filter == EVFILT_READ)
-				readFromSocket(events[i]);
-			else if (events[i].filter == EVFILT_WRITE)
-				writeToSocket(events[i]);
+			new_evnt = kevent(_kqueue, NULL, 0, events, _n_servers, NULL);
+			if (new_evnt == -1)
+				throw WebServerExcpetion("Error: kevent failed");
+			for (int i = 0; i < new_evnt; i++)
+			{
+				if (events[i].flags & EV_ERROR)
+					std::cout << "Error: Socket got deleted" << std::endl;
+				if (isListenSocket(events[i].ident))
+					addConnection(events[i], (t_evudat *)(events[i].udata));
+				else if (events[i].filter == EVFILT_READ)
+					readFromSocket(events[i]);
+				else if (events[i].filter == EVFILT_WRITE)
+					writeToSocket(events[i]);
+			}
 		}
 	}
+	catch(const std::exception& e) 
+	{
+		std::cerr << e.what() << '\n';
+	}
+	exit(1);
 }
