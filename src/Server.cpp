@@ -38,9 +38,8 @@ void Server::addServerName(const Json &json)
 
 void Server::setServerClientBodySize(const Json &json)
 {
-#ifdef DEBUG_MODE
+	if (DEBUG_MODE)
 		std::cout << BLUE << "Set the client_body_size to: " << json.values.number << " for the server." << RESET_COLOR << std::endl;
-#endif
 	_client_body_size = json.values.number;
 }
 
@@ -52,7 +51,8 @@ void Server::setServerErrorPage(const Json &json)
 			throw Config::wrongKey("Expected STRING type");
 		if (_error_page.find(x.first) != _error_page.end())
 			throw Config::wrongKey("error_code duplicate");
-		std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
+		if (DEBUG_MODE)
+			std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
 		_error_page.emplace(x.first, x.second->values.str);
 	}
 }
