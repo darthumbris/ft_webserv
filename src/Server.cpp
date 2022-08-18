@@ -43,7 +43,6 @@ void Server::setServerClientBodySize(const Json &json)
 	_client_body_size = json.values.number;
 }
 
-//TODO might need to parse what error the error_page it corresponds to and maybe make it a map instead?
 void Server::setServerErrorPage(const Json &json)
 {
 	for (const auto *x : json.values.list)
@@ -52,7 +51,8 @@ void Server::setServerErrorPage(const Json &json)
 			throw Config::wrongKey("expected <STRING>");
 		if (DEBUG_MODE)
 			std::cout << BLUE << "Added error_page: " << x->values.str << " to the server" << RESET_COLOR << std::endl;	
-		_error_page.push_back(json.values.str);
+		// _error_page.push_back(json.values.str);
+		//TODO abba needs to fix this so it makes a map.
 	}
 }
 
@@ -100,7 +100,7 @@ const std::vector<int> &Server::getServerPort() const
 }
 
 
-const t_vecstr &Server::getErrorPage() const
+const t_strmap &Server::getErrorPage() const
 {
 	return _error_page;
 }

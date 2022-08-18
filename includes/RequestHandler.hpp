@@ -17,7 +17,6 @@ struct	url
 	std::string	querry;
 };
 
-using	t_strmap = std::map<std::string, std::string>;
 using	t_url	= struct url;
 
 class RequestHandler
