@@ -38,21 +38,19 @@ void Server::addServerName(const Json &json)
 
 void Server::setServerClientBodySize(const Json &json)
 {
-	if (DEBUG_MODE)
+#ifdef DEBUG_MODE
 		std::cout << BLUE << "Set the client_body_size to: " << json.values.number << " for the server." << RESET_COLOR << std::endl;
+#endif
 	_client_body_size = json.values.number;
 }
 
 void Server::setServerErrorPage(const Json &json)
 {
-	for (const auto *x : json.values.list)
+	for (const auto &x : json.values.object)
 	{
-		if (x->type != Json::STRING)
-			throw Config::wrongKey("expected <STRING>");
-		if (DEBUG_MODE)
-			std::cout << BLUE << "Added error_page: " << x->values.str << " to the server" << RESET_COLOR << std::endl;	
-		// _error_page.push_back(json.values.str);
-		//TODO abba needs to fix this so it makes a map.
+		if (x.second->type != Json::STRING)
+			throw Config::wrongKey("Expected STRING type");
+		_error_page.emplace(x.first, x.second->values.str);
 	}
 }
 
@@ -110,9 +108,9 @@ const t_vecstr &Server::getServerNames() const
 	return _server_name;
 }
 
-t_locmap	Server::getLocationMap() const
+const t_locmap	&Server::getLocationMap() const
 {
-	return this->_location;
+	return _location;
 }
 
 Location *Server::getLocation(int port, std::string url) const

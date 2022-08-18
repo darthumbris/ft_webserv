@@ -1,5 +1,4 @@
 #include "../includes/Config.hpp"
-#include "../includes/Location.hpp"
 
 // Constructors
 Config::Config() {}

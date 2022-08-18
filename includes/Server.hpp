@@ -28,7 +28,7 @@ class Server
 		const std::vector<int>&	getServerPort() const;
 		const t_strmap&			getErrorPage() const;
 		const t_vecstr&			getServerNames() const;
-		t_locmap				getLocationMap() const;
+		const t_locmap&				getLocationMap() const;
 		Location				*getLocation(int port, std::string url) const;
 
 		// Setters
