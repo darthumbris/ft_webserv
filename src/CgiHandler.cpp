@@ -2,7 +2,7 @@
 #include "Utils.hpp"
 
 // Constructors
-CgiHandler::CgiHandler(RequestHandler &req) : _req(&req)
+CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _error(false)
 {
 	std::cout << "Cgi made" << std::endl;
 	std::string	request = _req->getCompleteRequest();
@@ -27,7 +27,13 @@ void	CgiHandler::setCgiPaths()
 	if (_req->getLocation(_folder))
 		_cgi_path = _req->getLocation(_folder)->getCgiPath();
 	else
+	{
 		_cgi_path = ""; // TODO might need to give a server error in this case
+		_req->setCgiError();
+		_error = true;
+		return ;
+	}
+		
 	
 	// std::cout << "root: " << _root << std::endl;
 	// std::cout << "folder: " << _folder << std::endl;
@@ -147,7 +153,8 @@ std::string	CgiHandler::execute()
 	setFileDescriptors();
 
 	envp = makeEnvArray();
-
+	if (_error)
+		return "Status: 500\r\n";
 	//reading in the input body to temp file
 	write(_in_file_fd, _input_body.c_str(), _input_body.length());
 	//Resetting to beginning of file
