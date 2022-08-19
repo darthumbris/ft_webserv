@@ -217,21 +217,26 @@ void	RequestHandler::testFunction()
 	std::cout << "file: " << file << std::endl;
 	if (_complete_request.find("GET /") != std::string::npos || _complete_request.find("POST /") != std::string::npos)
 	{
-		if (_url.path.find(".php") != std::string::npos)
+		if (_url.path.find(".php") != std::string::npos || _url.path.find(".py") != std::string::npos)
 		{
 			CgiHandler	cgi(*this);
 			_response_body = cgi.execute();
 			std::cout << _response_body << std::endl;
-			_response_body.append("\r\n\r\n");
-			//TODO response header needs to be properly made based on the response body? for alkrust or abba
-			_response_header = "HTTP/1.1 303 See Other\r\n";
-			_response_header += "Location: /test/upload/\r\n";
+			std::size_t content_type_start_pos = _response_body.find("Content-type:") + 13;
+			std::cout << "start pos: " << content_type_start_pos << std::endl;
+			std::size_t	content_type_end_pos = _response_body.find_first_of("\r\n", content_type_start_pos);
+			std::string content_type = _response_body.substr(content_type_start_pos, content_type_end_pos - content_type_start_pos + 2);
+			std::cout << "content-type:" << content_type << std::endl;
+			_response_body = _response_body.substr(content_type_end_pos + 2, _response_body.length());
+			std::cout << "\nResponse body after substr: " << _response_body << std::endl;
+			_response_header = "HTTP/1.1 200 Ok\r\n";
 			_response_header += "Content-Length: ";
 			_response_header += std::to_string(_response_body.length());
 			_response_header += "\r\nConnection: keep-alive\r\n";
-			_response_header += "Content-type: text/html\r\n\r\n";
+			_response_header += "Content-type: " + content_type + "\r\n\r\n";
 			_complete_request.clear();
 			_request_header.clear();
+			std::cout << "response header: " << _response_header << std::endl;
 			return;
 		}
 		Location *loc;

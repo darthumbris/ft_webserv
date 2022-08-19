@@ -6,7 +6,8 @@
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _error(false)
 {
-	std::cout << "Cgi made" << std::endl;
+	if (DEBUG_MODE)
+		std::cout << "Cgi made" << std::endl;
 	std::string	request = _req->getCompleteRequest();
 	std::size_t	body_start = request.find("\r\n\r\n");
 	_input_body = request.substr(body_start + 4);
@@ -30,7 +31,7 @@ void	CgiHandler::setCgiPaths()
 		_cgi_path = _req->getLocation(_folder)->getCgiPath();
 	else
 	{
-		_cgi_path = ""; // TODO might need to give a server error in this case
+		_cgi_path = "";
 		_req->setCgiError();
 		_error = true;
 		return ;
@@ -41,12 +42,10 @@ void	CgiHandler::setCgiPaths()
 	// std::cout << "folder: " << _folder << std::endl;
 	// std::cout << "file: " << _file << std::endl;
 	_cur_dir = getCurDir();
-	if (_file.find(".py") != std::string::npos)
-	{
-		//TODO fix this so it does this properly. might also need to look at the config?
-		_cgi_path = "/Users/shoogenb/Documents/Circle6/webserv/ft_webvserv/var/www/html/cgi_bin/pythontest.py";
+	if (_cgi_path == "/usr/bin/python")
+		_cgi_path = _cur_dir + _root + _folder + _file;
+	if (DEBUG_MODE)
 		std::cout << "cgipath: " << _cgi_path << std::endl;
-	}
 }
 
 //TODO for fileupload maybe have the redirect status be 303?
@@ -74,14 +73,20 @@ void	CgiHandler::setEnvValues()
 	_env["REDIRECT_STATUS="] = "200";
 	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
 	if (_req->getLocation(_folder)->getUploadPath() != "")
+	{
 		_env["UPLOAD_PATH="] = _req->getLocation(_folder)->getUploadPath();
+		_env["ROOT_PATH="] = _cur_dir + "/" + _req->getLocation(_folder)->getRootPath();
+	}
 	// std::cout << "current dir:" << _cur_dir << std::endl;
 	// std::cout << "path_info:" << _env["PATH_INFO="] << std::endl;
 	// std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
 	// std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
 	// std::cout << "REQUEST_METHOD: " << _env["REQUEST_METHOD="] << std::endl;
-	for (auto it = _env.begin(); it != _env.end(); it++)
-		std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
+	if (DEBUG_MODE)
+	{
+		for (auto it = _env.begin(); it != _env.end(); it++)
+			std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
+	}
 
 
 	// std::cout << "\n-----end of cgihandler env setter--------" << std::endl;
@@ -189,7 +194,8 @@ std::string	CgiHandler::execute()
 
 	if (pid == 0)
 		exit(0);
-	std::cout << "finished executing " << std::endl;
+	if (DEBUG_MODE)
+		std::cout << "finished executing " << std::endl;
 	//TODO might need to remove this part later so the requesthandler can see what content-type to set for the response header
 	// std::size_t	start_content_type = _output_body.find("Content-type");
 	// std::size_t	start_body = _output_body.find('\n', start_content_type);
