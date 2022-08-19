@@ -94,6 +94,16 @@ std::string	RequestHandler::getClientIp() const
 	return this->_client_ip;
 }
 
+const std::string&	RequestHandler::getRequestHeader() const
+{
+	return this->_request_header;
+}
+
+const std::string&	RequestHandler::getRequestBody() const
+{
+	return this->_request_body;
+}
+
 // Setters
 void	RequestHandler::setResponse()
 {
@@ -317,7 +327,7 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 		}
 		if (_is_request_header_done)
 		{
-			_request_body = _complete_request.substr(crlf_pos, std::string::npos);
+			_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
 			if (_headermap.find("Content-Length")  == _headermap.end())
 				_is_request_complete = true;
 			else if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))

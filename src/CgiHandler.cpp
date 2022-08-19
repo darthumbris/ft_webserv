@@ -4,13 +4,11 @@
 //TODO make it work also with python scripts for bonus
 
 // Constructors
-CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _error(false)
+CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _input_body(_req->getRequestBody()), _error(false)
 {
 	if (DEBUG_MODE)
-		std::cout << "Cgi made" << std::endl;
-	std::string	request = _req->getCompleteRequest();
-	std::size_t	body_start = request.find("\r\n\r\n");
-	_input_body = request.substr(body_start + 4);
+		std::cout << "Cgi constructor called" << std::endl;
+	std::cout << "input body: " << _input_body << std::endl;
 }
 
 
@@ -25,6 +23,7 @@ void	CgiHandler::setCgiPaths()
 	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/') + 1);
 	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
 	_root = "/";
+	_cur_dir = getCurDir();
 	if (_req->getLocation(_folder))
 		_root += _req->getLocation(_folder)->getRootPath();
 	if (_req->getLocation(_folder))
@@ -36,19 +35,16 @@ void	CgiHandler::setCgiPaths()
 		_error = true;
 		return ;
 	}
-		
-	
-	// std::cout << "root: " << _root << std::endl;
-	// std::cout << "folder: " << _folder << std::endl;
-	// std::cout << "file: " << _file << std::endl;
-	_cur_dir = getCurDir();
 	if (_cgi_path == "/usr/bin/python")
 		_cgi_path = _cur_dir + _root + _folder + _file;
 	if (DEBUG_MODE)
 		std::cout << "cgipath: " << _cgi_path << std::endl;
 }
 
-//TODO for fileupload maybe have the redirect status be 303?
+/*TODO maybe have the redirect status be assigned in the script itself 
+ * and the request handler checks the response body for it?
+ * The same for content-type (which php already does and python is manual)
+*/
 void	CgiHandler::setEnvValues()
 {
 	setCgiPaths();
@@ -66,7 +62,7 @@ void	CgiHandler::setEnvValues()
 	_env["REMOTE_USER="] = _req->getHeaderMap()["Authorization"];
 	_env["REQUEST_METHOD="] = _req->getRequestMethod();
 	_env["SCRIPT_NAME="] = _cgi_path;
-	_env["SERVER_NAME="] = "test_server"; // TODO get correct name from _req or from the headermap?
+	_env["SERVER_NAME="] = "ft_webserv"; // TODO get correct name from _req or from the headermap?
 	_env["SERVER_PORT="] = std::to_string(_req->getPort());
 	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
 	_env["SERVER_SOFTWARE="] = "test_server";
@@ -77,19 +73,10 @@ void	CgiHandler::setEnvValues()
 		_env["UPLOAD_PATH="] = _req->getLocation(_folder)->getUploadPath();
 		_env["ROOT_PATH="] = _cur_dir + "/" + _req->getLocation(_folder)->getRootPath();
 	}
-	// std::cout << "current dir:" << _cur_dir << std::endl;
-	// std::cout << "path_info:" << _env["PATH_INFO="] << std::endl;
-	// std::cout << "path_translated:" << _env["PATH_TRANSLATED="] << std::endl;
-	// std::cout << "content_length: " << _env["CONTENT_LENGTH="] << std::endl;
-	// std::cout << "REQUEST_METHOD: " << _env["REQUEST_METHOD="] << std::endl;
+
 	if (DEBUG_MODE)
-	{
 		for (auto it = _env.begin(); it != _env.end(); it++)
 			std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
-	}
-
-
-	// std::cout << "\n-----end of cgihandler env setter--------" << std::endl;
 }
 
 // this is for testing need to make a proper version for this
@@ -156,7 +143,6 @@ void	CgiHandler::closeFileDescriptors()
 	close(_temp_out_fd);
 }
 
-//TODO make sure to make the folder if request is post (look at the config for where to upload)
 std::string	CgiHandler::execute()
 {
 	char		**envp;
