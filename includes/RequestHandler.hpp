@@ -2,7 +2,6 @@
 # define REQUESTHANDLER_HPP
 
 //includes iostream vector string map
-# include "Server.hpp"
 # include <sstream>
 # include <cctype>
 # include <fcntl.h>
@@ -12,9 +11,10 @@
 # include <unistd.h>
 # include <fstream>
 # include <sstream>
+# include "Server.hpp"
 # include "AutoIndexGenerator.hpp"
 
-const std::string INTERNAL_SERVER_ERROR_500 = "<!DOCTYPE html> \
+const std::string &INTERNAL_SERVER_ERROR_500 = "<!DOCTYPE html> \
 <html lang='en'> \
   <head> \
     <meta charset='UTF-8'> \
@@ -57,23 +57,14 @@ class RequestHandler
 		const char			*getHeader(void) const;
 		//std::string	make
 
-		// Setters
-
-		void	setRequestMsg(std::string msg);
-		bool	parseFirstLine(std::string method);
-		bool	isMethodImplimented(std::string line, std::string availableMethod);
-		bool	isMethodFollowedBySpace(std::string line, std::string availableMethod);
-		int		BuildResponse(const std::string &response_status);
-		int		ParseRequestLine(std::string line);
-		bool	fileExists(const std::string &path);
-		int		OpenFile(void);
+		void	setRequestMsg(const std::string &msg);
+		bool	parseFirstLine(const std::string &method);
+		int		BuildResponseHeader(const std::string &response_status);
+		void	ParseRequestLine(void);
+		int		ParseHeaderMap(void);
 		int		ParseRequestMsg(void);
-
-		//utils
-		std::string	HexToStr(std::string hex);
-		std::string	ltrim(const std::string &s);
-		std::string	rtrim(const std::string &s);
-		std::string trim(const std::string &s);
+		bool	fileExists(const std::string &path);
+		void		OpenFile(void);
 
 		int			getResponseBody(void) const;
 		bool		isRequestComplete() const;
@@ -82,7 +73,7 @@ class RequestHandler
 		int			getFileDescriptor() const;
 		std::size_t	getFileSize(void) const;
 		void		test(void);
-		Location	*getLocation(std::string url) const;
+		Location	*getLocation(const std::string &url) const;
 		std::string	getRequestMethod() const;
 		t_strmap	getHeaderMap() const;
 		t_url		getUrl() const;
@@ -91,17 +82,28 @@ class RequestHandler
 		std::string&	getRequestBody();
 
 		// Setters
+		void	setContentType(const std::string &type);
+		void	setResponseStatus(const std::string &status_line);
+		void	setFdBody(int fd);
+		void	setFileName(const std::string &name);
+		void	setDefaultHost(const std::string &name);
+		void	setDefaultServer(const Server *server);
+		void	setHost(const std::string &name);
 		void	setCgiError(void);
-		void	setResponse();
+		void	setResponseCompelete(void);
 		void	addToRequestMsg(char *msg, int bytes_received);
 		void	setSocket(int socket);
 		void	setPort(int port);
-		void	setUrlStruct(std::string full_url);
-		void	setClientIp(std::string ip);
+		void	setUrlStruct(const std::string &full_url);
+		void	setClientIp(const std::string &ip);
+		void	setServer(const Server *server);
 		std::string	getClientIp(void) const;
 
 		// Member Functions
-		void	BuildHeader(const std::string &response_status, int body_length);
+		void	FindAllAccessibleLocations(void);
+		void	BuildResponseHeader(void);
+		int		CheckUserDefinedStatusPage(Server server);
+		void	FindServer(void);
 		void	BuildDefaultResponseBody(const std::string &msg);
 		void	makeHeaderMap();
 		void	testFunction();
@@ -112,13 +114,11 @@ class RequestHandler
 		bool			_has_remaining_request;
 		bool			_send_file;
 		int				_fd_response;
-		int				_response_body;
 		std::size_t		_file_size;
 
 		std::string		_client_ip;
 		std::string		_msg;
 		std::string		_request_header;
-		std::string		_method;
 		std::string		_protocol;
 		std::string		_uri;
 
@@ -126,19 +126,26 @@ class RequestHandler
 		std::string		_remaining_request;
 		std::string		_response_header;
 
-		std::string		_status_code;
 		int				_client_socket;
-		std::size_t		_fd_length;
 
 		t_strmap		_headermap;
 		std::string		_request_body;
 		std::string 	_request_method; //set this, this is used for the cgihandler 
-		std::string		_host;
 
 		t_url			_url;
 		bool			_is_request_header_done;
 		bool			_cgi_error;
 		int				_port;
-};
 
+		std::size_t						_fd_length;
+		std::string						_host;
+		std::string						_default_host;
+		std::string						_content_type;
+		std::string						_file_name;
+		std::string						_status_line;
+		std::vector<std::string>		_accessible_paths;
+		const Server					*_server;
+		const Locations					*_locations;
+		const Server					*_default_server;
+}; 
 #endif

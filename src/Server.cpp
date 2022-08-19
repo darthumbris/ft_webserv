@@ -57,6 +57,13 @@ void Server::setServerErrorPage(const Json &json)
 	}
 }
 
+void Server::setServerRoot(const Json& json)
+{
+	_root = json.values.str;
+	if (DEBUG_MODE)
+		std::cout << GREEN << "set the root_folder: " << _root << " for this location" <<  RESET_COLOR << std::endl;
+}
+
 Server::Func Server::setValues(const std::string name, const Json& json)
 {
 	t_table	map[] =
@@ -64,7 +71,8 @@ Server::Func Server::setValues(const std::string name, const Json& json)
 			{"listen", Json::ARRAY, &Server::addServerListen},
 			{"error_page", Json::OBJECT, &Server::setServerErrorPage},
 			{"server_name", Json::ARRAY, &Server::addServerName},
-			{"client_body_size", Json::NUMBER, &Server::setServerClientBodySize}
+			{"client_body_size", Json::NUMBER, &Server::setServerClientBodySize},
+			{"root", Json::STRING, &Server::setServerRoot}
 	};
 
 	for (const t_table& entry : map)

@@ -4,6 +4,7 @@
       {
         "client_body_size": 1000,
         "listen": [4242, 4343],
+		"root": "var/www/html",
         "server_name": [
           "test.com",
           "test2.com",
@@ -20,6 +21,12 @@
           "index": "index.html",
           "root": "var/www/html"
         },
+        "location /html/": {
+          "allowed_method": ["GET"],
+          "auto_index": true,
+          "index": "index.html",
+          "root": "var/www"
+		},
         "location /test/": {
           "root": "var/www/html",
           "auto_index": true,
@@ -76,4 +83,4 @@
         }
       }
     ]
-  }
+}

@@ -1,5 +1,75 @@
 #include "Utils.hpp"
 
+//<-- HexToStr
+std::string	HexToStr(const std::string &hex)
+{
+	char 		chr;
+	std::string newString;
+	std::string hexValue;
+	std::string	tmpUri;
+
+	for (std::string::const_iterator uri_char = hex.begin(); uri_char != hex.end(); uri_char++)
+	{
+		if (*uri_char == '%')
+		{
+			uri_char++;
+			if (uri_char == hex.end())
+				return ("");
+			hexValue += *uri_char;
+			uri_char++;
+			if (uri_char == hex.end())
+				return ("");
+			hexValue += *uri_char;
+			chr = (char) (int)strtol(hexValue.c_str(), NULL, 16);
+			tmpUri.push_back(chr);
+			hexValue.clear();
+		}
+		tmpUri.push_back(*uri_char);
+	}
+	return (tmpUri);
+}
+//<-- HexToStr
+
+//<-- cpp_split
+std::vector<std::string>	cpp_split(const std::string &line)
+{
+	std::size_t 				prev = 0, pos;
+	std::vector<std::string>	wordVector;
+
+	while ((pos = line.find_first_of(" ", prev)) != std::string::npos)
+	{
+		if (pos > prev)
+			wordVector.push_back(trim(line.substr(prev, pos - prev)));
+		prev = pos + 1;
+	}
+	if (prev < line.length())
+		wordVector.push_back(trim(line.substr(prev, std::string::npos)));
+	return (wordVector);
+}
+//<-- cpp_split
+
+//<-- strtrim
+const std::string WHITESPACE = " \n\r\t\f\v";
+
+static std::string ltrim(const std::string &s)
+{
+    size_t start = s.find_first_not_of(WHITESPACE);
+    return (start == std::string::npos) ? "" : s.substr(start);
+}
+ 
+static std::string rtrim(const std::string &s)
+{
+    size_t end = s.find_last_not_of(WHITESPACE);
+    return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+ 
+std::string trim(const std::string &s)
+{
+    return rtrim(ltrim(s));
+}
+//<-- strtrim
+
+
 std::string getCurDir()
 {
 	unsigned int bufferSize = 512;
@@ -15,7 +85,7 @@ std::string getCurDir()
 	return cur_dir;
 }
 
-int	checkPath(std::string path, std::string root)
+int	checkPath(const std::string &path, const std::string &root)
 {
 	struct stat s;
 
@@ -127,7 +197,7 @@ std::map<std::string, std::string>	getTypeMap()
 	return type_map;
 }
 
-std::string	getContentType(std::string file_name)
+std::string	getContentType(const std::string &file_name)
 {
 	static const std::map<std::string, std::string>	type_map = getTypeMap();
 	std::size_t type_pos = file_name.find_last_of('.');
