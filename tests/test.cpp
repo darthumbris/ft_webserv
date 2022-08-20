@@ -13,6 +13,25 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#include <ctime>
+#include <iostream>
+#include <unistd.h>
+
+std::string gen_random(const int len) {
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    std::string tmp_s;
+    tmp_s.reserve(len);
+
+    for (int i = 0; i < len; ++i) {
+        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+    
+    return tmp_s;
+}
+
 void setUp(void)
 {
 }
@@ -41,7 +60,7 @@ void	access_test(void)
 }
 */
 
-void	TESTLengthOfMatch(void)
+void	TEST_LengthOfMatch(void)
 {
 //	std::cout << LengthOfMatch("var/html/test", "var/html/test") << " " << strlen("var/html/test") << std::endl;
 	TEST_ASSERT_TRUE(LengthOfMatch("var/html/test", "var/html/test") == strlen("var/html/test"));
@@ -50,7 +69,7 @@ void	TESTLengthOfMatch(void)
 	TEST_ASSERT_TRUE(LengthOfMatch("var/html", "var") == strlen("var"));
 }
 
-void	TESTstripExesSlashes(void)
+void	TEST_stripExesSlashes(void)
 {
 	TEST_ASSERT_TRUE("/" == stripExesSlashes("/"));
 	TEST_ASSERT_TRUE("/test/html" == stripExesSlashes("/test///html"));
@@ -58,7 +77,73 @@ void	TESTstripExesSlashes(void)
 	TEST_ASSERT_TRUE("/halo/test/test/" == stripExesSlashes("/halo//test/////test//"));
 }
 
-void	TESTParseRequestLine(void)
+void	TEST_HexToStr(void)
+{
+	TEST_ASSERT_TRUE("ahahahahhaha" == HexToStr("%61%68%61%68%61%68%61%68%68%61%68%61"));
+	TEST_ASSERT_TRUE("index. html" == HexToStr("index.%20html"));
+	TEST_ASSERT_TRUE("///index. html" == HexToStr("%2f%2f%2findex.%20html"));
+	TEST_ASSERT_TRUE("index. html" == HexToStr("%07%07%07index.%20html"));
+	TEST_ASSERT_TRUE("///" == HexToStr("%2f%2f%2f"));
+}
+
+void	TEST_ParseRequestLine(void)
+{
+	int	x = 100;
+
+	std::string path;
+	path = "configs/default.json";
+	std::ifstream file(path);
+	Parse parse;
+	Json* json = parse.parse(file);
+	Config config(json);
+	std::vector<std::string>	m = {"GET", "POST", "DELETE"};
+
+	while (x)
+	{
+		RequestHandler	*req = new RequestHandler(config.getServerMap());
+
+		std::string rm = m[rand() % 2];
+		std::string rp = gen_random(100);
+		req->setRequestMsg(rm + " /" + rp + " HTTP/1.1\r\n\r\n");
+		req->ParseRequestLine();
+
+		TEST_ASSERT_TRUE(req->getRequestMethod() == rm);
+		TEST_ASSERT_TRUE(req->getUri() == "/" + rp);
+		TEST_ASSERT_TRUE(req->getRequestProtocol() == "HTTP/1.1");
+		x--;
+		delete req;
+	}
+}
+
+void	TEST_FindServer_WrongPort(void)
+{
+	//woulbe be nice to pass here some specific locatoins
+	int	x = 100;
+	std::string path;
+	path = "configs/default.json";
+	std::ifstream file(path);
+	Parse parse;
+	Json* json = parse.parse(file);
+	Config config(json);
+
+	while (x == -1)
+	{
+		RequestHandler *req = new RequestHandler(config.getServerMap());
+		req->setRequestMsg("GET / HTTP/1.1\r\nHost: " + gen_random(x) +  "\r\n\n\n");
+		req->setCompeleteRequest("GET / HTTP/1.1\r\nHost: " + gen_random(x) +  "\r\n\n\n");
+		req->setPort(123);
+		req->makeHeaderMap();
+		req->ParseHeaderMap();
+		req->ParseRequestLine();
+		req->FindServer();
+
+		TEST_ASSERT_TRUE(req->getHost() == "");
+		x--;
+		delete req;
+	}
+}
+
+void	TEST_FindServer_RightPort_NoHost(void)
 {
 	std::string path;
 	path = "configs/default.json";
@@ -67,18 +152,85 @@ void	TESTParseRequestLine(void)
 	Json* json = parse.parse(file);
 	Config config(json);
 
-	RequestHandler req(config.getServerMap());
-	req.setRequestMsg("GET / HTTP/1.1\r\nHost: test.com\r\nConnection: close\r\n\r\n");
-	req.ParseRequestLine();
-	std::cout << req
+	RequestHandler *req = new RequestHandler(config.getServerMap());
+	req->setRequestMsg("GET / HTTP/1.1\r\n\n\n");
+	req->setCompeleteRequest("GET / HTTP/1.1\r\n\n\n");
+	req->setPort(4242);
+	req->makeHeaderMap();
+	req->ParseHeaderMap();
+	req->ParseRequestLine();
+	req->FindServer();
+
+	TEST_ASSERT_TRUE(req->getHost() == "test.com");
+	delete req;
+}
+
+/*
+ *	lets say we find a server because there is a server listening to that port
+ *
+ */
+void	TEST_FindServer_RightPort_Host(void)
+{
+	std::string path;
+	path = "configs/default.json";
+	std::ifstream file(path);
+	Parse parse;
+	Json* json = parse.parse(file);
+	Config config(json);
+
+	RequestHandler *req = new RequestHandler(config.getServerMap());
+	req->setRequestMsg("GET / HTTP/1.1\r\nHost: test2.com\n\n");
+	req->setCompeleteRequest("GET / HTTP/1.1\r\nHost: test2.com\n\n");
+	req->setPort(4242);
+	req->makeHeaderMap();
+	req->ParseHeaderMap();
+	req->ParseRequestLine();
+	req->FindServer();
+
+	TEST_ASSERT_TRUE(req->getHost() == "test2.com");
+	delete req;
+	req = new RequestHandler(config.getServerMap());
+	req->setRequestMsg("GET / HTTP/1.1\r\nHost: test3.com\n\n");
+	req->setCompeleteRequest("GET / HTTP/1.1\r\nHost: test3.com\n\n");
+	req->setPort(4242);
+	req->makeHeaderMap();
+	req->ParseHeaderMap();
+	req->ParseRequestLine();
+	req->FindServer();
+
+	TEST_ASSERT_TRUE(req->getHost() == "test3.com");
+	delete req;
+	req = new RequestHandler(config.getServerMap());
+	req->setRequestMsg("GET / HTTP/1.1\r\nHost: other3.com\n\n");
+	req->setCompeleteRequest("GET / HTTP/1.1\r\nHost: other3.com\n\n");
+	req->setPort(8080);
+	req->makeHeaderMap();
+	req->ParseHeaderMap();
+	req->ParseRequestLine();
+	req->FindServer();
+
+	TEST_ASSERT_TRUE(req->getHost() == "other3.com");
+	delete req;
+}
+
+void	TEST_FindServer_location(void)
+{
+
 }
 
 int main(void)
 {
+    srand((unsigned)time(NULL) * getpid());     
     UNITY_BEGIN();
-    //RUN_TEST(access_test);
-	RUN_TEST(TESTstripExesSlashes);
-	RUN_TEST(TESTLengthOfMatch);
-	RUN_TEST(TESTParseRequestLine);
+	//util fucntoins
+	RUN_TEST(TEST_stripExesSlashes);
+	RUN_TEST(TEST_LengthOfMatch);
+	RUN_TEST(TEST_HexToStr);
+	//member functions fucntoins
+	RUN_TEST(TEST_ParseRequestLine);
+	RUN_TEST(TEST_FindServer_WrongPort);
+	RUN_TEST(TEST_FindServer_RightPort_NoHost);
+	RUN_TEST(TEST_FindServer_RightPort_Host);
+	RUN_TEST(TEST_FindServer_location);
     return UNITY_END();
 }

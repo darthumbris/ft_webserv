@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/20 17:02:39 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/20 22:04:14 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,31 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 
 //Getters
 
+const std::string	&RequestHandler::getStatusLine(void) const
+{
+	return _status_line;
+}
+
+const Server &RequestHandler::getServer(void) const
+{
+	return _server;
+}
+
+const std::string	&RequestHandler::getHost(void) const
+{
+	return _host;
+}
+
+std::string		RequestHandler::getRequestMethod(void) const
+{
+	return _request_method;
+}
+
+std::string		RequestHandler::getRequestProtocol(void) const
+{
+	return _request_protocol;
+}
+
 std::string	RequestHandler::getRemainingRequestMsg() const
 {
 	return this->_remaining_request;
@@ -68,17 +93,12 @@ std::size_t	RequestHandler::getFileSize() const
 	return this->_file_size;
 }
 
-std::string	RequestHandler::getRequestMethod() const
-{
-	return this->_request_method;
-}
-
 int	RequestHandler::getResponseBody(void) const
 {
 	return this->_fd_response;
 }
 
-std::string	RequestHandler::getResponse(void)
+std::string	RequestHandler::getResponse(void) const
 {
 	return ("");
 }
@@ -88,6 +108,11 @@ t_strmap	RequestHandler::getHeaderMap() const
 	return this->_headermap;
 }
 
+std::string	RequestHandler::getUri(void) const
+{
+	return _uri;
+}
+
 t_url	RequestHandler::getUrl() const
 {
 	return this->_url;
@@ -95,7 +120,7 @@ t_url	RequestHandler::getUrl() const
 
 int	RequestHandler::getPort() const
 {
-	return this->_port;
+	return _port;
 }
 
 std::string RequestHandler::getCompleteRequest() const
@@ -105,6 +130,10 @@ std::string RequestHandler::getCompleteRequest() const
 
 // Setters
 
+void	RequestHandler::setCompeleteRequest(const std::string &request_msg)
+{
+	_complete_request = request_msg;
+}
 void	RequestHandler::setLocation(const Location &location)
 {
 	_location = location;
@@ -138,11 +167,6 @@ void	RequestHandler::setFdBody(int fd)
 void	RequestHandler::setHost(const std::string &name)
 {
 	_host = name;
-}
-
-void	RequestHandler::setDefaultHost(const std::string &name)
-{
-	_default_host = name;
 }
 
 void	RequestHandler::setResponseStatus(const std::string &status_line)
@@ -202,10 +226,7 @@ int			RequestHandler::getBody(void) const
 void	RequestHandler::BuildResponseHeader(void)
 {
 	_response_header += "HTTP/1.1 " + _status_line + "\r\n";
-	if (_default_host == "")
-		_response_header += "Server: " + _host +  "\r\n";
-	else
-		_response_header += "Server: " + _default_host +  "\r\n";
+	_response_header += "Server: " + _host +  "\r\n";
 	_response_header += "Content-Length: " + std::to_string(_fd_length) + "\r\n";
 	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
 }
@@ -282,7 +303,7 @@ void	RequestHandler::FindServer(void)
 
 				while (server_name_iter != server_names.end())
 				{
-					if (_host == *server_name_iter)
+					if (_request_host == *server_name_iter)
 					{
 						setHost(*server_name_iter);
 						setServer(*serv_iterator);
@@ -341,14 +362,22 @@ void	RequestHandler::ParseRequestLine(void)
 			(wordVector[1][0] != '/') ||
 			(wordVector[2] != "HTTP/1.1"))
 	{
+		_request_method = "FAIL";
+		_uri = "FAIL";
+		_request_protocol = "FAIL";
 		setResponseStatus("400 BAD REQUEST");
 		return ;
 	}
 	_request_method = wordVector[0];
 	_uri = stripExesSlashes(HexToStr(wordVector[1]));
 	if (_uri == "")
+	{
+		_request_method = "FAIL";
+		_uri = "FAIL";
+		_request_protocol = "FAIL";
 		setResponseStatus("400 BAD REQUEST");
-	_protocol = wordVector[2];
+	}
+	_request_protocol = wordVector[2];
 }
 
 void	RequestHandler::OpenFile(void)
@@ -513,7 +542,7 @@ int	RequestHandler::ParseHeaderMap(void)
 		if (headerMap_iter->first == "Host")
 		{
 			std::size_t	pos = headerMap_iter->second.find(':');
-			_host = headerMap_iter->second.substr(0, pos);
+			_request_host = headerMap_iter->second.substr(0, pos);
 		}
 	}
 	return (0);
@@ -550,8 +579,6 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 			ParseRequestLine();
 			FindServer();
 			FindTheRightLocationForUri();
-			//FindLocationPath();
-			//FindBestFithLocation();
 			OpenFile();
 			BuildResponseHeader();
 			setResponseCompelete(true);

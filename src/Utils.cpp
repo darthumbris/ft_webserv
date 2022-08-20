@@ -63,10 +63,12 @@ std::string	HexToStr(const std::string &hex)
 				return ("");
 			hexValue += *uri_char;
 			chr = (char) (int)strtol(hexValue.c_str(), NULL, 16);
-			tmpUri.push_back(chr);
+			if (chr >= 32)
+				tmpUri.push_back(chr);
 			hexValue.clear();
 		}
-		tmpUri.push_back(*uri_char);
+		else
+			tmpUri.push_back(*uri_char);
 	}
 	return (tmpUri);
 }

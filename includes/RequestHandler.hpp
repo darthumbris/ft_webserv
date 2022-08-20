@@ -14,19 +14,6 @@
 # include "Server.hpp"
 # include "AutoIndexGenerator.hpp"
 
-/*
-const std::string &INTERNAL_SERVER_ERROR_500 = "<!DOCTYPE html> \
-<html lang='en'> \
-  <head> \
-    <meta charset='UTF-8'> \
-    <title>500 Internal Server Error</title> \
-  </head> \
-  <body bgcolor='white'> \
-    <center><h1>500 Internal Server Error</h1></center> \
-  </body> \
-</html>";
-*/
-
 //TODO make all the request handling stuff. (parsing etc) for alkrust
 //TODO check if remaining request stuff is actually needed
 
@@ -54,10 +41,27 @@ class RequestHandler
 
 		// Getters
 
-		std::string	getResponse(void);
-		int					getBody(void) const;
-		const char			*getHeader(void) const;
-		//std::string	make
+		const std::string	&getStatusLine(void) const;
+		const Server	&getServer(void) const;
+		std::string		getRequestMothod(void) const;
+		std::string		getResponse(void) const;
+		int				getBody(void) const;
+		const char		*getHeader(void) const;
+		int				getResponseBody(void) const;
+		bool			isRequestComplete(void) const;
+		std::string		getRemainingRequestMsg(void) const;
+		bool			hasRemainingRequestMsg(void) const;
+		int				getFileDescriptor(void) const;
+		std::size_t		getFileSize(void) const;
+		t_strmap		getHeaderMap(void) const;
+		t_url			getUrl(void) const;
+		int				getPort(void) const;
+		std::string		getCompleteRequest(void) const;
+		std::string		getUri(void) const;
+		const std::string	&getHost(void) const;
+		std::string		getRequestMethod(void) const;
+		std::string		getRequestProtocol(void) const;
+		
 
 		bool	parseFirstLine(const std::string &method);
 		void	ParseRequestLine(void);
@@ -66,20 +70,6 @@ class RequestHandler
 		bool	fileExists(const std::string &path);
 		void		OpenFile(void);
 
-		int			getResponseBody(void) const;
-		bool		isRequestComplete() const;
-		std::string	getRemainingRequestMsg() const;
-		bool		hasRemainingRequestMsg() const;
-		int			getFileDescriptor() const;
-		std::size_t	getFileSize(void) const;
-		void		test(void);
-		//Location	*getLocation(const std::string &url) const;
-		std::string	getRequestMethod() const;
-		t_strmap	getHeaderMap() const;
-		t_url		getUrl() const;
-		int			getPort() const;
-		std::string	getCompleteRequest() const;
-		std::string&	getRequestBody();
 
 		// Setters
 		void	setRequestMsg(const std::string &msg);
@@ -100,6 +90,7 @@ class RequestHandler
 		void	setLocations(const t_locmap &locations);
 		void	setLocation(const Location &location);
 		void	addToRequestMsg(char *msg, int bytes_received);
+		void	setCompeleteRequest(const std::string &request_msg);
 		std::string	getClientIp(void) const;
 
 		// Member Functions
@@ -115,42 +106,46 @@ class RequestHandler
 		void	testFunction(void);
 		
 	private:
-		t_servmap		_srv_map;
-		bool			_is_request_complete;
-		bool			_has_remaining_request;
-		bool			_send_file;
-		int				_fd_response;
-		std::size_t		_file_size;
 
-		std::string		_client_ip;
-		std::string		_msg;
-		std::string		_request_header;
-		std::string		_protocol;
-		std::string		_uri;
+		const std::string	default_root = "/var/www/html";
+		t_servmap			_srv_map;
+		bool				_is_request_complete;
+		bool				_has_remaining_request;
+		bool				_send_file;
+		int					_fd_response;
+		std::size_t			_file_size;
 
-		std::string		_complete_request;
-		std::string		_remaining_request;
-		std::string		_response_header;
+		std::string			_client_ip;
+		std::string			_msg;
+		std::string			_request_header;
+		std::string			_request_protocol;
+		std::string			_uri;
 
-		int				_client_socket;
+		std::string			_complete_request;
+		std::string			_remaining_request;
+		std::string			_response_header;
 
-		t_strmap		_headermap;
-		std::string		_request_body;
-		std::string 	_request_method; //set this, this is used for the cgihandler 
+		int					_client_socket;
 
-		t_url			_url;
-		bool			_is_request_header_done;
-		bool			_cgi_error;
-		int				_port;
+		t_strmap			_headermap;
+		std::string			_request_body;
+		std::string 		_request_method; //set this, this is used for the cgihandler 
+
+		t_url				_url;
+		bool				_is_request_header_done;
+		bool							_cgi_error;
+		int								_port;
 
 		std::size_t						_fd_length;
+
 		std::string						_host;
-		std::string						_default_host;
+		std::string						_status_line;
+
+		std::string						_request_host;
 		std::string						_content_type;
 		std::string						_file_name;
-		std::string						_status_line;
-		Location						_location;
 		Server							_server;
+		Location						_location;
 		t_locmap						_locations;
 }; 
 #endif
