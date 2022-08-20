@@ -10,6 +10,25 @@ Location::~Location()
 {
 }
 
+Location::Location(const Location &assign)
+{
+	*this = assign;
+}
+
+Location & Location::operator=(const Location &assign)
+{
+	_auto_index = assign._auto_index;
+	_cgi_path = assign._cgi_path;
+	_cgi_file_type = assign._cgi_file_type;
+	_index = assign._index;
+	_upload_path = assign._upload_path;
+	_return_url = assign._return_url;
+	_root = assign._root;
+	_index_file = assign._index_file;
+	_allowed_methods = assign._allowed_methods;
+	return *this;
+}
+
 // Getters
 const std::string& Location::getRootPath() const
 {

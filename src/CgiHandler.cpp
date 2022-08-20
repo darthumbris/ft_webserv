@@ -23,12 +23,14 @@ void	CgiHandler::setCgiPaths()
 	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/') + 1);
 	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
 	_root = "/";
+	/*
 	if (_req->getLocation(_folder))
 		_root += _req->getLocation(_folder)->getRootPath();
 	if (_req->getLocation(_folder))
 		_cgi_path = _req->getLocation(_folder)->getCgiPath();
 	else
 		_cgi_path = "";
+	*/
 	
 	// std::cout << "root: " << _root << std::endl;
 	// std::cout << "folder: " << _folder << std::endl;

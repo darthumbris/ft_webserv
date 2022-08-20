@@ -21,12 +21,6 @@
           "index": "index.html",
           "root": "var/www/html"
         },
-        "location /html/": {
-          "allowed_method": ["GET"],
-          "auto_index": true,
-          "index": "index.html",
-          "root": "var/www"
-		},
         "location /test/": {
           "root": "var/www/html",
           "auto_index": true,

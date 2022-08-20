@@ -20,6 +20,7 @@ class Location
 	public:
 		// Constructors
 		Location();		
+		Location(const Location& assign);		
 
 		// Destructor
 		~Location();

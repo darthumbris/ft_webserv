@@ -1,5 +1,47 @@
 #include "Utils.hpp"
 
+std::size_t	LengthOfMatch(const std::string &str1, const std::string &str2)
+{
+	std::string::const_iterator	iter1;
+	std::string::const_iterator	iter2;
+	std::string::const_iterator	iter_end1;
+	std::string::const_iterator	iter_end2;
+	std::size_t					size;
+
+	iter1 = str1.begin();
+	iter2 = str2.begin();
+	iter_end1 = str1.end();
+	iter_end2 = str2.end();
+	size = 0;
+	while (*iter1 == *iter2 && iter1 != iter_end1 && iter2 != iter_end2)
+	{
+		size++;
+		iter1++;
+		iter2++;
+	}
+	return (size);
+}
+
+std::string	stripExesSlashes(const std::string &uri)
+{
+	std::string::const_iterator	char_iter = uri.begin();
+	std::string					clean_uri;
+	bool						skip;
+
+	skip = false;
+	while (char_iter != uri.end())
+	{
+		if (*char_iter != '/')
+			skip = false;
+		if (!skip)
+			clean_uri += *char_iter;
+		if (*char_iter == '/')
+			skip = true;
+		char_iter++;
+	}
+	return (clean_uri);
+}
+
 //<-- HexToStr
 std::string	HexToStr(const std::string &hex)
 {
@@ -31,12 +73,12 @@ std::string	HexToStr(const std::string &hex)
 //<-- HexToStr
 
 //<-- cpp_split
-std::vector<std::string>	cpp_split(const std::string &line)
+std::vector<std::string>	cpp_split(const std::string &line, char delimiter)
 {
 	std::size_t 				prev = 0, pos;
 	std::vector<std::string>	wordVector;
 
-	while ((pos = line.find_first_of(" ", prev)) != std::string::npos)
+	while ((pos = line.find_first_of(delimiter, prev)) != std::string::npos)
 	{
 		if (pos > prev)
 			wordVector.push_back(trim(line.substr(prev, pos - prev)));

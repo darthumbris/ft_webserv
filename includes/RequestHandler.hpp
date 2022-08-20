@@ -14,6 +14,7 @@
 # include "Server.hpp"
 # include "AutoIndexGenerator.hpp"
 
+/*
 const std::string &INTERNAL_SERVER_ERROR_500 = "<!DOCTYPE html> \
 <html lang='en'> \
   <head> \
@@ -24,6 +25,7 @@ const std::string &INTERNAL_SERVER_ERROR_500 = "<!DOCTYPE html> \
     <center><h1>500 Internal Server Error</h1></center> \
   </body> \
 </html>";
+*/
 
 //TODO make all the request handling stuff. (parsing etc) for alkrust
 //TODO check if remaining request stuff is actually needed
@@ -57,9 +59,7 @@ class RequestHandler
 		const char			*getHeader(void) const;
 		//std::string	make
 
-		void	setRequestMsg(const std::string &msg);
 		bool	parseFirstLine(const std::string &method);
-		int		BuildResponseHeader(const std::string &response_status);
 		void	ParseRequestLine(void);
 		int		ParseHeaderMap(void);
 		int		ParseRequestMsg(void);
@@ -73,7 +73,7 @@ class RequestHandler
 		int			getFileDescriptor() const;
 		std::size_t	getFileSize(void) const;
 		void		test(void);
-		Location	*getLocation(const std::string &url) const;
+		//Location	*getLocation(const std::string &url) const;
 		std::string	getRequestMethod() const;
 		t_strmap	getHeaderMap() const;
 		t_url		getUrl() const;
@@ -82,6 +82,7 @@ class RequestHandler
 		std::string&	getRequestBody();
 
 		// Setters
+		void	setRequestMsg(const std::string &msg);
 		void	setContentType(const std::string &type);
 		void	setResponseStatus(const std::string &status_line);
 		void	setFdBody(int fd);
@@ -90,23 +91,28 @@ class RequestHandler
 		void	setDefaultServer(const Server *server);
 		void	setHost(const std::string &name);
 		void	setCgiError(void);
-		void	setResponseCompelete(void);
-		void	addToRequestMsg(char *msg, int bytes_received);
+		void	setResponseCompelete(const bool &status);
 		void	setSocket(int socket);
 		void	setPort(int port);
 		void	setUrlStruct(const std::string &full_url);
 		void	setClientIp(const std::string &ip);
-		void	setServer(const Server *server);
+		void	setServer(const Server &server);
+		void	setLocations(const t_locmap &locations);
+		void	setLocation(const Location &location);
+		void	addToRequestMsg(char *msg, int bytes_received);
 		std::string	getClientIp(void) const;
 
 		// Member Functions
+		void	FindTheRightLocationForUri(void);
+		//void	FindLocationPath(void);
 		void	FindAllAccessibleLocations(void);
-		void	BuildResponseHeader(void);
 		int		CheckUserDefinedStatusPage(Server server);
 		void	FindServer(void);
-		void	BuildDefaultResponseBody(const std::string &msg);
-		void	makeHeaderMap();
-		void	testFunction();
+		//void	FindBestFithLocation(void);
+		void	BuildDefaultResponseBody(void);
+		void	BuildResponseHeader(void);
+		void	makeHeaderMap(void);
+		void	testFunction(void);
 		
 	private:
 		t_servmap		_srv_map;
@@ -143,9 +149,8 @@ class RequestHandler
 		std::string						_content_type;
 		std::string						_file_name;
 		std::string						_status_line;
-		std::vector<std::string>		_accessible_paths;
-		const Server					*_server;
-		const Locations					*_locations;
-		const Server					*_default_server;
+		Location						_location;
+		Server							_server;
+		t_locmap						_locations;
 }; 
 #endif

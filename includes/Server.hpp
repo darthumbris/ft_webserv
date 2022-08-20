@@ -25,13 +25,15 @@ class Server
 		//	std::vector<int>	getServerSocket() const;
 		const std::string&		getServerIp() const;
 		int						getClientBodySize() const;
-		const std::vector<int>&	getServerPort() const;
+		const std::vector<int>	&getServerPort() const;
 		const t_strmap&			getErrorPage() const;
 		const t_vecstr&			getServerNames() const;
 		const t_locmap&			getLocationMap() const;
 		Location				*getLocation(int port, std::string url) const;
+		const std::string		&getServerRoot(void) const;
 
 		// Setters
+		void	setServerRoot(const Json& json);
 		void	setServerIp(const Json& json);
 		void	addServerListen(const Json& json);
 		void	addServerName(const Json& json);

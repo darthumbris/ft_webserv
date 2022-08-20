@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/20 17:02:39 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/20 11:03:34 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ RequestHandler::RequestHandler(const t_servmap &srv_map) :
 		_file_size(0)
 {
 	_host = "";
+	_default_host = "";
 	_status_line = "";
 	_content_type = "";
 }
@@ -40,6 +41,7 @@ RequestHandler::RequestHandler(const RequestHandler &copy)
 RequestHandler::~RequestHandler()
 {
 	_host = "";
+	_default_host = "";
 	_status_line = "";
 	_content_type = "";
 }
@@ -105,17 +107,12 @@ std::string RequestHandler::getCompleteRequest() const
 
 // Setters
 
-void	RequestHandler::setLocation(const Location &location)
+void	RequestHandler::setDefaultServer(const Server *server)
 {
-	_location = location;
+	_default_server = server;
 }
 
-void	RequestHandler::setLocations(const t_locmap &locations)
-{
-	_locations = locations;
-}
-
-void	RequestHandler::setServer(const Server &server)
+void	RequestHandler::setServer(const Server *server)
 {
 	_server = server;
 }
@@ -166,12 +163,12 @@ void	RequestHandler::setRequestMsg(const std::string &msg)
 
 void	RequestHandler::setSocket(int socket)
 {
-	_client_socket = socket;
+	this->_client_socket = socket;
 }
 
 void	RequestHandler::setPort(int port)
 {
-	_port = port;
+	this->_port = port;
 }
 
 void	RequestHandler::setCgiError(void)
@@ -179,14 +176,24 @@ void	RequestHandler::setCgiError(void)
 	_cgi_error = true;
 }
 
-void	RequestHandler::setResponseCompelete(const bool &status)
+void	RequestHandler::setResponseCompelete(void)
 {
-	_is_request_complete = status;
+	this->_is_request_complete = true;
+}
+
+Location	*RequestHandler::getLocation(const std::string &url) const
+{
+	for (std::size_t it = 0; it < _srv_map.size(); it++)
+	{
+		if (_srv_map[it].getLocation(_port, url))
+			return (_srv_map[it].getLocation(_port, url));
+	}
+	return NULL;
 }
 
 std::string	RequestHandler::getClientIp() const
 {
-	return _client_ip;
+	return this->_client_ip;
 }
 
 const char	*RequestHandler::getHeader(void) const
@@ -210,54 +217,20 @@ void	RequestHandler::BuildResponseHeader(void)
 	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
 }
 
-/*
- * root + location
- * first we need to know if this path exists at all
- * uri test/index.html
- * /var/www/html/test
- */
-
-/*
-void	RequestHandler::FindBestFithLocation(void)
+void	RequestHandler::FindLocationBlock(void)
 {
-	std::map<Location, std::string>::const_iterator	path_iter = _location_paths.begin();
-	
-	wordVector = cpp_split(line, );
-	while (path_iter != _location_paths.end())
+	t_locmap	*locations;
+
+	if (!_default_server)
+		locations = &_server->getLocationMap()
+	else
+		locations = &_default_server->getLocationMap()
+
+	t_locmap::const_iterator	loc_iter = locations->begin();
+
+	while (loc_iter != locations.end())
 	{
-		path_iter++;
-	}
-}
-
-void	RequestHandler::FindLocationPath(void)
-{
-	t_locmap::const_iterator	loc_iter = _server.getLocationMap().begin();
-
-	while (loc_iter != _locations.end())
-	{
-		_location_paths.push_back(*loc_iter, loc_iter->first + loc_iter->second->getRootPath());
-		loc_iter++;
-	}
-}
-*/
-
-void	RequestHandler::FindTheRightLocationForUri(void)
-{
-	t_locmap::const_iterator	loc_iter = _server.getLocationMap().begin();
-	t_locmap::const_iterator	loc_iter_end = _server.getLocationMap().end();
-	const std::string			&abs_uri_dir = _server.getServerRoot() + _uri.substr(0, _uri.find_last_of("/"));
-	std::string					abs_location_dir;
-	std::size_t					best_match;
-
-	best_match = 0;
-	while (loc_iter != loc_iter_end)
-	{
-		abs_location_dir = _server.getServerRoot() + loc_iter->first;
-		if (best_match < LengthOfMatch(abs_location_dir, abs_uri_dir))
-		{
-			best_match = LengthOfMatch(abs_location_dir, abs_uri_dir);
-			setLocation(*(loc_iter->second));
-		}
+		_accessible_paths.push_back(loc_iter.getRootPath() + _uri);
 		loc_iter++;
 	}
 }
@@ -277,16 +250,19 @@ void	RequestHandler::FindServer(void)
 			if (*port_iter == _port)
 			{
 				std::vector<std::string>::const_iterator server_name_iter = server_names.begin();
-				setHost(*server_name_iter);
-				setServer(*serv_iterator);
+				setDefaultHost(*server_name_iter);
+				setDefaultServer(&(*serv_iterator));
 
 				while (server_name_iter != server_names.end())
 				{
 					if (_host == *server_name_iter)
 					{
-						setHost(*server_name_iter);
-						setServer(*serv_iterator);
-						setLocations((*serv_iterator).getLocationMap());
+						setDefaultHost("");
+						setDefaultServer(NULL);
+						setServer(&(*serv_iterator));
+						FindLocationBlock();
+						OpenFile();
+						//CheckUserDefinedStatusPage(*serv_iterator);
 						return ;
 					}
 					server_name_iter++;
@@ -335,7 +311,7 @@ void	RequestHandler::ParseRequestLine(void)
 
 	iss.str(_msg);
 	std::getline(iss, line);
-	wordVector = cpp_split(line, ' ');
+	wordVector = cpp_split(line);
 	if ((wordVector.size() != 3) || 
 			(wordVector[0] != "GET" && wordVector[0] != "DELETE" && wordVector[0] != "POST") ||
 			(wordVector[1][0] != '/') ||
@@ -344,16 +320,15 @@ void	RequestHandler::ParseRequestLine(void)
 		setResponseStatus("400 BAD REQUEST");
 		return ;
 	}
-	_request_method = wordVector[0];
-	_uri = stripExesSlashes(HexToStr(wordVector[1]));
+	_method = wordVector[0];
+	_uri = HexToStr(wordVector[1]);
+	_protocol = wordVector[2];
 	if (_uri == "")
 		setResponseStatus("400 BAD REQUEST");
-	_protocol = wordVector[2];
 }
 
 void	RequestHandler::OpenFile(void)
 {
-	/*
 	int											fd;
 	std::vector<std::string>::const_iterator	path_iter = _accessible_paths.begin();
 	t_methods::const_iterator					method_iter = _allowed_methods.begin();
@@ -426,17 +401,16 @@ void	RequestHandler::OpenFile(void)
 		}
 		path_iter++;
 	}
-	*/
 }
 
 bool	RequestHandler::isRequestComplete() const
 {
-	return _is_request_complete;
+	return this->_is_request_complete;
 }
 
 bool	RequestHandler::hasRemainingRequestMsg() const
 {
-	return _has_remaining_request;
+	return this->_has_remaining_request;
 }
 
 // Member functions
@@ -479,19 +453,19 @@ void	RequestHandler::makeHeaderMap()
 	}
 }
 
-void	RequestHandler::BuildDefaultResponseBody(void)
+void	RequestHandler::BuildDefaultResponseBody(const std::string &msg)
 {
 	_request_header += "<!DOCTYPE html> \
 	<html lang='en'> \
 	  <head> \
 		<meta charset='UTF-8'> \
 		<title>";
-	_request_header += _status_line;
+	_request_header += msg;
 	_request_header += "</title> \
 	  </head> \
 	  <body bgcolor='white'> \
 		<center><h1>";
-	_request_header += _status_line;
+	_request_header += msg;
 	_request_header += "</h1></center> \
 	  </body> \
 	</html>\r\n\r\n";
@@ -549,12 +523,8 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 			ParseHeaderMap();
 			ParseRequestLine();
 			FindServer();
-			FindTheRightLocationForUri();
-			//FindLocationPath();
-			//FindBestFithLocation();
-			OpenFile();
 			BuildResponseHeader();
-			setResponseCompelete(true);
+			setResponseCompelete();
 		}
 	}
 }

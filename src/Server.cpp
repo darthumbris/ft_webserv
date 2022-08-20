@@ -138,6 +138,12 @@ Location *Server::getLocation(int port, std::string url) const
 	return NULL;
 }
 
+
+const std::string		&Server::getServerRoot(void) const
+{
+	return (_root);
+}
+
 // Member Function
 void	Server::addLocationToServer(std::string location_dir, Location *loc)
 {
