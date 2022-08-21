@@ -41,11 +41,12 @@ class RequestHandler
 
 		// Getters
 
+		const Location		&getLocation(void) const;
 		const std::string	&getMatchingDir(void) const;
 		const Location		&getMatchingLocation(void) const;
 		const std::string	&getStatusLine(void) const;
 		const Server	&getServer(void) const;
-		std::string		getRequestMothod(void) const;
+		const std::string		&getRequestMethod(void) const;
 		std::string		getResponse(void) const;
 		int				getBody(void) const;
 		const char		*getHeader(void) const;
@@ -61,7 +62,6 @@ class RequestHandler
 		std::string		getCompleteRequest(void) const;
 		std::string		getUri(void) const;
 		const std::string	&getHost(void) const;
-		std::string		getRequestMethod(void) const;
 		std::string		getRequestProtocol(void) const;
 		
 
@@ -151,5 +151,6 @@ class RequestHandler
 		std::string						_matching_dir;
 		t_locmap						_location;
 		std::string						_server_start_dir;
+		std::string						_file_to_get;
 }; 
 #endif

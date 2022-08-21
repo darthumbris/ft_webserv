@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/21 18:11:13 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/21 20:23:53 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,10 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 
 //Getters
 
+const std::string		&RequestHandler::getRequestMethod(void) const
+{
+	return _request_method;
+}
 
 const std::string	&RequestHandler::getMatchingDir(void) const
 {
@@ -78,11 +82,6 @@ const Server &RequestHandler::getServer(void) const
 const std::string	&RequestHandler::getHost(void) const
 {
 	return _host;
-}
-
-std::string		RequestHandler::getRequestMethod(void) const
-{
-	return _request_method;
 }
 
 std::string		RequestHandler::getRequestProtocol(void) const
@@ -249,37 +248,6 @@ void	RequestHandler::BuildResponseHeader(void)
 	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
 }
 
-/*
- * root + location
- * first we need to know if this path exists at all
- * uri test/index.html
- * /var/www/html/test
- */
-
-/*
-void	RequestHandler::FindBestFithLocation(void)
-{
-	std::map<Location, std::string>::const_iterator	path_iter = _location_paths.begin();
-	
-	wordVector = cpp_split(line, );
-	while (path_iter != _location_paths.end())
-	{
-		path_iter++;
-	}
-}
-
-void	RequestHandler::FindLocationPath(void)
-{
-	t_locmap::const_iterator	loc_iter = _server.getLocationMap().begin();
-
-	while (loc_iter != _locations.end())
-	{
-		_location_paths.push_back(*loc_iter, loc_iter->first + loc_iter->second->getRootPath());
-		loc_iter++;
-	}
-}
-*/
-
 void	RequestHandler::FindTheRightLocationForUri(void)
 {
 	char						buf[4096];
@@ -294,20 +262,20 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 
 	if (server_root.at(0) != '/')
 		server_root = "/" + server_root;
+	_file_to_get = _server_start_dir + server_root + _uri;
 	requested_dir = _server_start_dir + server_root + uri_dir;
 	if (chdir(requested_dir.c_str()) == -1)
 	{
-		std::cout << "ERROR: " << std::endl;
 		setResponseStatus("404 NOT FOUND");
 		return ;
 	}
-	requested_loc = getcwd(buf, 4096);
+	requested_dir = trim(uri_dir, "/");
+	requested_loc = getcwd(buf, 4096);//TO DO CHECK FOR ERROR HERE!
+	best_match = 0; 
 	while (loc_iter != loc_iter_end)
 	{
-		server_loc = _server_start_dir + _server.getServerRoot();
-		if (server_loc.back() != '/')
-			server_loc = server_loc += "/";
-		if (best_match < LengthOfMatch(server_loc, requested_dir))
+		server_loc = trim(loc_iter->first, "/");
+		if (best_match < LengthOfMatch(server_loc, requested_dir) || (server_loc == "" && requested_dir == ""))
 		{
 			best_match = LengthOfMatch(server_loc, requested_dir);
 			setMatchingLocation(*(loc_iter->second));
@@ -316,10 +284,7 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 		loc_iter++;
 	}
 	if (chdir(_server_start_dir.c_str()) == -1)
-	{
 		setResponseStatus("500 INTERNAL SERVER ERROR");
-		return ;
-	}
 }
 
 void	RequestHandler::FindServer(void)
@@ -421,82 +386,42 @@ void	RequestHandler::ParseRequestLine(void)
 	_request_protocol = wordVector[2];
 }
 
+
+
 void	RequestHandler::OpenFile(void)
 {
-	/*
-	int											fd;
-	std::vector<std::string>::const_iterator	path_iter = _accessible_paths.begin();
-	t_methods::const_iterator					method_iter = _allowed_methods.begin();
-
-	while (path_iter != path_iter.end())
+	if (getRequestMethod() == "GET")
 	{
-		fd = access(_uri.c_str(), F_OK); //checks if file exists
-		if (fd == -1)
+		std::cout << "REquested: " << getRequestMethod() << std::endl;
+		if (getMatchingLocation().getMethodGet())
 		{
-			setFdBody(fd);
-			setResponseStatus("404 NOT FOUND");
+			_fd_response = open(_file_to_get.c_str(), O_RDONLY);
+			std::cout << _fd_response << "  " + _file_to_get << std::endl;
+			std::ifstream infile(_file_to_get.c_str(), std::ios::in);
+			infile.seekg(0, std::ios::end);
+			std::size_t length  = infile.tellg();
+			infile.seekg(0, std::ios::beg);
+			_file_size = length;
+			setResponseStatus("200 OK");
+			//exit (1);
 		}
-		if (fd != -1)
-		{
-			while (method_iter != _allowed_methods.end())
-			{
-				if (*method_iter == _request_method && _request_method == "GET")
-				{
-					fd = access(_uri.c_str(), R_OK); //checks if file is redable
-					if (fd == -1)
-					{
-						setFdBody(fd);
-						setResponseStatus("403 FORBIDDEN");
-						return ;
-					}
-					if (checkPath(_uri) == IS_DIR)
-					{
-						if (_uri.end() != '/')	
-							_uri += "/";
-						_uri = getRootPath() + _uri;
-					}
-					std::ifstream infile(_uri, std::ios::in);
-					if (infile.fail())
-					{
-						setFdBody(fd);
-						setResponseStatus("500 INTERNAL SERVER ERROR");
-						return ;
-					}
-					infile.seekg(0, std::ios::end);
-					_fd_length = infile.tellg();
-					infile.seekg(0, std::ios::beg);
-					infile.close();
-					fd = open(_uri.c_str(), O_RDONLY);
-					if (fd == -1)
-					{
-						setFdBody(fd);
-						setResponseStatus("500 INTERNAL SERVER ERROR");
-						return ;
-					}
-					setFileName(_uri.c_str());
-					setContentType(getContentType(_uri));
-					setFdBody(fd);
-					setResponseStatus("200 OK");
-				}
-				if (*method_iter == _request_method && _request_method == "POST")
-				{
-					fd = access(_uri.c_str(), W_OK); //checks if file is writeble
-					if (fd == -1)
-					{
-						setResponseStatus("403 FORBIDDEN");
-						return ;
-					}
-				}
-				if (*method_iter == _request_method && _request_method == "DELETE")
-				{
-
-				}
-				method_iter++;
-			}
-		}
-		path_iter++;
 	}
-	*/
+	if (getRequestMethod() == "POST")
+	{
+		std::cout << "REquested: " << getRequestMethod() << std::endl;
+		if (getMatchingLocation().getMethodPost())
+		{
+		
+		}
+	}
+	if (getRequestMethod() == "DELETE")
+	{
+		std::cout << "REquested: " << getRequestMethod() << std::endl;
+		if (getMatchingLocation().getMethodDel())
+		{
+
+		}
+	}
 }
 
 bool	RequestHandler::isRequestComplete() const
