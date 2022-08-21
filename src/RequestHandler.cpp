@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/21 15:09:02 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/21 18:11:13 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,9 @@ RequestHandler::RequestHandler(const t_servmap &srv_map) :
 		_has_remaining_request(false), _send_file(false), _fd_response(0),
 		_file_size(0)
 {
+	char	buf[4096];
+
+	_server_start_dir = getcwd(buf, 4096);
 	_host = "";
 	_status_line = "";
 	_content_type = "";
@@ -33,6 +36,9 @@ RequestHandler::RequestHandler(const t_servmap &srv_map) :
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
 {
+	char	buf[4096];
+
+	_server_start_dir = getcwd(buf, 4096);
 	(void) copy;
 }
 
@@ -276,57 +282,43 @@ void	RequestHandler::FindLocationPath(void)
 
 void	RequestHandler::FindTheRightLocationForUri(void)
 {
+	char						buf[4096];
 	t_locmap::const_iterator	loc_iter = _server.getLocationMap().begin();
 	t_locmap::const_iterator	loc_iter_end = _server.getLocationMap().end();
-	const std::string			&server_root = _server.getServerRoot();
-	std::string					abs_uri_dir;
-	std::string					abs_location_dir;
+	std::string					uri_dir = _uri.substr(0, _uri.find_last_of("/"));
+	std::string					server_root = _server.getServerRoot();
+	std::string					requested_loc;
+	std::string					server_loc;
 	std::size_t					best_match;
-	std::string					uri_dir;
-	std::string					new_dir;
-	std::string					old_dir;
-	char						buf[4096];
+	std::string					requested_dir;
 
-	if (_uri.back() == '/')
+	if (server_root.at(0) != '/')
+		server_root = "/" + server_root;
+	requested_dir = _server_start_dir + server_root + uri_dir;
+	if (chdir(requested_dir.c_str()) == -1)
 	{
-		uri_dir = _uri;
-		uri_dir.pop_back();
-	}
-	else
-		uri_dir = _uri;
-	abs_uri_dir = server_root + uri_dir.substr(0, uri_dir.find_last_of("/"));
-	if (abs_uri_dir.back() != '/')
-		abs_uri_dir += "/";
-	if (abs_uri_dir.at(0) != '/')
-		abs_uri_dir.append("/");
-	if (abs_uri_dir == "")
-		abs_uri_dir = "/";
-	old_dir = getcwd(buf, 4096);
-	if (chdir(abs_uri_dir.c_str()) == -1)
+		std::cout << "ERROR: " << std::endl;
 		setResponseStatus("404 NOT FOUND");
-	new_dir = getcwd(buf, 4096);
-	std::cout << new_dir << std::endl;
-	if (chdir(old_dir.c_str()) == -1)
-		setResponseStatus("500 INTERNAL SERVER ERROR");
-	new_dir = getcwd(buf, 4096);
-	std::cout << new_dir << std::endl;
-	best_match = 0;
+		return ;
+	}
+	requested_loc = getcwd(buf, 4096);
 	while (loc_iter != loc_iter_end)
 	{
-		abs_location_dir = server_root + loc_iter->first;
-		if (abs_location_dir == "")
-			abs_location_dir = "/";
-		if (abs_location_dir.back() != '/')
-			abs_location_dir += "/";
-		if (abs_location_dir.at(0) != '/')
-			abs_location_dir.append("/");
-		if (best_match < LengthOfMatch(abs_location_dir, abs_uri_dir))
+		server_loc = _server_start_dir + _server.getServerRoot();
+		if (server_loc.back() != '/')
+			server_loc = server_loc += "/";
+		if (best_match < LengthOfMatch(server_loc, requested_dir))
 		{
-			best_match = LengthOfMatch(abs_location_dir, abs_uri_dir);
+			best_match = LengthOfMatch(server_loc, requested_dir);
 			setMatchingLocation(*(loc_iter->second));
 			setMatchingDir(loc_iter->first);
 		}
 		loc_iter++;
+	}
+	if (chdir(_server_start_dir.c_str()) == -1)
+	{
+		setResponseStatus("500 INTERNAL SERVER ERROR");
+		return ;
 	}
 }
 
@@ -418,7 +410,7 @@ void	RequestHandler::ParseRequestLine(void)
 		return ;
 	}
 	_request_method = wordVector[0];
-	_uri = stripExesSlashes(HexToStr(wordVector[1]));
+	_uri = HexToStr(wordVector[1]);
 	if (_uri == "")
 	{
 		_request_method = "FAIL";

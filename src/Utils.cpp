@@ -101,7 +101,7 @@ static std::string ltrim(const std::string &s, const std::string &to_trim)
     return (start == std::string::npos) ? "" : s.substr(start);
 }
  
-static std::string rtrim(const std::string &s, const std::string &to_trim)
+std::string	rtrim(const std::string &s, const std::string &to_trim)
 {
     size_t end = s.find_last_not_of(to_trim);
     return (end == std::string::npos) ? "" : s.substr(0, end + 1);

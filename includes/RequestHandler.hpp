@@ -150,5 +150,6 @@ class RequestHandler
 		Location						_matching_location;
 		std::string						_matching_dir;
 		t_locmap						_location;
+		std::string						_server_start_dir;
 }; 
 #endif

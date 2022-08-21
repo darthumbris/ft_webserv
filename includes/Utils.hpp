@@ -23,5 +23,6 @@ std::vector<std::string>	cpp_split(const std::string &line, char delimiter);
 std::string 				trim(const std::string &s, const std::string &to_trim);
 std::string					stripExesSlashes(const std::string &uri);
 std::size_t					LengthOfMatch(const std::string &str1, const std::string &str2);
+std::string					rtrim(const std::string &s, const std::string &to_trim);
 
 # endif

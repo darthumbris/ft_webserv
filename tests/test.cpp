@@ -96,6 +96,7 @@ void	TEST_ParseRequestLine(void)
 	Parse parse;
 	Json* json = parse.parse(file);
 	Config config(json);
+
 	std::vector<std::string>	m = {"GET", "POST", "DELETE"};
 
 	while (x)

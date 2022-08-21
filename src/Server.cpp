@@ -14,7 +14,14 @@ Server::~Server() {}
 
 Server & Server::operator=(const Server &assign)
 {
-	(void)assign;
+	_client_body_size = assign._client_body_size;
+	_server_fd = assign._server_fd;
+	_server_listen = assign._server_listen;
+	_error_page = assign._error_page;
+	_server_name = assign._server_name;
+	_location = assign._location;
+	_server_ip = assign._server_ip;
+	_root = assign._root;
 	return *this;
 }
 // Setters

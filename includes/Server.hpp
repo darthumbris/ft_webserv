@@ -67,7 +67,7 @@ class Server
 		t_locmap			_location;
 		std::string			_server_ip;
 		std::string			_root;
-		const std::string	_default_root = "/var/www/html/";
+		const std::string	_default_root = "/var/www/html";
 };
 
 #endif
