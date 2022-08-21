@@ -2,7 +2,7 @@
 # include "../includes/Config.hpp"
 
 // Constructor
-Server::Server()
+Server::Server(): _default_root("/var/www/html/")
 {
 	if (DEBUG_MODE)
 		std::cout << BLUE << "\nAdded a new server." << std::endl;
@@ -11,6 +11,12 @@ Server::Server()
 // Destructor
 Server::~Server() {}
 
+
+Server & Server::operator=(const Server &assign)
+{
+	(void)assign;
+	return *this;
+}
 // Setters
 void Server::addServerListen(const Json &json)
 {
@@ -93,6 +99,12 @@ void	Server::setServerSocket(int server_socket)
 
 
 // Getters
+
+const std::string		&Server::getDefaultRoot(void) const
+{
+	return _default_root;
+}
+
 int Server::getClientBodySize() const
 {
 	return _client_body_size;
@@ -141,7 +153,7 @@ Location *Server::getLocation(int port, std::string url) const
 
 const std::string		&Server::getServerRoot(void) const
 {
-	return (_root);
+	return _root == "" ? _default_root : _root;
 }
 
 // Member Function

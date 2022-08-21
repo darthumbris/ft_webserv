@@ -79,37 +79,37 @@ std::vector<std::string>	cpp_split(const std::string &line, char delimiter)
 {
 	std::size_t 				prev = 0, pos;
 	std::vector<std::string>	wordVector;
+	const std::string WHITESPACE = " \n\r\t\f\v";
 
 	while ((pos = line.find_first_of(delimiter, prev)) != std::string::npos)
 	{
 		if (pos > prev)
-			wordVector.push_back(trim(line.substr(prev, pos - prev)));
+			wordVector.push_back(trim(line.substr(prev, pos - prev), WHITESPACE));
 		prev = pos + 1;
 	}
 	if (prev < line.length())
-		wordVector.push_back(trim(line.substr(prev, std::string::npos)));
+		wordVector.push_back(trim(line.substr(prev, std::string::npos), WHITESPACE));
 	return (wordVector);
 }
 //<-- cpp_split
 
 //<-- strtrim
-const std::string WHITESPACE = " \n\r\t\f\v";
 
-static std::string ltrim(const std::string &s)
+static std::string ltrim(const std::string &s, const std::string &to_trim)
 {
-    size_t start = s.find_first_not_of(WHITESPACE);
+    size_t start = s.find_first_not_of(to_trim);
     return (start == std::string::npos) ? "" : s.substr(start);
 }
  
-static std::string rtrim(const std::string &s)
+static std::string rtrim(const std::string &s, const std::string &to_trim)
 {
-    size_t end = s.find_last_not_of(WHITESPACE);
+    size_t end = s.find_last_not_of(to_trim);
     return (end == std::string::npos) ? "" : s.substr(0, end + 1);
 }
  
-std::string trim(const std::string &s)
+std::string trim(const std::string &s, const std::string &to_trim)
 {
-    return rtrim(ltrim(s));
+    return rtrim(ltrim(s, to_trim), to_trim);
 }
 //<-- strtrim
 

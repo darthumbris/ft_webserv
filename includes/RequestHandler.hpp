@@ -41,6 +41,8 @@ class RequestHandler
 
 		// Getters
 
+		const std::string	&getMatchingDir(void) const;
+		const Location		&getMatchingLocation(void) const;
 		const std::string	&getStatusLine(void) const;
 		const Server	&getServer(void) const;
 		std::string		getRequestMothod(void) const;
@@ -72,6 +74,8 @@ class RequestHandler
 
 
 		// Setters
+		void	setMatchingDir(const std::string &matching_dir);
+		void	setMatchingLocation(const Location &location);
 		void	setRequestMsg(const std::string &msg);
 		void	setContentType(const std::string &type);
 		void	setResponseStatus(const std::string &status_line);
@@ -88,7 +92,6 @@ class RequestHandler
 		void	setClientIp(const std::string &ip);
 		void	setServer(const Server &server);
 		void	setLocations(const t_locmap &locations);
-		void	setLocation(const Location &location);
 		void	addToRequestMsg(char *msg, int bytes_received);
 		void	setCompeleteRequest(const std::string &request_msg);
 		std::string	getClientIp(void) const;
@@ -107,7 +110,6 @@ class RequestHandler
 		
 	private:
 
-		const std::string	default_root = "/var/www/html";
 		t_servmap			_srv_map;
 		bool				_is_request_complete;
 		bool				_has_remaining_request;
@@ -145,7 +147,8 @@ class RequestHandler
 		std::string						_content_type;
 		std::string						_file_name;
 		Server							_server;
-		Location						_location;
-		t_locmap						_locations;
+		Location						_matching_location;
+		std::string						_matching_dir;
+		t_locmap						_location;
 }; 
 #endif

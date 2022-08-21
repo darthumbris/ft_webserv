@@ -213,9 +213,63 @@ void	TEST_FindServer_RightPort_Host(void)
 	delete req;
 }
 
-void	TEST_FindServer_location(void)
+void	TEST_FindTheRightLocationForUri(void)
 {
+	std::string path;
+	path = "configs/default.json";
+	std::ifstream file(path);
+	Parse parse;
+	Json* json = parse.parse(file);
+	Config config(json);
 
+	RequestHandler *req = new RequestHandler(config.getServerMap());
+
+	req->setRequestMsg("GET /test/ HTTP/1.1\r\nHost: other3.com\n\n");
+	req->setCompeleteRequest("GET /test/ HTTP/1.1\r\nHost: other3.com\n\n");
+	req->setPort(8080);
+	req->makeHeaderMap();
+	req->ParseHeaderMap();
+	req->ParseRequestLine();
+	req->FindServer();
+	req->FindTheRightLocationForUri();
+
+	TEST_ASSERT_TRUE(req->getMatchingDir() == "/");
+	delete req;
+}
+
+void	TEST_FindTheRightLocationForUri2(void)
+{
+	std::string path;
+	path = "configs/default.json";
+	std::ifstream file(path);
+	Parse parse;
+	Json* json = parse.parse(file);
+	Config config(json);
+
+	RequestHandler *req = new RequestHandler(config.getServerMap());
+
+	req->setRequestMsg("GET /test/./././../ HTTP/1.1\r\nHost: other3.com\r\n\r\n");
+	//function_resolve("test/./././../");//././../../
+	req->setCompeleteRequest("GET /test/./././../ HTTP/1.1\r\nHost: other3.com\r\n\r\n");
+	//"/var/html/"
+	//chdir
+	//pwd
+	//cmp with available locations
+	//chdir
+	//"/var/html/test/" GET
+	//"/var/html/test/img/" POST
+
+	//"/var/html/test/./././../"
+	req->setPort(8080);
+	req->makeHeaderMap();
+	req->ParseHeaderMap();
+	req->ParseRequestLine();
+	req->FindServer();
+	req->FindTheRightLocationForUri();
+
+	std::cout << "I am the right loc: " << req->getMatchingDir() << std::endl;
+	//TEST_ASSERT_TRUE(req->getMatchingDir() == "/test/");
+	delete req;
 }
 
 int main(void)
@@ -231,6 +285,7 @@ int main(void)
 	RUN_TEST(TEST_FindServer_WrongPort);
 	RUN_TEST(TEST_FindServer_RightPort_NoHost);
 	RUN_TEST(TEST_FindServer_RightPort_Host);
-	RUN_TEST(TEST_FindServer_location);
+	RUN_TEST(TEST_FindTheRightLocationForUri);
+	RUN_TEST(TEST_FindTheRightLocationForUri2);
     return UNITY_END();
 }

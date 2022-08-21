@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/20 22:04:14 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/21 15:09:02 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,12 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 }
 
 //Getters
+
+
+const std::string	&RequestHandler::getMatchingDir(void) const
+{
+	return _matching_dir;
+}
 
 const std::string	&RequestHandler::getStatusLine(void) const
 {
@@ -128,20 +134,26 @@ std::string RequestHandler::getCompleteRequest() const
 	return this->_complete_request;
 }
 
+const Location	&RequestHandler::getMatchingLocation(void) const
+{
+	return _matching_location;
+}
+
+void	RequestHandler::setMatchingDir(const std::string &matching_dir)
+{
+	_matching_dir = matching_dir;
+}
+
 // Setters
 
 void	RequestHandler::setCompeleteRequest(const std::string &request_msg)
 {
 	_complete_request = request_msg;
 }
-void	RequestHandler::setLocation(const Location &location)
-{
-	_location = location;
-}
 
-void	RequestHandler::setLocations(const t_locmap &locations)
+void	RequestHandler::setMatchingLocation(const Location &location)
 {
-	_locations = locations;
+	_matching_location = location;
 }
 
 void	RequestHandler::setServer(const Server &server)
@@ -266,18 +278,53 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 {
 	t_locmap::const_iterator	loc_iter = _server.getLocationMap().begin();
 	t_locmap::const_iterator	loc_iter_end = _server.getLocationMap().end();
-	const std::string			&abs_uri_dir = _server.getServerRoot() + _uri.substr(0, _uri.find_last_of("/"));
+	const std::string			&server_root = _server.getServerRoot();
+	std::string					abs_uri_dir;
 	std::string					abs_location_dir;
 	std::size_t					best_match;
+	std::string					uri_dir;
+	std::string					new_dir;
+	std::string					old_dir;
+	char						buf[4096];
 
+	if (_uri.back() == '/')
+	{
+		uri_dir = _uri;
+		uri_dir.pop_back();
+	}
+	else
+		uri_dir = _uri;
+	abs_uri_dir = server_root + uri_dir.substr(0, uri_dir.find_last_of("/"));
+	if (abs_uri_dir.back() != '/')
+		abs_uri_dir += "/";
+	if (abs_uri_dir.at(0) != '/')
+		abs_uri_dir.append("/");
+	if (abs_uri_dir == "")
+		abs_uri_dir = "/";
+	old_dir = getcwd(buf, 4096);
+	if (chdir(abs_uri_dir.c_str()) == -1)
+		setResponseStatus("404 NOT FOUND");
+	new_dir = getcwd(buf, 4096);
+	std::cout << new_dir << std::endl;
+	if (chdir(old_dir.c_str()) == -1)
+		setResponseStatus("500 INTERNAL SERVER ERROR");
+	new_dir = getcwd(buf, 4096);
+	std::cout << new_dir << std::endl;
 	best_match = 0;
 	while (loc_iter != loc_iter_end)
 	{
-		abs_location_dir = _server.getServerRoot() + loc_iter->first;
+		abs_location_dir = server_root + loc_iter->first;
+		if (abs_location_dir == "")
+			abs_location_dir = "/";
+		if (abs_location_dir.back() != '/')
+			abs_location_dir += "/";
+		if (abs_location_dir.at(0) != '/')
+			abs_location_dir.append("/");
 		if (best_match < LengthOfMatch(abs_location_dir, abs_uri_dir))
 		{
 			best_match = LengthOfMatch(abs_location_dir, abs_uri_dir);
-			setLocation(*(loc_iter->second));
+			setMatchingLocation(*(loc_iter->second));
+			setMatchingDir(loc_iter->first);
 		}
 		loc_iter++;
 	}
@@ -298,8 +345,11 @@ void	RequestHandler::FindServer(void)
 			if (*port_iter == _port)
 			{
 				std::vector<std::string>::const_iterator server_name_iter = server_names.begin();
-				setHost(*server_name_iter);
-				setServer(*serv_iterator);
+				if (getHost() == "")
+				{
+					setHost(*server_name_iter);
+					setServer(*serv_iterator);
+				}
 
 				while (server_name_iter != server_names.end())
 				{
@@ -307,7 +357,6 @@ void	RequestHandler::FindServer(void)
 					{
 						setHost(*server_name_iter);
 						setServer(*serv_iterator);
-						setLocations((*serv_iterator).getLocationMap());
 						return ;
 					}
 					server_name_iter++;

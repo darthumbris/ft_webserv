@@ -21,8 +21,11 @@ class Server
 		// Destructor
 		~Server();
 
+		// Overloads
+		Server & operator=(const Server &assign);
 		// Getters
 		//	std::vector<int>	getServerSocket() const;
+		const std::string		&getDefaultRoot(void) const;
 		const std::string&		getServerIp() const;
 		int						getClientBodySize() const;
 		const std::vector<int>	&getServerPort() const;
@@ -40,6 +43,7 @@ class Server
 		void	setServerClientBodySize(const Json& json);
 		void	setServerErrorPage(const Json& json);
 		void	setServerSocket(int server_socket);
+		//void	setDefaultRoot(void); set in the default constructor
 
 		typedef void (Server::* Func )(const Json&);
 		//Table to check which function to jump in
@@ -63,6 +67,7 @@ class Server
 		t_locmap			_location;
 		std::string			_server_ip;
 		std::string			_root;
+		const std::string	_default_root = "/var/www/html/";
 };
 
 #endif
