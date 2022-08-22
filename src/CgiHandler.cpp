@@ -1,8 +1,6 @@
 #include "CgiHandler.hpp"
 #include "Utils.hpp"
 
-//TODO make it work also with python scripts for bonus
-
 // Constructors
 CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _input_body(_req->getRequestBody()), _error(false)
 {
@@ -41,10 +39,7 @@ void	CgiHandler::setCgiPaths()
 		std::cout << "cgipath: " << _cgi_path << std::endl;
 }
 
-/*TODO maybe have the redirect status be assigned in the script itself 
- * and the request handler checks the response body for it?
- * The same for content-type (which php already does and python is manual)
-*/
+//TODO have the redirect status be assigned in the script itself
 void	CgiHandler::setEnvValues()
 {
 	setCgiPaths();
@@ -104,7 +99,7 @@ void	CgiHandler::executeScript(char **envp)
 	dup2(_out_file_fd, STDOUT_FILENO);
 	execve(_cgi_path.c_str(), NULL, envp);
 	_req->setCgiError();
-	write(STDOUT_FILENO, "Status: 500\r\n", 14);
+	write(STDOUT_FILENO, "Status: 502\r\n\r\n", 15);
 }
 
 void	CgiHandler::readScriptOutput(pid_t pid)
@@ -153,7 +148,7 @@ std::string	CgiHandler::execute()
 
 	envp = makeEnvArray();
 	if (_error)
-		return "Status: 500\r\n";
+		return "Status: 500\r\n\r\n";
 	//reading in the input body to temp file
 	write(_in_file_fd, _input_body.c_str(), _input_body.length());
 	//Resetting to beginning of file
@@ -164,7 +159,7 @@ std::string	CgiHandler::execute()
 	if (pid == -1)
 	{
 		_req->setCgiError();
-		return ("Status: 500\r\n");
+		return ("Status: 500\r\n\r\n");
 	}
 	else if (pid == 0)
 		executeScript(envp);
@@ -182,12 +177,7 @@ std::string	CgiHandler::execute()
 		exit(0);
 	if (DEBUG_MODE)
 		std::cout << "finished executing " << std::endl;
-	//TODO might need to remove this part later so the requesthandler can see what content-type to set for the response header
-	// std::size_t	start_content_type = _output_body.find("Content-type");
-	// std::size_t	start_body = _output_body.find('\n', start_content_type);
-	// std::cout << _output_body.substr(0, start_body);
-	// _output_body = _output_body.substr(start_body, std::string::npos);
-	// std::cout << "output: " << _output_body << std::endl;
+	//TODO use the setContent-Type and setStatus from the request handler and substr the response and then return it
 	return _output_body;
 }
 

@@ -2,10 +2,6 @@
 #include "CgiHandler.hpp"
 #include "Utils.hpp"
 
-/*TODO need to have a check here for post to check how big the upload is
-// and compare it to the client_body_size variable of the server
-*/
-
 // Constructors
 RequestHandler::RequestHandler(const t_servmap &srv_map) : 
 		_srv_map(srv_map), _is_request_complete(false), 
@@ -267,6 +263,8 @@ void	RequestHandler::testFunction()
 			path = root + url + loc->getIndex();
 		else
 			return (setServerError(&_response_body, &_response_header, "500 Internal Server Errorasd"));
+		if (file == "" && loc && loc->getIndex() != "")
+			file = loc->getIndex();
 		std::cout << "\n\n=======Path:" << path << std::endl;
 		std::ifstream infile(path, std::ios::in);
 		if (!infile.is_open())
@@ -305,7 +303,6 @@ void	RequestHandler::testFunction()
 	}
 }
 
-//TODO after parsing the request need to check for which server it is (first using port, then if multiple servers on same port the servername/host and then location)
 void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 {
 	size_t	crlf_pos;
