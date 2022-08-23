@@ -45,13 +45,15 @@ void Server::setServerClientBodySize(const Json &json)
 
 void Server::setServerErrorPage(const Json &json)
 {
-	for (const auto *x : json.values.list)
+	for (const auto &x : json.values.object)
 	{
-		if (x->type != Json::STRING)
-			throw Config::wrongKey("expected <STRING>");
+		if (x.second->type != Json::STRING)
+			throw Config::wrongKey("Expected STRING type");
+		if (_error_page.find(x.first) != _error_page.end())
+			throw Config::wrongKey("error_code duplicate");
 		if (DEBUG_MODE)
-			std::cout << BLUE << "Added error_page: " << x->values.str << " to the server" << RESET_COLOR << std::endl;	
-		_error_page.push_back(json.values.str);
+			std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
+		_error_page.emplace(x.first, x.second->values.str);
 	}
 }
 
@@ -60,7 +62,7 @@ Server::Func Server::setValues(const std::string name, const Json& json)
 	t_table	map[] =
 	{
 			{"listen", Json::ARRAY, &Server::addServerListen},
-			{"error_page", Json::ARRAY, &Server::setServerErrorPage},
+			{"error_page", Json::OBJECT, &Server::setServerErrorPage},
 			{"server_name", Json::ARRAY, &Server::addServerName},
 			{"client_body_size", Json::NUMBER, &Server::setServerClientBodySize}
 	};
@@ -124,7 +126,7 @@ const std::vector<int> &Server::getServerPort() const
 }
 
 
-const t_vecstr &Server::getErrorPage() const
+const t_strmap &Server::getErrorPage() const
 {
 	return _error_page;
 }
@@ -134,6 +136,7 @@ t_locmap	Server::getLocationMap() const
 	return this->_location;
 }
 
+<<<<<<< HEAD
 void Server::setServerErrorPage(const Json &json)
 {
 	for (const auto &x : json.values.object)
@@ -210,6 +213,11 @@ const std::string&		Server::getServerIp() const
 const t_vecstr &Server::getServerNames() const
 {
 	return _server_name;
+=======
+const t_locmap	&Server::getLocationMap() const
+{
+	return _location;
+>>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
 }
 
 Location *Server::getLocation(int port, std::string url) const

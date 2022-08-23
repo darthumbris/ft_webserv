@@ -45,6 +45,7 @@ class CgiHandler
 		std::string		_file;
 		std::string		_cur_dir;
 		std::string		_input_body;
+		bool			_error;
 };
 
 #endif

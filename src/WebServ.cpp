@@ -12,6 +12,9 @@
 
 #include "WebServ.hpp"
 
+//TODO check for memory leaks and proper delete etc usage
+//TODO make a index.html that shows all stuff we need to handle (file uploading redirect etc)
+
 // Constructors
 WebServ::WebServ(Config *config) : _config(config)
 {

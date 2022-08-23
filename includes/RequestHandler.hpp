@@ -14,16 +14,12 @@
 # include "Server.hpp"
 # include "AutoIndexGenerator.hpp"
 
-//TODO make all the request handling stuff. (parsing etc) for alkrust
-//TODO check if remaining request stuff is actually needed
-
 struct	url
 {
 	std::string	path;
 	std::string	querry;
 };
 
-using	t_strmap = std::map<std::string, std::string>;
 using	t_url	= struct url;
 
 class RequestHandler
@@ -40,6 +36,7 @@ class RequestHandler
 		RequestHandler & operator=(const RequestHandler &assign);
 
 		// Getters
+<<<<<<< HEAD
 
 		const Location		&getLocation(void) const;
 		const std::string	&getMatchingDir(void) const;
@@ -71,6 +68,24 @@ class RequestHandler
 		bool	fileExists(const std::string &path);
 		void		OpenFile(void);
 
+=======
+		std::string	getResponse() const;
+		bool		isRequestComplete() const;
+		std::string	getRemainingRequestMsg() const;
+		bool		hasRemainingRequestMsg() const;
+		int			getFileDescriptor() const;
+		std::size_t	getFileSize() const;
+		Location	*getLocation(std::string url) const;
+		const std::string&	getRequestHeader() const;
+		const std::string&	getRequestBody() const;
+		std::string	getRequestMethod() const;
+		std::string	getResponseBody() const;
+		t_strmap	getHeaderMap() const;
+		t_url		getUrl() const;
+		int			getPort() const;
+		std::string	getClientIp() const;
+		std::string	getCompleteRequest() const;
+>>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
 
 		// Setters
 		void	setMatchingDir(const std::string &matching_dir);
@@ -87,6 +102,7 @@ class RequestHandler
 		void	setResponseCompelete(const bool &status);
 		void	setSocket(int socket);
 		void	setPort(int port);
+<<<<<<< HEAD
 		void	setUrlStruct(const std::string &full_url);
 		void	setClientIp(const std::string &ip);
 		void	setServer(const Server &server);
@@ -94,6 +110,11 @@ class RequestHandler
 		void	addToRequestMsg(char *msg, int bytes_received);
 		void	setCompeleteRequest(const std::string &request_msg);
 		std::string	getClientIp(void) const;
+=======
+		void	setUrlStruct(std::string full_url);
+		void	setClientIp(std::string ip);
+		void	setCgiError();
+>>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
 
 		// Member Functions
 		bool	isResponseDone(void) const;
@@ -111,6 +132,7 @@ class RequestHandler
 		
 	private:
 
+<<<<<<< HEAD
 		t_servmap			_srv_map;
 		bool				_is_request_complete;
 		bool				_send_file;
@@ -142,6 +164,29 @@ class RequestHandler
 
 		std::string						_host;
 		std::string						_status_line;
+=======
+		t_servmap	_srv_map;
+		std::string	_complete_request;
+		std::string	_request_header;
+		std::string	_request_body;
+		std::string _request_method; //set this, this is used for the cgihandler 
+		t_strmap	_headermap;
+		std::string	_response_header;
+		std::string	_response_body;
+		std::string	_client_ip;	
+
+		t_url		_url;
+		bool		_is_request_complete;
+		bool		_is_request_header_done;
+		bool		_has_remaining_request;
+		bool		_send_file;
+		bool		_cgi_error;
+		int			_client_socket;
+		int			_fd;
+		int			_port;
+		std::size_t	_file_size;
+};
+>>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
 
 		std::string						_request_host;
 		std::string						_content_type;

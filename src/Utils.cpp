@@ -243,6 +243,8 @@ std::map<std::string, std::string>	getTypeMap()
 
 std::string	getContentType(const std::string &file_name)
 {
+	if (DEBUG_MODE)
+		std::cout << "Looking for content-type of file: " << file_name << std::endl;
 	static const std::map<std::string, std::string>	type_map = getTypeMap();
 	std::size_t type_pos = file_name.find_last_of('.');
 	if (type_pos != std::string::npos)

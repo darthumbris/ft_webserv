@@ -8,6 +8,10 @@
 #include <vector>
 #include <map>
 
+# ifndef DEBUG_MODE
+#  define DEBUG_MODE	0
+# endif
+
 enum	path
 {
 	IS_DIR,

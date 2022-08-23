@@ -29,10 +29,17 @@ class Server
 		const std::string		&getDefaultRoot(void) const;
 		const std::string&		getServerIp() const;
 		int						getClientBodySize() const;
+<<<<<<< HEAD
 		const std::vector<int>	&getServerPort() const;
 		const t_strmap&			getErrorPage() const;
 		const t_vecstr&			getServerNames() const;
 		const t_locmap&			getLocationMap() const;
+=======
+		const std::vector<int>&	getServerPort() const;
+		const t_strmap&			getErrorPage() const;
+		const t_vecstr&			getServerNames() const;
+		const t_locmap&				getLocationMap() const;
+>>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
 		Location				*getLocation(int port, std::string url) const;
 		const std::string		&getServerRoot(void) const;
 
