@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+[submodule "Unity"]
+	path = Unity
+	url = https://github.com/ThrowTheSwitch/Unity.git
+>>>>>>> alkrusts
 [submodule "new_json"]
 	path = new_json
 	url = git@github.com:Abdi-29/new_json.git

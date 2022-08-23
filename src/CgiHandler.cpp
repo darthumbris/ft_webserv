@@ -20,15 +20,26 @@ CgiHandler::~CgiHandler()
 // Setter
 void	CgiHandler::setCgiPaths()
 {
+	//_folder ->req->getAbsPath of file to open
+	//test/index.html
+	//this would be test
 	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/') + 1);
+	//this would be the index.html
+	//_file ->get file name to open
 	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
+	//
 	_root = "/";
+	/*
+>>>>>>> alkrusts
 	if (_req->getLocation(_folder))
 		_root += _req->getLocation(_folder)->getRootPath();
 	if (_req->getLocation(_folder))
 		_cgi_path = _req->getLocation(_folder)->getCgiPath();
 	else
 		_cgi_path = "";
+<<<<<<< HEAD
+=======
+	*/
 	
 	// std::cout << "root: " << _root << std::endl;
 	// std::cout << "folder: " << _folder << std::endl;
