@@ -53,7 +53,6 @@ class RequestHandler
 		int				getResponseBody(void) const;
 		bool			isRequestComplete(void) const;
 		std::string		getRemainingRequestMsg(void) const;
-		bool			hasRemainingRequestMsg(void) const;
 		int				getFileDescriptor(void) const;
 		std::size_t		getFileSize(void) const;
 		t_strmap		getHeaderMap(void) const;
@@ -67,8 +66,8 @@ class RequestHandler
 
 		bool	parseFirstLine(const std::string &method);
 		void	ParseRequestLine(void);
-		int		ParseHeaderMap(void);
-		int		ParseRequestMsg(void);
+		void	ParseHeaderMap(void);
+		void	ParseRequestMsg(void);
 		bool	fileExists(const std::string &path);
 		void		OpenFile(void);
 
@@ -97,6 +96,7 @@ class RequestHandler
 		std::string	getClientIp(void) const;
 
 		// Member Functions
+		bool	isResponseDone(void) const;
 		void	FindTheRightLocationForUri(void);
 		//void	FindLocationPath(void);
 		void	FindAllAccessibleLocations(void);
@@ -107,24 +107,22 @@ class RequestHandler
 		void	BuildResponseHeader(void);
 		void	makeHeaderMap(void);
 		void	testFunction(void);
+		void	MakeResponse(void);
 		
 	private:
 
 		t_servmap			_srv_map;
 		bool				_is_request_complete;
-		bool				_has_remaining_request;
 		bool				_send_file;
 		int					_fd_response;
 		std::size_t			_file_size;
 
 		std::string			_client_ip;
-		std::string			_msg;
 		std::string			_request_header;
 		std::string			_request_protocol;
 		std::string			_uri;
 
 		std::string			_complete_request;
-		std::string			_remaining_request;
 		std::string			_response_header;
 
 		int					_client_socket;
@@ -134,11 +132,12 @@ class RequestHandler
 		std::string 		_request_method; //set this, this is used for the cgihandler 
 
 		t_url				_url;
-		bool				_is_request_header_done;
-		bool							_cgi_error;
-		int								_port;
+		bool				_cgi_error;
+		bool				_is_response_done;
+		int					_port;
 
 		std::size_t						_fd_length;
+		bool							_is_request_header_done;
 
 		std::string						_host;
 		std::string						_status_line;

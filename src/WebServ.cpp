@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/19 18:57:48 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/23 13:27:33 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,6 +148,7 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
 	new_udat->req = new RequestHandler(_config->getServerMap());
+	new_udat->total_size = 0;
 	new_udat->req->setSocket(clnt_sckt);
 	new_udat->req->setPort(old_udat->port);
 
