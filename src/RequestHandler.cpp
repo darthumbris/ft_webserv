@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/24 14:32:21 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/24 15:52:05 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,6 +224,13 @@ void	RequestHandler::BuildResponseHeader(void)
 	if (_fd <= 0)
 		len = _response_body.length();
 	_response_header += "HTTP/1.1 " + _status_line + "\r\n";
+	if (stoi(_status_line.substr(0, 3)) >= 300 && stoi(_status_line.substr(0, 3)) <= 310)
+	{
+		if (_is_folder)
+			_response_header += "Location: " + _uri + "/\r\n";
+		else
+			_response_header += "Location: " + _uri + "\r\n";
+	}	
 	_response_header += "Server: " + _host +  "\r\n";
 	_response_header += "Content-Length: " + std::to_string(len) + "\r\n";
 	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
@@ -255,17 +262,12 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 	if (server_root.at(0) != '/')
 		server_root = "/" + server_root;
 	_file_to_get = _server_start_dir + server_root + _uri;
-	requested_dir = _server_start_dir + server_root + uri_dir;
-	std::cout << "this is where to :" << requested_dir << std::endl;
-	//if (chdir(requested_dir.c_str()) == -1)
-//////		setResponseStatus("404 NOT FOUND");
-	requested_dir = trim(uri_dir, "/");
+	_requested_dir = trim(uri_dir, "/");
 	requested_loc = getcwd(buf, 4096);//TO DO CHECK FOR ERROR HERE!
 	if (requested_loc.empty())
 		setResponseStatus("500 INTERNAL SERVER ERROR");
 	else
 	{
-		//std::cout << " This is loc: " + requested_loc << " this is requested dir " + requested_dir << std::endl;
 		best_match = 0;
 		while (loc_iter != loc_iter_end)
 		{
@@ -285,7 +287,8 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 
 void	RequestHandler::BuildDefaultResponsePage(void)
 {
-	if (_fd <= 0)
+	//loop over defalut response pages
+	if (_fd <= 0 && _response_body.empty())
 	{
 		setContentType("text/html");
 		_response_body = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
@@ -314,7 +317,6 @@ void	RequestHandler::FindServer(void)
 					setHost(*server_name_iter);
 					setServer(*serv_iterator);
 				}
-
 				while (server_name_iter != server_names.end())
 				{
 					if (_request_host == *server_name_iter)
@@ -400,75 +402,70 @@ void	RequestHandler::OpenFile(void)
 	else
 		 file_to_open = _server_start_dir + "/" + _server.getServerRoot() + _uri;
 	if (access(file_to_open.c_str(), F_OK) == -1)
-	{
 		setResponseStatus("404 NOT FOUND");
-		return ;
-	}
-	if (getRequestMethod() == "GET" && getMatchingLocation().getMethodGet())
+	else
 	{
-		if (access(file_to_open.c_str(), R_OK) == -1)
+		if (getRequestMethod() == "GET")
 		{
-			setResponseStatus("403 FORBIDEN");
-			return ;
-		}
-		if (_uri.back() == '/' && _matching_location.getAutoIndex())
-		{
-			AutoIndexGenerator("/var/www/html", "test");
-			setResponseStatus("200 OK");
-			return ;
-		}
-		else
-		{
-			std::cout << "REquested: " << getRequestMethod() << std::endl;
-			_file_name = file_to_open.substr(file_to_open.find_last_of("/"), file_to_open.length());
-			std::cout << "FILE NAME: " << _file_name << std::endl;
-			if (checkPath(file_to_open) == IS_FILE)
-			{
-				std::ifstream infile(file_to_open.c_str(), std::ios::in);
-				content_type = getContentType(_file_name);
-				std::cout << "content-type: " << content_type << std::endl;
-				infile.seekg(0, std::ios::end);
-				std::size_t length  = infile.tellg();
-				infile.seekg(0, std::ios::beg);
-				_file_size = length;
-				_fd = open(file_to_open.c_str(), O_RDONLY);
-				setResponseStatus("200 OK");
-			}
-			else if (checkPath(file_to_open) == IS_DIR)
-			{
-				//make 301
-				std::ifstream infile(file_to_open.c_str(), std::ios::in);
-				content_type = getContentType(_file_name);
-				std::cout << "content-type: " << content_type << std::endl;
-				infile.seekg(0, std::ios::end);
-				std::size_t length  = infile.tellg();
-				infile.seekg(0, std::ios::beg);
-				_file_size = length;
-				setResponseStatus("200 OK");
-			}
+			if (access(file_to_open.c_str(), R_OK) == -1 || !getMatchingLocation().getMethodGet())
+				setResponseStatus("403 FORBIDEN");
 			else
 			{
-				std::cout << "Ither stat failed or its a sym link etc. " << std::endl;
-				setResponseStatus("500 INTERNAL SERVER ERROR");
+				if (_uri.back() == '/' && _matching_location.getAutoIndex())
+				{
+					_response_body = AutoIndexGenerator("var/www/html", "/" + _requested_dir).getDirectoryIndex();
+					setResponseStatus("200 OK");
+					return ;
+				}
+				else
+				{
+					std::cout << "REquested: " << getRequestMethod() << std::endl;
+					_file_name = file_to_open.substr(file_to_open.find_last_of("/"), file_to_open.length());
+					std::cout << "FILE NAME: " << _file_name << std::endl;
+					if (checkPath(file_to_open) == IS_FILE)
+					{
+						std::ifstream infile(file_to_open.c_str(), std::ios::in);
+						content_type = getContentType(_file_name);
+						std::cout << "content-type: " << content_type << std::endl;
+						infile.seekg(0, std::ios::end);
+						std::size_t length  = infile.tellg();
+						infile.seekg(0, std::ios::beg);
+						_file_size = length;
+						_fd = open(file_to_open.c_str(), O_RDONLY);
+						std::cout << "TEST: "<< _fd << std::endl;
+						setResponseStatus("200 OK");
+					}
+					else if (checkPath(file_to_open) == IS_DIR)
+					{
+						setResponseStatus("301 Moved Permanently");
+						_is_folder = true;
+					}
+					else
+					{
+						std::cout << "Ither stat failed or its a sym link etc. " << std::endl;
+						setResponseStatus("500 INTERNAL SERVER ERROR");
+					}
+				}
 			}
 		}
-	}
-	if (getRequestMethod() == "POST" && getMatchingLocation().getMethodPost())
-	{
-		std::cout << "REquested: " << getRequestMethod() << std::endl;
-		if (getMatchingLocation().getMethodPost())
+		else if (getRequestMethod() == "POST")
 		{
-			CgiHandler cgi(*this);
-			cgi.execute();
+			if (!getMatchingLocation().getMethodPost())
+				setResponseStatus("403 FORBIDEN");
+			else
+			{
+				CgiHandler cgi(*this);
+				_response_body = cgi.execute();
+			}
 		}
-	}
-	if (getRequestMethod() == "DELETE" && getMatchingLocation().getMethodDel())
-	{
-		std::cout << "REquested: " << getRequestMethod() << std::endl;
-		if (getMatchingLocation().getMethodDel())
+		else if (getRequestMethod() == "DELETE")
 		{
-
+			if (!getMatchingLocation().getMethodDel())
+				setResponseStatus("403 FORBIDEN");
+			if (remove(file_to_open.c_str()) == -1)
 		}
+		else
+			setResponseStatus("405 Method Not Allowed");
 	}
 }
 
@@ -545,7 +542,7 @@ bool	RequestHandler::isResponseDone(void) const
 
 }
 
-void	RequestHandler::MakeResponse(void)
+void	RequestHandler::ParseResponse(void)
 {
 	std::size_t	index;
 	void	(RequestHandler::*fptr[])(void) = {
@@ -573,32 +570,35 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	if (!isprint(_complete_request[0])) // this is for https and bad requests
 	{
 		_is_request_complete = true;
-		//return (setServerError(&_response_body, &_response_header, "400 Bad Request"));
-
+		setResponseStatus("400 BAD REQUEST");
+		BuildDefaultResponsePage();//TO DO  add user response custom
+		BuildResponseHeader();
 		return ;
 	}
-	crlf_pos = _complete_request.find("\r\n\r\n");
-	if (crlf_pos != std::string::npos)
+	else
 	{
-		if (_is_request_header_done == false)
+		crlf_pos = _complete_request.find("\r\n\r\n");
+		if (crlf_pos != std::string::npos)
 		{
-			_request_header = _complete_request.substr(0, crlf_pos);
-			makeHeaderMap();
-			_is_request_header_done = true;
-		}
-		if (_is_request_header_done)
-		{
-			_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
-			if (_headermap.find("Content-Length")  == _headermap.end())
-				_is_request_complete = true;
-			else if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
-				_is_request_complete = true;
-			if (_is_request_complete)
+			if (_is_request_header_done == false)
 			{
-				MakeResponse();
-				BuildDefaultResponsePage();//TO DO  add user response custom
-				BuildResponseHeader();
-				setResponseCompelete(true);
+				_request_header = _complete_request.substr(0, crlf_pos);
+				makeHeaderMap();
+				_is_request_header_done = true;
+			}
+			if (_is_request_header_done)
+			{
+				_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
+				if (_headermap.find("Content-Length")  == _headermap.end())
+					_is_request_complete = true;
+				else if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
+					_is_request_complete = true;
+				if (_is_request_complete)
+				{
+					ParseResponse();
+					BuildDefaultResponsePage();//TO DO  add user response custom
+					BuildResponseHeader();
+				}
 			}
 		}
 	}

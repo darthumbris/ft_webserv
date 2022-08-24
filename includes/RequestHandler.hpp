@@ -103,7 +103,7 @@ class RequestHandler
 		void	BuildResponseHeader(void);
 		void	makeHeaderMap(void);
 		void	testFunction(void);
-		void	MakeResponse(void);
+		void	ParseResponse(void);
 		
 	private:
 
@@ -149,6 +149,8 @@ class RequestHandler
 		t_locmap						_location;
 		std::string						_server_start_dir;
 		std::string						_file_to_get;
+		std::string						_requested_dir;
+		bool							_is_folder;
 		//getresponse header + body 
 		//if the fd 
 }; 
