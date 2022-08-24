@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/24 14:18:39 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/24 14:32:21 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,10 +285,13 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 
 void	RequestHandler::BuildDefaultResponsePage(void)
 {
-	setContentType("text/html");
-	_response_body = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
-	_response_body += "<title>" + _status_line + "</title>\n</head>\n<body bgcolor=\"white\">";
-	_response_body += "<center><h1>" + _status_line + "</h1></center>\n</body>\n</html>";
+	if (_fd <= 0)
+	{
+		setContentType("text/html");
+		_response_body = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
+		_response_body += "<title>" + _status_line + "</title>\n</head>\n<body bgcolor=\"white\">";
+		_response_body += "<center><h1>" + _status_line + "</h1></center>\n</body>\n</html>";
+	}
 }
 
 void	RequestHandler::FindServer(void)
@@ -399,9 +402,6 @@ void	RequestHandler::OpenFile(void)
 	if (access(file_to_open.c_str(), F_OK) == -1)
 	{
 		setResponseStatus("404 NOT FOUND");
-		BuildDefaultResponsePage();//TO DO  add user response custom
-		BuildResponseHeader();
-		//build body
 		return ;
 	}
 	if (getRequestMethod() == "GET" && getMatchingLocation().getMethodGet())
@@ -563,8 +563,6 @@ void	RequestHandler::MakeResponse(void)
 		(this->*fptr[index])();
 		index++;
 	}
-	BuildResponseHeader();
-	setResponseCompelete(true);
 }
 
 void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
@@ -600,6 +598,7 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 				MakeResponse();
 				BuildDefaultResponsePage();//TO DO  add user response custom
 				BuildResponseHeader();
+				setResponseCompelete(true);
 			}
 		}
 	}
