@@ -4,10 +4,7 @@
       {
         "client_body_size": 1000,
         "listen": [4242, 4343],
-<<<<<<< HEAD
 		"root": "var/www/html",
-=======
->>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
         "server_name": [
           "test.com",
           "test2.com",
@@ -20,10 +17,7 @@
         },
         "location /": {
           "allowed_method": ["GET"],
-<<<<<<< HEAD
           "auto_index": true,
-=======
->>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
           "index": "index.html",
           "root": "var/www/html"
         },
@@ -43,16 +37,13 @@
           "root": "var/www/html",
           "auto_index": true,
           "allowed_method": ["GET", "POST"],
-<<<<<<< HEAD
           "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi",
           "upload": "/images/"
         },
         "location /test/upload/": {
-=======
           "upload": "/images/"
         },
         "location /upload/": {
->>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
           "root": "var/www/html",
           "auto_index": true,
           "allowed_method": ["GET", "DELETE"]

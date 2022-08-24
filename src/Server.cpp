@@ -12,17 +12,6 @@ Server::Server(): _default_root("/var/www/html/")
 Server::~Server() {}
 
 // Setters
-void Server::addServerListen(const Json &json)
-{
-	for (const Json *x: json.values.list)
-	{
-		if (x->type != Json::NUMBER)
-			throw Config::wrongKey("expected <NUMBER>");
-		if (DEBUG_MODE)
-			std::cout << BLUE << "Added port: " << x->values.number << " to the server." << RESET_COLOR << std::endl;
-		_server_listen.push_back(x->values.number);
-	}
-}
 
 void Server::addServerName(const Json &json)
 {
@@ -55,27 +44,6 @@ void Server::setServerErrorPage(const Json &json)
 			std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
 		_error_page.emplace(x.first, x.second->values.str);
 	}
-}
-
-Server::Func Server::setValues(const std::string name, const Json& json)
-{
-	t_table	map[] =
-	{
-			{"listen", Json::ARRAY, &Server::addServerListen},
-			{"error_page", Json::OBJECT, &Server::setServerErrorPage},
-			{"server_name", Json::ARRAY, &Server::addServerName},
-			{"client_body_size", Json::NUMBER, &Server::setServerClientBodySize}
-	};
-
-	for (const t_table& entry : map)
-	{
-		if (entry.type == json.type)
-		{
-			if (entry.key == name)
-				return (entry.map_values);
-		}
-	}
-	throw Config::wrongKey("invalid name or key for <" + name);
 }
 
 Server & Server::operator=(const Server &assign)
@@ -131,23 +99,9 @@ const t_strmap &Server::getErrorPage() const
 	return _error_page;
 }
 
-t_locmap	Server::getLocationMap() const
+const t_locmap	&Server::getLocationMap() const
 {
 	return this->_location;
-}
-
-<<<<<<< HEAD
-void Server::setServerErrorPage(const Json &json)
-{
-	for (const auto &x : json.values.object)
-	{
-		if (x.second->type != Json::STRING)
-			throw Config::wrongKey("Expected STRING type");
-		if (_error_page.find(x.first) != _error_page.end())
-			throw Config::wrongKey("error_code duplicate");
-		std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
-		_error_page.emplace(x.first, x.second->values.str);
-	}
 }
 
 void Server::setServerRoot(const Json& json)
@@ -179,11 +133,6 @@ Server::Func Server::setValues(const std::string name, const Json& json)
 	throw Config::wrongKey("invalid name or key for <" + name);
 }
 
-void	Server::setServerSocket(int server_socket)
-{
-	this->_server_fd.push_back(server_socket);
-}
-
 // Getters
 
 const std::string		&Server::getDefaultRoot(void) const
@@ -191,11 +140,7 @@ const std::string		&Server::getDefaultRoot(void) const
 	return _default_root;
 }
 
-int Server::getClientBodySize() const
-{
-	return _client_body_size;
-}
-
+/*
 const std::string&		Server::getServerIp() const
 {
 	for (std::size_t i = 0; i < _server_listen.size(); i++)
@@ -209,15 +154,11 @@ const std::string&		Server::getServerIp() const
 	}
 	return NULL;
 }
+*/
 
 const t_vecstr &Server::getServerNames() const
 {
 	return _server_name;
-=======
-const t_locmap	&Server::getLocationMap() const
-{
-	return _location;
->>>>>>> adeb397b66dc98e28e81fd4be59ebd586042f888
 }
 
 Location *Server::getLocation(int port, std::string url) const

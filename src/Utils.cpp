@@ -129,12 +129,11 @@ std::string getCurDir()
 	return cur_dir;
 }
 
-int	checkPath(const std::string &path, const std::string &root)
+int	checkPath(const std::string &path)
 {
 	struct stat s;
 
-	std::string	total_path = getCurDir() + "/" + root + path;
-	if (stat(total_path.c_str(), &s) == 0)
+	if (stat(path.c_str(), &s) == 0)
 	{
 		if (s.st_mode & S_IFDIR)
 		{
@@ -152,7 +151,7 @@ int	checkPath(const std::string &path, const std::string &root)
 			return IS_OTHER;
 		}
 	}
-	std::cout << "Error: " << total_path << " is not a file or directory" << std::endl;
+	std::cout << "Error: " << path << " is not a file or directory" << std::endl;
 	return IS_OTHER;
 }
 

@@ -10,7 +10,7 @@ class AutoIndexGenerator
 {
 	public:
 		// Constructors
-		AutoIndexGenerator(const std::string root, const std::string path);
+		AutoIndexGenerator(const std::string &root, const std::string &path);
 		AutoIndexGenerator(const AutoIndexGenerator &copy);
 		
 		// Destructor
