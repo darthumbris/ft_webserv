@@ -16,22 +16,28 @@
         },
         "location /": {
           "allowed_method": ["GET"],
-          "auto_index": true,
           "index": "index.html",
           "root": "var/www/html"
         },
-        "location /cgi_bin/": {
+        "location /cgi_bin/php/": {
           "allowed_method": ["GET", "POST"],
-          "root": "var/www/html"
+          "root": "var/www/html",
+          "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi",
+          "upload": "/upload/"
+        },
+        "location /cgi_bin/python/": {
+          "allowed_method": ["GET", "POST"],
+          "root": "var/www/html",
+          "CGI": ".py /usr/bin/python",
+          "upload": "/upload/"
         },
         "location /test/": {
           "root": "var/www/html",
           "auto_index": true,
           "allowed_method": ["GET", "POST"],
-          "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi",
           "upload": "/images/"
         },
-        "location /test/upload/": {
+        "location /upload/": {
           "root": "var/www/html",
           "auto_index": true,
           "allowed_method": ["GET", "DELETE"]

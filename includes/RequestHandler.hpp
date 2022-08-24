@@ -40,6 +40,8 @@ class RequestHandler
 		int			getFileDescriptor() const;
 		std::size_t	getFileSize() const;
 		Location	*getLocation(std::string url) const;
+		const std::string&	getRequestHeader() const;
+		const std::string&	getRequestBody() const;
 		std::string	getRequestMethod() const;
 		std::string	getResponseBody() const;
 		t_strmap	getHeaderMap() const;
@@ -47,7 +49,6 @@ class RequestHandler
 		int			getPort() const;
 		std::string	getClientIp() const;
 		std::string	getCompleteRequest() const;
-		std::string&	getRequestBody();
 
 		// Setters
 		void	setResponse();
