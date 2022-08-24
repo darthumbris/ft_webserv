@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/24 15:52:05 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/24 16:11:49 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -463,6 +463,9 @@ void	RequestHandler::OpenFile(void)
 			if (!getMatchingLocation().getMethodDel())
 				setResponseStatus("403 FORBIDEN");
 			if (remove(file_to_open.c_str()) == -1)
+				setResponseStatus("500 INTERNAL SERVER ERROR");
+			else
+				setResponseStatus("204 No Content");
 		}
 		else
 			setResponseStatus("405 Method Not Allowed");
