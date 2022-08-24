@@ -51,7 +51,7 @@ std::string Parse::parseName(std::istream &file)
 
 Json *Parse::parseObject(std::istream& file)
 {
-	Json *node = new Json;
+	Json *node = new Json(jsonObject());
 	node->type = Json::Token::OBJECT;
 	std::string name;
 	char c;
@@ -91,7 +91,7 @@ Json *Parse::parseObject(std::istream& file)
 
 Json *Parse::parseArray(std::istream& file)
 {
-	Json *node = new Json;
+	Json *node = new Json(jsonList());
 	node->type = Json::Token::ARRAY;
 	char c;
 
@@ -128,7 +128,7 @@ Json *Parse::parseArray(std::istream& file)
 
 Json *Parse::parseString(std::istream& file)
 {
-	Json *node = new Json;
+	Json *node = new Json(std::string());
 	std::string str;
 	file.ignore();
 	while (file.good())
@@ -147,7 +147,7 @@ Json *Parse::parseString(std::istream& file)
 
 Json *Parse::parseNumber(std::istream& file)
 {
-	Json *node = new Json;
+	Json *node = new Json(int());
 	std::string str;
 	if (file.peek() == '-')
 		str += file.get();
@@ -161,7 +161,7 @@ Json *Parse::parseNumber(std::istream& file)
 
 Json *Parse::parseBoolean(std::istream& file)
 {
-	Json *node = new Json;
+	Json *node = new Json(bool());
 	char correct[5];
 	char wrong[6];
 	if (file.peek() == 't')
@@ -190,7 +190,6 @@ Json *Parse::parseNull(std::istream& file)
 	file.get(str, sizeof(str));
 	if (std::memcmp("null", str, 4) != 0)
 		throw wrongToken("error null");
-	node->values.str = str;
 	node->type = Json::NULL_TYPE;
 	skipWhiteSpaces(file);
 	return node;
