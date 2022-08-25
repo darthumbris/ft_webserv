@@ -6,7 +6,6 @@ CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _input_body(_req->getR
 {
 	if (DEBUG_MODE)
 		std::cout << "Cgi constructor called" << std::endl;
-	std::cout << "input body: " << _input_body << std::endl;
 }
 
 
@@ -95,7 +94,7 @@ void	CgiHandler::executeScript(char **envp)
 	execve(_cgi_path.c_str(), NULL, envp);
 	_req->setCgiError();
 	std::cout << "failed to execute: " << _cgi_path << std::endl;
-	write(STDOUT_FILENO, "Status: 502 Bad Gateway\r\n\r\n", 15);
+	write(STDOUT_FILENO, "502 Bad Gateway\r\n\r\n", 15);
 }
 
 void	CgiHandler::readScriptOutput(pid_t pid)
@@ -136,6 +135,7 @@ void	CgiHandler::closeFileDescriptors()
 
 std::string	CgiHandler::setResponseHeaders(std::string body)
 {
+	//TO DO
 	std::size_t	status = body.find("Status: ");
 	if (status != std::string::npos)
 		_req->setResponseStatus(body.substr(status, body.find("\r\n", status)));
@@ -163,7 +163,7 @@ std::string	CgiHandler::execute()
 	setFileDescriptors();
 
 	if (_error)
-		return setResponseHeaders("Status: 500 Internal Server Error\r\n\r\n");
+		return setResponseHeaders("500 Internal Server Error\r\n\r\n");
 	envp = makeEnvArray();
 	
 	//reading in the input body to temp file
@@ -176,7 +176,7 @@ std::string	CgiHandler::execute()
 	if (pid == -1)
 	{
 		_req->setCgiError();
-		return setResponseHeaders("Status: 500 Internal Server Error\r\n\r\n");
+		return setResponseHeaders("500 Internal Server Error\r\n\r\n");
 	}
 	else if (pid == 0)
 		executeScript(envp);
@@ -191,7 +191,7 @@ std::string	CgiHandler::execute()
 	delete envp;
 
 	if (pid == 0)
-		setResponseHeaders("Status: 502 Bad Gateway\r\n\r\n");
+		setResponseHeaders("502 Bad Gateway\r\n\r\n");
 	if (DEBUG_MODE)
 		std::cout << "finished executing " << std::endl;
 	return setResponseHeaders(_output_body);

@@ -11,7 +11,7 @@
 // Constructors
 RequestHandler::RequestHandler(const t_servmap &srv_map) : 
 		_srv_map(srv_map), _is_request_complete(false), 
-		_send_file(false), _cgi_error(false), _fd(0), _file_size(0)
+		_cgi_error(false), _fd(0), _file_size(0)
 {
 	char	buf[4096];
 
@@ -183,6 +183,7 @@ void	RequestHandler::setUrlStruct(const std::string &full_url)
 	_url.querry = full_url.substr(q_pos, full_url.length());
 }
 
+//TO BE REMOVED
 void	RequestHandler::setSocket(int socket)
 {
 	_client_socket = socket;
@@ -222,6 +223,7 @@ void	RequestHandler::BuildResponseHeader(void)
 	std::cout << "len: " << len << std::endl;
 	if (_status_line.length() >= 3)
 	{
+		std::cout << "I am status: " << _status_line << std::endl;
 		if (std::stoi(_status_line.substr(0, 3)) >= 300 && std::stoi(_status_line.substr(0, 3)) <= 310)
 		{
 			if (_is_folder)
@@ -335,6 +337,8 @@ void	RequestHandler::FindServer(void)
 					{
 						setHost(*server_name_iter);
 						setServer(*serv_iterator);
+						if (_server.getClientBodySize() < (int)_request_body.length())
+							setResponseStatus("413 Request Entity Too Large");
 						return ;
 					}
 					server_name_iter++;

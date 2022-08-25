@@ -36,30 +36,30 @@ class RequestHandler
 
 		// Getters
 
-		const std::string	&getRequestBody(void) const;
-		const Location		&getLocation(void) const;
-		const std::string	&getMatchingDir(void) const;
-		const Location		&getMatchingLocation(void) const;
-		const std::string	&getStatusLine(void) const;
-		const Server	&getServer(void) const;
-		const std::string	&getRequestMethod(void) const;
-		std::string		getResponse(void) const;
-		int				getBody(void) const;
-		const char		*getHeader(void) const;
-		int				getResponseBody(void) const;
-		bool			isRequestComplete(void) const;
-		std::string		getRemainingRequestMsg(void) const;
-		int				getFileDescriptor(void) const;
-		std::size_t		getFileSize(void) const;
-		t_strmap		getHeaderMap(void) const;
-		t_url			getUrl(void) const;
-		int				getPort(void) const;
-		std::string		getCompleteRequest(void) const;
-		std::string		getUri(void) const;
-		const std::string	&getHost(void) const;
-		std::string		getRequestProtocol(void) const;
+		const std::string		&getRequestBody(void) const;
+		const Location			&getLocation(void) const;
+		const std::string		&getMatchingDir(void) const;
+		const Location			&getMatchingLocation(void) const;
+		const std::string		&getStatusLine(void) const;
+		const Server			&getServer(void) const;
+		const std::string		&getRequestMethod(void) const;
+		std::string				getResponse(void) const;
+		int						getBody(void) const;
+		const char				*getHeader(void) const;
+		int						getResponseBody(void) const;
+		bool					isRequestComplete(void) const;
+		std::string				getRemainingRequestMsg(void) const;
+		int						getFileDescriptor(void) const;
+		std::size_t				getFileSize(void) const;
+		t_strmap				getHeaderMap(void) const;
+		t_url					getUrl(void) const;
+		int						getPort(void) const;
+		std::string				getCompleteRequest(void) const;
+		std::string				getUri(void) const;
+		const std::string		&getHost(void) const;
+		std::string				getRequestProtocol(void) const;
+		std::string				getClientIp(void) const;
 		const std::string&		getFileName() const;
-		
 
 		// Setters
 		void	setClientIp(const std::string &ip);
@@ -82,7 +82,6 @@ class RequestHandler
 		void	setLocations(const t_locmap &locations);
 		void	addToRequestMsg(char *msg, int bytes_received);
 		void	setCompeleteRequest(const std::string &request_msg);
-		std::string	getClientIp(void) const;
 
 		// Member Functions
 		bool	UserHasDefinedRespnosePage(void);
@@ -98,11 +97,9 @@ class RequestHandler
 
 		bool	isResponseDone(void) const;
 		void	FindTheRightLocationForUri(void);
-		//void	FindLocationPath(void);
 		void	FindAllAccessibleLocations(void);
 		int		CheckUserDefinedStatusPage(Server server);
 		void	FindServer(void);
-		//void	FindBestFithLocation(void);
 		void	BuildDefaultResponseBody(void);
 		void	BuildResponseHeader(void);
 		void	makeHeaderMap(void);
@@ -112,10 +109,9 @@ class RequestHandler
 		
 	private:
 
-		t_servmap			_srv_map;
+		t_servmap			_srv_map;//kind of not needed
 		bool				_is_request_complete;
-		bool				_send_file;
-		bool				_cgi_error;
+		bool				_cgi_error;//kind of unused
 		int					_fd;
 		std::size_t			_file_size;
 
@@ -129,7 +125,8 @@ class RequestHandler
 
 		std::string			_complete_request;
 
-		int					_client_socket;
+		//unused or maybe used in the future?
+		int					_client_socket;//remove
 
 		t_strmap			_headermap;
 		std::string			_request_body;
