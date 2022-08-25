@@ -28,8 +28,10 @@ AutoIndexGenerator::AutoIndexGenerator(const std::string &root, const std::strin
 		if (!isCurrentDirectory(currentDirEntry->d_name))
 		{
 			this->_directoryIndex += "<li><a href=\"";
-			//this->_directoryIndex += root;
-			if (root[root.length() - 1] == '/')
+			// std::cout << "path: " << path << std::endl;
+			// std::cout << "root: " << root << std::endl;
+			this->_directoryIndex += path;
+			if (path[path.length() - 1] == '/')
 				this->_directoryIndex += "";
 			else
 				this->_directoryIndex += "/";
