@@ -109,7 +109,7 @@ void	CgiHandler::executeScript(char **envp)
 	dup2(_out_file_fd, STDOUT_FILENO);
 	execve(_cgi_path.c_str(), NULL, envp);
 	_req->setCgiError();
-	write(STDOUT_FILENO, "Status: 502\r\n\r\n", 15);
+	write(STDOUT_FILENO, "Status: 502 Bad Gateway\r\n\r\n", 15);
 }
 
 void	CgiHandler::readScriptOutput(pid_t pid)
@@ -148,6 +148,28 @@ void	CgiHandler::closeFileDescriptors()
 	close(_temp_out_fd);
 }
 
+std::string	CgiHandler::setResponseHeaders(std::string body)
+{
+	std::size_t	status = body.find("Status: ");
+	if (status != std::string::npos)
+	{
+		std::cout << "status: " << body.substr(status, body.find("\r\n", status)) << std::endl;
+		_req->setResponseStatus(body.substr(status, body.find("\r\n", status)));
+	}
+	else
+		_req->setResponseStatus("200 Ok");
+	std::size_t	content = body.find("Content-Type: ");
+	if (content != std::string::npos)
+	{
+		std::cout << "content-type: " << body.substr(content, body.find("\r\n", content)) << std::endl;
+		_req->setContentType(body.substr(content, body.find("\r\n", content)));
+	}
+	else
+		_req->setContentType("application/octet-stream");
+	std::size_t	sub = std::max<std::size_t>(content, status);
+	return body.substr(sub);
+}
+
 std::string	CgiHandler::execute()
 {
 	char		**envp;
@@ -156,9 +178,10 @@ std::string	CgiHandler::execute()
 	setEnvValues();
 	setFileDescriptors();
 
-	envp = makeEnvArray();
 	if (_error)
-		return "Status: 500\r\n\r\n";
+		return setResponseHeaders("Status: 500 Internal Server Error\r\n\r\n");
+	envp = makeEnvArray();
+	
 	//reading in the input body to temp file
 	write(_in_file_fd, _input_body.c_str(), _input_body.length());
 	//Resetting to beginning of file
@@ -169,7 +192,7 @@ std::string	CgiHandler::execute()
 	if (pid == -1)
 	{
 		_req->setCgiError();
-		return ("Status: 500\r\n\r\n");
+		return setResponseHeaders("Status: 500 Internal Server Error\r\n\r\n");
 	}
 	else if (pid == 0)
 		executeScript(envp);
@@ -184,10 +207,11 @@ std::string	CgiHandler::execute()
 	delete envp;
 
 	if (pid == 0)
-		exit(0);
+		setResponseHeaders("Status: 502 Bad Gateway\r\n\r\n");
 	if (DEBUG_MODE)
 		std::cout << "finished executing " << std::endl;
+	
 	//TODO use the setContent-Type and setStatus from the request handler and substr the response and then return it
-	return _output_body;
+	return setResponseHeaders(_output_body);
 }
 

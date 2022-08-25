@@ -19,6 +19,7 @@ class CgiHandler
 		// Setter
 		void	setCgiPaths();
 		void	setEnvValues();
+		std::string	setResponseHeaders(std::string body);
 
 		// Member Functions
 		std::string	execute();
