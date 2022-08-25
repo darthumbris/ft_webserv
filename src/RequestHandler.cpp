@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 09:37:56 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/25 11:30:49 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,13 +224,16 @@ void	RequestHandler::BuildResponseHeader(void)
 	if (_fd <= 0)
 		len = _response_body.length();
 	_response_header += "HTTP/1.1 " + _status_line + "\r\n";
-	if (stoi(_status_line.substr(0, 3)) >= 300 && stoi(_status_line.substr(0, 3)) <= 310)
+	if (_status_line.length() >= 3)
 	{
-		if (_is_folder)
-			_response_header += "Location: " + _uri + "/\r\n";
-		else
-			_response_header += "Location: " + _uri + "\r\n";
-	}	
+		if (stoi(_status_line.substr(0, 3)) >= 300 && stoi(_status_line.substr(0, 3)) <= 310)
+		{
+			if (_is_folder)
+				_response_header += "Location: " + _uri + "/\r\n";
+			else
+				_response_header += "Location: " + _uri + "\r\n";
+		}	
+	}
 	_response_header += "Server: " + _host +  "\r\n";
 	_response_header += "Content-Length: " + std::to_string(len) + "\r\n";
 	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
@@ -259,22 +262,29 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 	std::size_t					best_match;
 	std::string					requested_dir;
 
+	std::cout << "HALLO" << std::endl;
 	if (server_root.at(0) != '/')
 		server_root = "/" + server_root;
 	_file_to_get = _server_start_dir + server_root + _uri;
+	std::cout << "uri: " << uri_dir << std::endl;
 	_requested_dir = trim(uri_dir, "/");
+	std::cout << "requested dir : " << _requested_dir << std::endl;
 	requested_loc = getcwd(buf, 4096);//TO DO CHECK FOR ERROR HERE!
 	if (requested_loc.empty())
 		setResponseStatus("500 INTERNAL SERVER ERROR");
 	else
 	{
 		best_match = 0;
+		std::cout << "bagn: " << loc_iter->first << std::endl;
 		while (loc_iter != loc_iter_end)
 		{
 			server_loc = trim(loc_iter->first, "/");
-			if (best_match < LengthOfMatch(server_loc, requested_dir) || (server_loc == "" && requested_dir == ""))
+			std::cout << "Hallo: " << loc_iter->first << std::endl;
+			std::cout << "server loc : "<< server_loc << "requested dir: " << _requested_dir << std::endl;
+			if (best_match < LengthOfMatch(server_loc, _requested_dir) || (server_loc == "" && _requested_dir == ""))
 			{
-				best_match = LengthOfMatch(server_loc, requested_dir);
+				std::cout << "BEST MATCH: " << loc_iter->first << std::endl;
+				best_match = LengthOfMatch(server_loc, _requested_dir);
 				setMatchingLocation(*(loc_iter->second));
 				setMatchingDir(loc_iter->first);
 			}
@@ -550,6 +560,7 @@ bool	RequestHandler::isResponseDone(void) const
 void	RequestHandler::ParseResponse(void)
 {
 	std::size_t	index;
+
 	void	(RequestHandler::*fptr[])(void) = {
 		&RequestHandler::ParseHeaderMap,
 		&RequestHandler::ParseRequestLine,
@@ -567,10 +578,34 @@ void	RequestHandler::ParseResponse(void)
 	}
 }
 
+bool	RequestHandler::UserHasDefinedRespnosePage(void)
+{
+	if (_server.getErrorPage().empty())
+		return (true);
+	return (false);
+}
+
 void	RequestHandler::BuildResponsePage(void)
 {
-	//UserHasDefinedRespnosePage();
-	BuildDefaultResponsePage();
+	t_strmap	error_pages;
+	t_strmap::const_iterator iter_begin;
+	t_strmap::const_iterator iter_end;
+
+	if (!UserHasDefinedRespnosePage())
+		BuildDefaultResponsePage();
+	else
+	{
+		error_pages = _server.getErrorPage();
+		iter_begin = error_pages.begin();
+		iter_end = error_pages.end();
+
+		while (iter_begin != iter_end)
+		{
+			std::cout << "f: " << iter_begin->first << "s: " << iter_begin->second << std::endl;
+			//if (_status_line.substr(0, 3) == iter)
+			iter_begin++;
+		}
+	}
 }
 
 void	RequestHandler::test(void)

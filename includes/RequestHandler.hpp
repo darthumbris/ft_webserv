@@ -84,6 +84,7 @@ class RequestHandler
 		std::string	getClientIp(void) const;
 
 		// Member Functions
+		bool	UserHasDefinedRespnosePage(void);
 		void	test(void);
 		void	BuildResponsePage(void);
 		bool	parseFirstLine(const std::string &method);
@@ -153,7 +154,6 @@ class RequestHandler
 		std::string						_file_to_get;
 		std::string						_requested_dir;
 		bool							_is_folder;
-		//getresponse header + body 
-		//if the fd 
 }; 
+
 #endif
