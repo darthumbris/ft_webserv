@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 14:16:59 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/25 14:23:33 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -630,7 +630,6 @@ void	RequestHandler::test(void)
 	}
 }
 
-//TO DO check for index file
 void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 {
 	_complete_request.append(msg, bytes_received);

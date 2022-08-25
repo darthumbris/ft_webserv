@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 13:53:45 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/25 14:23:45 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,7 +140,6 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 		evudat->flag = 1;
 }
 
-//TODO maybe needs a check for the udat if it needs to be deleted?
 void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 {
 	int			opt_value = 1;
