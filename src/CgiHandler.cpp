@@ -6,7 +6,7 @@ CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _input_body(_req->getR
 {
 	if (DEBUG_MODE)
 		std::cout << "Cgi constructor called" << std::endl;
-	std::cout << "input body: " << _input_body << std::endl;
+	// std::cout << "input body: " << _input_body << std::endl;
 }
 
 
@@ -18,32 +18,22 @@ CgiHandler::~CgiHandler()
 // Setter
 void	CgiHandler::setCgiPaths()
 {
-	//_folder ->req->getAbsPath of file to open
-	//test/index.html
-	//this would be test
+	Location	loc = _req->getMatchingLocation();
+
 	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/') + 1);
-	//this would be the index.html
-	//_file ->get file name to open
 	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
-	//_file_name = ""/
-	//
-	_root = "/";
-	/*
-	*/
-	
-	// std::cout << "root: " << _root << std::endl;
-	// std::cout << "folder: " << _folder << std::endl;
-	// std::cout << "file: " << _file << std::endl;
-	
-//	_cur_dir = getCurDir();
-//		_req->setCgiError();
-//		_error = true;
-//		return ;
-//	}
+	_root = loc.getRootPath();
+	_cur_dir = getCurDir() + "/";
+	_cgi_path = loc.getCgiPath();
 	if (_cgi_path == "/usr/bin/python")
 		_cgi_path = _cur_dir + _root + _folder + _file;
 	if (DEBUG_MODE)
+	{
 		std::cout << "cgipath: " << _cgi_path << std::endl;
+		std::cout << "root: " << _root << std::endl;
+		std::cout << "folder: " << _folder << std::endl;
+		std::cout << "file: " << _file << std::endl;
+	}
 }
 
 //TODO have the redirect status be assigned in the script itself
@@ -70,14 +60,13 @@ void	CgiHandler::setEnvValues()
 	_env["SERVER_SOFTWARE="] = "test_server";
 	_env["REDIRECT_STATUS="] = "200";
 	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
-	/*
+	
 	//TO DO fix this
-	if (_req->getLocation(_folder)->getUploadPath() != "")
+	if (_req->getMatchingLocation().getUploadPath() != "")
 	{
-		_env["UPLOAD_PATH="] = _req->getLocation(_folder)->getUploadPath();
-		_env["ROOT_PATH="] = _cur_dir + "/" + _req->getLocation(_folder)->getRootPath();
+		_env["UPLOAD_PATH="] = _req->getMatchingLocation().getUploadPath();
+		_env["ROOT_PATH="] = _cur_dir + "/" + _req->getMatchingLocation().getRootPath();
 	}
-	*/
 
 	if (DEBUG_MODE)
 		for (auto it = _env.begin(); it != _env.end(); it++)
@@ -109,6 +98,7 @@ void	CgiHandler::executeScript(char **envp)
 	dup2(_out_file_fd, STDOUT_FILENO);
 	execve(_cgi_path.c_str(), NULL, envp);
 	_req->setCgiError();
+	std::cout << "failed to execute: " << _cgi_path << std::endl;
 	write(STDOUT_FILENO, "Status: 502 Bad Gateway\r\n\r\n", 15);
 }
 
@@ -152,22 +142,20 @@ std::string	CgiHandler::setResponseHeaders(std::string body)
 {
 	std::size_t	status = body.find("Status: ");
 	if (status != std::string::npos)
-	{
-		std::cout << "status: " << body.substr(status, body.find("\r\n", status)) << std::endl;
 		_req->setResponseStatus(body.substr(status, body.find("\r\n", status)));
-	}
 	else
 		_req->setResponseStatus("200 Ok");
-	std::size_t	content = body.find("Content-Type: ");
+	std::size_t	content = body.find("Content-type:");
 	if (content != std::string::npos)
-	{
-		std::cout << "content-type: " << body.substr(content, body.find("\r\n", content)) << std::endl;
 		_req->setContentType(body.substr(content, body.find("\r\n", content)));
-	}
 	else
 		_req->setContentType("application/octet-stream");
 	std::size_t	sub = std::max<std::size_t>(content, status);
-	return body.substr(sub);
+	if (sub == std::string::npos)
+		sub = std::min<std::size_t>(content, status);
+	if (sub != std::string::npos)
+		return body.substr(body.find("\r\n", sub) + 2);
+	return body;
 }
 
 std::string	CgiHandler::execute()
@@ -210,8 +198,6 @@ std::string	CgiHandler::execute()
 		setResponseHeaders("Status: 502 Bad Gateway\r\n\r\n");
 	if (DEBUG_MODE)
 		std::cout << "finished executing " << std::endl;
-	
-	//TODO use the setContent-Type and setStatus from the request handler and substr the response and then return it
 	return setResponseHeaders(_output_body);
 }
 

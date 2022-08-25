@@ -4,8 +4,6 @@
 // Constructor
 Server::Server(): _default_root("/var/www/html/")
 {
-	if (DEBUG_MODE)
-		std::cout << BLUE << "\nAdded a new server." << std::endl;
 }
 
 Server & Server::operator=(const Server &assign)

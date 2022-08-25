@@ -34,6 +34,8 @@ void Config::addServer(const Json *json)
 {
 	Server		server;
 
+	if (DEBUG_MODE)
+		std::cout << BLUE << "\nAdded a new server." << std::endl;
 	for (const auto &x: json->values.object)
 	{
 		if(x.first.find("location") != std::string::npos)
