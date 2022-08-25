@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/24 16:11:49 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/25 09:37:56 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -401,6 +401,7 @@ void	RequestHandler::OpenFile(void)
 		 file_to_open = _server_start_dir + "/" + _matching_location.getRootPath() + _uri;
 	else
 		 file_to_open = _server_start_dir + "/" + _server.getServerRoot() + _uri;
+	std::cout << "Open this: " << file_to_open << std::endl;
 	if (access(file_to_open.c_str(), F_OK) == -1)
 		setResponseStatus("404 NOT FOUND");
 	else
@@ -413,6 +414,7 @@ void	RequestHandler::OpenFile(void)
 			{
 				if (_uri.back() == '/' && _matching_location.getAutoIndex())
 				{
+					//if ()//TO DO check for index
 					_response_body = AutoIndexGenerator("var/www/html", "/" + _requested_dir).getDirectoryIndex();
 					setResponseStatus("200 OK");
 					return ;
@@ -565,10 +567,45 @@ void	RequestHandler::ParseResponse(void)
 	}
 }
 
-void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
+void	RequestHandler::BuildResponsePage(void)
+{
+	//UserHasDefinedRespnosePage();
+	BuildDefaultResponsePage();
+}
+
+void	RequestHandler::test(void)
 {
 	size_t	crlf_pos;
 
+	crlf_pos = _complete_request.find("\r\n\r\n");
+	if (crlf_pos != std::string::npos)
+	{
+		if (_is_request_header_done == false)
+		{
+			_request_header = _complete_request.substr(0, crlf_pos);
+			makeHeaderMap();
+			_is_request_header_done = true;
+		}
+		if (_is_request_header_done)
+		{
+			_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
+			if (_headermap.find("Content-Length")  == _headermap.end())
+				_is_request_complete = true;
+			else if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
+				_is_request_complete = true;
+			if (_is_request_complete)
+			{
+				ParseResponse();
+				BuildResponsePage();
+				BuildResponseHeader();
+			}
+		}
+	}
+}
+
+//TO DO check for index file
+void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
+{
 	_complete_request.append(msg, bytes_received);
 	if (!isprint(_complete_request[0])) // this is for https and bad requests
 	{
@@ -579,30 +616,5 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 		return ;
 	}
 	else
-	{
-		crlf_pos = _complete_request.find("\r\n\r\n");
-		if (crlf_pos != std::string::npos)
-		{
-			if (_is_request_header_done == false)
-			{
-				_request_header = _complete_request.substr(0, crlf_pos);
-				makeHeaderMap();
-				_is_request_header_done = true;
-			}
-			if (_is_request_header_done)
-			{
-				_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
-				if (_headermap.find("Content-Length")  == _headermap.end())
-					_is_request_complete = true;
-				else if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
-					_is_request_complete = true;
-				if (_is_request_complete)
-				{
-					ParseResponse();
-					BuildDefaultResponsePage();//TO DO  add user response custom
-					BuildResponseHeader();
-				}
-			}
-		}
-	}
+		test();
 }

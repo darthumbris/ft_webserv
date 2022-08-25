@@ -84,6 +84,8 @@ class RequestHandler
 		std::string	getClientIp(void) const;
 
 		// Member Functions
+		void	test(void);
+		void	BuildResponsePage(void);
 		bool	parseFirstLine(const std::string &method);
 		void	BuildDefaultResponsePage(void);
 		void	ParseRequestLine(void);
