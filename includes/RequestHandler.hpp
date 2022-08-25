@@ -85,7 +85,7 @@ class RequestHandler
 
 		// Member Functions
 		bool	UserHasDefinedRespnosePage(void);
-		void	test(void);
+		void	checkRequestComplete(void);
 		void	BuildResponsePage(void);
 		bool	parseFirstLine(const std::string &method);
 		void	BuildDefaultResponsePage(void);
@@ -107,6 +107,7 @@ class RequestHandler
 		void	makeHeaderMap(void);
 		void	testFunction(void);
 		void	ParseResponse(void);
+		void	deChunkRequestBody(void);
 		
 	private:
 
@@ -139,6 +140,7 @@ class RequestHandler
 
 		std::size_t						_fd_length;
 		bool							_is_request_header_done;
+		bool							_is_chunked;
 
 		std::string						_host;
 		std::string						_status_line;

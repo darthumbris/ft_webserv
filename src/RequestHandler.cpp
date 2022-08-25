@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 14:23:33 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/25 15:46:07 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -479,29 +479,14 @@ bool	RequestHandler::isRequestComplete() const
 // Member functions
 void	RequestHandler::makeHeaderMap()
 {
-	std::vector<std::string>	split;
-	std::size_t					pos;
-	std::size_t					last_pos;
-	std::size_t					len;
+	std::vector<std::string>	split = splitOnString(_request_header, "\r\n");
 	std::size_t					first_pos;
 	std::size_t					end_pos;
 
-	len = _complete_request.length();
-	last_pos = 0;
-	while (last_pos < len + 1)
-	{
-		pos = _complete_request.find_first_of("\r\n", last_pos);
-		if (pos == std::string::npos)
-			pos = len;
-		if (pos != last_pos)
-			split.push_back(std::string(_complete_request.data() + last_pos, pos - last_pos));
-		last_pos = pos + 1;
-	}
-	first_pos = _complete_request.find_first_of(' ') + 1;
-	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
-	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
-	_request_method = _complete_request.substr(0, first_pos - 1);
-	//_method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
+	first_pos = _request_header.find_first_of(' ') + 1;
+	end_pos = _request_header.find_first_of(' ', first_pos + 1);
+	setUrlStruct(_request_header.substr(first_pos, end_pos - first_pos));
+	_request_method = _request_header.substr(0, first_pos - 1);
 
 	//making a map of all the request headers
 	if (split.size() > 1)
@@ -510,7 +495,7 @@ void	RequestHandler::makeHeaderMap()
 		{
 			if (split[i] == "\r\n")
 				break ;
-			pos = split[i].find_first_of(':');
+			std::size_t pos = split[i].find_first_of(':');
 			_headermap[split[i].substr(0, pos)] = split[i].substr(pos + 2, split[i].length());
 		}
 	}
@@ -600,7 +585,20 @@ void	RequestHandler::BuildResponsePage(void)
 		BuildDefaultResponsePage();
 }
 
-void	RequestHandler::test(void)
+void	RequestHandler::deChunkRequestBody(void)
+{
+	std::vector<std::string> lines = splitOnString(_request_body, "\r\n");
+	std::string de_chunked_body;
+
+	for (size_t i = 0; i < lines.size(); i++)
+		if (i % 2 != 0)
+			de_chunked_body += lines[i];
+	
+	_request_body = de_chunked_body;
+}
+
+//TODO handle chunked request
+void	RequestHandler::checkRequestComplete(void)
 {
 	size_t	crlf_pos;
 
@@ -616,12 +614,23 @@ void	RequestHandler::test(void)
 		if (_is_request_header_done)
 		{
 			_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
-			if (_headermap.find("Content-Length")  == _headermap.end())
-				_is_request_complete = true;
-			else if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
+			if (_complete_request.find("Transfer-Encoding: chunked") != std::string::npos)
+			{
+				_is_chunked = true;
+				if (_complete_request.find("\0\r\n\r\n") != std::string::npos)
+					_is_request_complete = true;
+			}
+			if (_headermap.find("Content-Length")  != _headermap.end() && !_is_chunked)
+			{
+				if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
+					_is_request_complete = true;
+			}
+			else
 				_is_request_complete = true;
 			if (_is_request_complete)
 			{
+				if (_is_chunked)
+					deChunkRequestBody();
 				ParseResponse();
 				BuildResponsePage();
 				BuildResponseHeader();
@@ -641,6 +650,5 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 		BuildResponseHeader();
 		return ;
 	}
-	else
-		test();
+	checkRequestComplete();
 }

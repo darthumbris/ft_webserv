@@ -93,6 +93,25 @@ std::vector<std::string>	cpp_split(const std::string &line, char delimiter)
 }
 //<-- cpp_split
 
+std::vector<std::string>	splitOnString(const std::string &str, std::string delimiter)
+{
+	std::size_t pos;
+	std::size_t last_pos = 0;
+	std::size_t	length = str.length();
+	std::vector<std::string>	split_str;
+	
+	while (last_pos < length + 1)
+	{
+		pos = str.find_first_of(delimiter, last_pos);
+		if (pos == std::string::npos)
+			pos = length;
+		if (pos != last_pos)
+			split_str.push_back(std::string(str.data() + last_pos, pos - last_pos));
+		last_pos = pos + 1;
+	}
+	return split_str;
+}
+
 //<-- strtrim
 
 static std::string ltrim(const std::string &s, const std::string &to_trim)
