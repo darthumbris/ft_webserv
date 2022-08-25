@@ -6,13 +6,12 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 13:52:26 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/25 13:53:45 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "WebServ.hpp"
 
-//TODO check for memory leaks and proper delete etc usage
 //TODO make a index.html that shows all stuff we need to handle (file uploading redirect etc)
 
 // Constructors
