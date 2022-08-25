@@ -209,7 +209,6 @@ void	RequestHandler::BuildResponseHeader(void)
 
 	if (_fd <= 0)
 		len = _response_body.length();
-	_response_header += "HTTP/1.1 " + _status_line + "\r\n";
 	if (_status_line.length() >= 3)
 	{
 		if (stoi(_status_line.substr(0, 3)) >= 300 && stoi(_status_line.substr(0, 3)) <= 310)
@@ -219,7 +218,13 @@ void	RequestHandler::BuildResponseHeader(void)
 			else
 				_response_header += "Location: " + _uri + "\r\n";
 		}	
+		else if (stoi(_status_line.substr(0, 3)) < 300 && !_matching_location.getReturnCode().empty())
+		{
+				_response_header += "Location: " + _matching_location.getReturnCode() + "\r\n";
+				_status_line = _matching_location.getReturnCode() + "Moved";
+		}
 	}
+	_response_header = "HTTP/1.1 " + _status_line + "\r\n" + _response_header;
 	_response_header += "Server: " + _host +  "\r\n";
 	_response_header += "Content-Length: " + std::to_string(len) + "\r\n";
 	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
