@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 14:16:59 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/25 14:27:03 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -578,7 +578,7 @@ void	RequestHandler::BuildResponsePage(void)
 	iter_end = error_pages.end();
 	while (iter_begin != iter_end)
 	{
-		std::cout << "f: " << iter_begin->first << "s: " << iter_begin->second << std::endl;
+		//std::cout << "f: " << iter_begin->first << "s: " << iter_begin->second << std::endl;
 		if (_status_line.substr(0, 3) == iter_begin->first)
 		{
 			_fd = open(("/" + _server_start_dir + "/" + _server.getServerRoot() + "/" + iter_begin->second).c_str(), O_RDONLY);
@@ -625,6 +625,7 @@ void	RequestHandler::test(void)
 				ParseResponse();
 				BuildResponsePage();
 				BuildResponseHeader();
+				//return 301 adsfadsf ladhs
 			}
 		}
 	}
