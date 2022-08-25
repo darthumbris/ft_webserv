@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 11:30:49 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/25 12:02:32 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -437,7 +437,7 @@ void	RequestHandler::OpenFile(void)
 					if (checkPath(file_to_open) == IS_FILE)
 					{
 						std::ifstream infile(file_to_open.c_str(), std::ios::in);
-						content_type = getContentType(_file_name);
+						_content_type = getContentType(_file_name);
 						std::cout << "content-type: " << content_type << std::endl;
 						infile.seekg(0, std::ios::end);
 						std::size_t length  = infile.tellg();
@@ -578,34 +578,39 @@ void	RequestHandler::ParseResponse(void)
 	}
 }
 
-bool	RequestHandler::UserHasDefinedRespnosePage(void)
-{
-	if (_server.getErrorPage().empty())
-		return (true);
-	return (false);
-}
-
 void	RequestHandler::BuildResponsePage(void)
 {
 	t_strmap	error_pages;
 	t_strmap::const_iterator iter_begin;
 	t_strmap::const_iterator iter_end;
+	bool		hit;
 
-	if (!UserHasDefinedRespnosePage())
-		BuildDefaultResponsePage();
-	else
+	hit = false;
+	error_pages = _server.getErrorPage();
+	iter_begin = error_pages.begin();
+	iter_end = error_pages.end();
+	while (iter_begin != iter_end)
 	{
-		error_pages = _server.getErrorPage();
-		iter_begin = error_pages.begin();
-		iter_end = error_pages.end();
-
-		while (iter_begin != iter_end)
+		std::cout << "f: " << iter_begin->first << "s: " << iter_begin->second << std::endl;
+		if (_status_line.substr(0, 3) == iter_begin->first)
 		{
-			std::cout << "f: " << iter_begin->first << "s: " << iter_begin->second << std::endl;
-			//if (_status_line.substr(0, 3) == iter)
-			iter_begin++;
+			_fd = open(("/" + _server_start_dir + "/" + _server.getServerRoot() + "/" + iter_begin->second).c_str(), O_RDONLY);
+			if (_fd > 0)
+			{
+				std::ifstream infile("/" + _server_start_dir + "/" + _server.getServerRoot() + "/" + iter_begin->second, std::ios::in);
+				_content_type = getContentType(iter_begin->second);
+				std::cout << "content-type: " << _content_type << std::endl;
+				infile.seekg(0, std::ios::end);
+				std::size_t length  = infile.tellg();
+				infile.seekg(0, std::ios::beg);
+				_file_size = length;
+				hit = true;
+			}
 		}
+		iter_begin++;
 	}
+	if (!hit)
+		BuildDefaultResponsePage();
 }
 
 void	RequestHandler::test(void)
@@ -646,7 +651,7 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	{
 		_is_request_complete = true;
 		setResponseStatus("400 BAD REQUEST");
-		BuildDefaultResponsePage();//TO DO  add user response custom
+		BuildResponsePage();
 		BuildResponseHeader();
 		return ;
 	}
