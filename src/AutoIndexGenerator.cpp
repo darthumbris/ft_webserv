@@ -16,7 +16,6 @@ AutoIndexGenerator::AutoIndexGenerator(const std::string &root, const std::strin
 	this->_directoryIndex += "</h1>";
 	this->_directoryIndex += "<ul>\n";
 
-	std::cout << "GALLO" << root << path << std::endl;
 	if (!dir)
 	{
 		std::cout << "Error opening directory" << std::endl;

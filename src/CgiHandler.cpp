@@ -71,6 +71,7 @@ void	CgiHandler::setEnvValues()
 	_env["REDIRECT_STATUS="] = "200";
 	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
 	/*
+	//TO DO fix this
 	if (_req->getLocation(_folder)->getUploadPath() != "")
 	{
 		_env["UPLOAD_PATH="] = _req->getLocation(_folder)->getUploadPath();
@@ -189,3 +190,4 @@ std::string	CgiHandler::execute()
 	//TODO use the setContent-Type and setStatus from the request handler and substr the response and then return it
 	return _output_body;
 }
+
