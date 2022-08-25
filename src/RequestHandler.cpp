@@ -602,7 +602,7 @@ void	RequestHandler::deChunkRequestBody(void)
 	_request_body = de_chunked_body;
 }
 
-//TODO handle chunked request
+//TODO check if it still happens that sometimes post request data doesn;t get through?
 void	RequestHandler::checkRequestComplete(void)
 {
 	size_t	crlf_pos;
