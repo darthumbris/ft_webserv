@@ -29,6 +29,7 @@ class Location
 		bool				getAutoIndex() const;
 		const std::string&	getUploadPath() const;
 		const std::string&	getReturnUrl() const;
+		const std::string&	getReturnCode() const;
 		const std::string&	getRootPath() const;
 		bool				getMethodGet() const;
 		bool				getMethodPost() const;

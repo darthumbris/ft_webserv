@@ -102,6 +102,11 @@ std::string			Location::getCgiPath() const
 	return this->_cgi_path;
 }
 
+const std::string&	Location::getReturnCode() const
+{
+	return _return_code;
+}
+
 // Setters
 void Location::setAutoIndex(const Json& json)
 {
