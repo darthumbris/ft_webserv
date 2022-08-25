@@ -102,6 +102,16 @@ int	RequestHandler::getPort() const
 	return this->_port;
 }
 
+const std::string&	RequestHandler::getFileName() const
+{
+	return _file_name;
+}
+
+const std::string&	RequestHandler::getMatchingDir() const
+{
+	return _matching_dir;
+}
+
 std::string RequestHandler::getCompleteRequest() const
 {
 	return this->_complete_request;
@@ -209,16 +219,17 @@ void	RequestHandler::BuildResponseHeader(void)
 
 	if (_fd <= 0)
 		len = _response_body.length();
+	std::cout << "len: " << len << std::endl;
 	if (_status_line.length() >= 3)
 	{
-		if (stoi(_status_line.substr(0, 3)) >= 300 && stoi(_status_line.substr(0, 3)) <= 310)
+		if (std::stoi(_status_line.substr(0, 3)) >= 300 && std::stoi(_status_line.substr(0, 3)) <= 310)
 		{
 			if (_is_folder)
 				_response_header += "Location: " + _uri + "/\r\n";
 			else
 				_response_header += "Location: " + _uri + "\r\n";
 		}	
-		else if (stoi(_status_line.substr(0, 3)) < 300 && !_matching_location.getReturnCode().empty())
+		else if (std::stoi(_status_line.substr(0, 3)) < 300 && !_matching_location.getReturnCode().empty())
 		{
 				_response_header += "Location: " + _matching_location.getReturnCode() + "\r\n";
 				_status_line = _matching_location.getReturnCode() + "Moved";
@@ -374,6 +385,7 @@ void	RequestHandler::OpenFile(void)
 		 file_to_open = _server_start_dir + "/" + _matching_location.getRootPath() + _uri;
 	else
 		 file_to_open = _server_start_dir + "/" + _server.getServerRoot() + _uri;
+	_file_name = file_to_open;
 	std::cout << "Open this: " << file_to_open << std::endl;
 	if (access(file_to_open.c_str(), F_OK) == -1)
 		setResponseStatus("404 NOT FOUND");
@@ -476,10 +488,10 @@ void	RequestHandler::makeHeaderMap()
 	std::size_t					first_pos;
 	std::size_t					end_pos;
 
-	first_pos = _request_header.find_first_of(' ') + 1;
-	end_pos = _request_header.find_first_of(' ', first_pos + 1);
-	setUrlStruct(_request_header.substr(first_pos, end_pos - first_pos));
-	_request_method = _request_header.substr(0, first_pos - 1);
+	first_pos = _complete_request.find_first_of(' ') + 1;
+	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
+	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
+	_request_method = _complete_request.substr(0, first_pos - 1);
 
 	//making a map of all the request headers
 	if (split.size() > 1)

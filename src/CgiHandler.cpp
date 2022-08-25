@@ -6,7 +6,7 @@ CgiHandler::CgiHandler(RequestHandler &req) : _req(&req), _input_body(_req->getR
 {
 	if (DEBUG_MODE)
 		std::cout << "Cgi constructor called" << std::endl;
-	// std::cout << "input body: " << _input_body << std::endl;
+	std::cout << "input body: " << _input_body << std::endl;
 }
 
 
@@ -20,18 +20,15 @@ void	CgiHandler::setCgiPaths()
 {
 	Location	loc = _req->getMatchingLocation();
 
-	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/') + 1);
-	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
-	_root = loc.getRootPath();
-	_cur_dir = getCurDir() + "/";
+	_file = _req->getFileName();
 	_cgi_path = loc.getCgiPath();
 	if (_cgi_path == "/usr/bin/python")
-		_cgi_path = _cur_dir + _root + _folder + _file;
+		_cgi_path = _file;
 	if (DEBUG_MODE)
 	{
+		std::cout << "url path: " << _req->getUrl().path << std::endl;
+		std::cout << "url querry: " << _req->getUrl().querry << std::endl;
 		std::cout << "cgipath: " << _cgi_path << std::endl;
-		std::cout << "root: " << _root << std::endl;
-		std::cout << "folder: " << _folder << std::endl;
 		std::cout << "file: " << _file << std::endl;
 	}
 }
@@ -46,7 +43,7 @@ void	CgiHandler::setEnvValues()
 	_env["CONTENT_TYPE="] = _req->getHeaderMap()["Content-Type"];
 	_env["GATEWAY_INTERFACE="] = "CGI/1.1";
 	_env["PATH_INFO="] = _file;
-	_env["PATH_TRANSLATED="] = _cur_dir + _root + _folder + _file;
+	_env["PATH_TRANSLATED="] = _file;
 	_env["QUERY_STRING="] = _req->getUrl().querry;
 	_env["REMOTE_ADDR="] = _req->getClientIp();
 	_env["REMOTEaddr="] = _req->getClientIp();
@@ -146,14 +143,14 @@ std::string	CgiHandler::setResponseHeaders(std::string body)
 		_req->setResponseStatus("200 Ok");
 	std::size_t	content = body.find("Content-type:");
 	if (content != std::string::npos)
-		_req->setContentType(body.substr(content, body.find("\r\n", content)));
+		_req->setContentType(body.substr(content + 14, body.find("\n", content + 13) - content - 15));
 	else
 		_req->setContentType("application/octet-stream");
 	std::size_t	sub = std::max<std::size_t>(content, status);
 	if (sub == std::string::npos)
 		sub = std::min<std::size_t>(content, status);
 	if (sub != std::string::npos)
-		return body.substr(body.find("\r\n", sub) + 2);
+		body = body.substr(body.find("\r\n", sub) + 2);
 	return body;
 }
 

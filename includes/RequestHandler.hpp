@@ -58,6 +58,7 @@ class RequestHandler
 		std::string		getUri(void) const;
 		const std::string	&getHost(void) const;
 		std::string		getRequestProtocol(void) const;
+		const std::string&		getFileName() const;
 		
 
 		// Setters
