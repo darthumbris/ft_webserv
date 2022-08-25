@@ -45,8 +45,8 @@ class WebServ
 {
 	public:
 		// Constructors
-		WebServ(Config *config);
-		WebServ(int port, char *address);
+		WebServ(t_servmap& servers);
+		// WebServ(int port, char *address);
 		WebServ(const WebServ &copy);
 		
 		// Destructor
@@ -56,7 +56,8 @@ class WebServ
 		WebServ &operator=(const WebServ &assign);
 
 		// Getters
-		bool	listeningToPort(int port) const;
+		bool		listeningToPort(int port) const;
+		t_servmap	getServers() const;
 	
 		// Setters
 		void	addPortToList(int port);
@@ -88,7 +89,7 @@ class WebServ
 		int					_kqueue;
 		int					_n_servers;
 		std::vector<int>	_ports;
-		Config				*_config;
+		t_servmap			_servers;
 		t_ev_lst 			_change_ev;
 };
 

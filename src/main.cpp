@@ -6,7 +6,7 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/08/17 14:12:00 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/25 11:00:24 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,12 @@ int	main(int argc, char *argv[])
 		std::ifstream file(path);
 		Parse parse;
 		Json* json = parse.parse(file);
+		file.close();
 		Config config(json);
-		WebServ	webserver(&config);
+		delete json;
+		t_servmap	servers = config.getServerMap();
+		WebServ	webserver(servers);
+		
 		webserver.runServer();
 	} 
 	catch (std::exception const &e)

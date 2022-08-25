@@ -32,7 +32,7 @@ void Config::setServerName(const std::string name, const Json &json)
 
 void Config::addServer(const Json *json)
 {
-	Server		*server = new Server();
+	Server		server;
 
 	for (const auto &x: json->values.object)
 	{
@@ -41,15 +41,15 @@ void Config::addServer(const Json *json)
 			Location	*loc = new Location();
 
 			loc->ParseLocation(x.first, *x.second);
-			server->addLocationToServer(loc->getPath(x.first), loc);
+			server.addLocationToServer(loc->getPath(x.first), loc);
 		}
 		else
 		{
-			Server::Func f = server->setValues(x.first, *x.second);
-			(*server.*f)(*x.second);
+			Server::Func f = server.setValues(x.first, *x.second);
+			(server.*f)(*x.second);
 		}
 	}
-	_servers.push_back(*server);
+	_servers.push_back(server);
 }
 
 // Getters

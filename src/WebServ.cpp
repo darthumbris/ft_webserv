@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/23 13:56:27 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/25 10:40:12 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,17 +16,17 @@
 //TODO make a index.html that shows all stuff we need to handle (file uploading redirect etc)
 
 // Constructors
-WebServ::WebServ(Config *config) : _config(config)
+WebServ::WebServ(t_servmap& servers) : _servers(servers)
 {
 	// Starting the kqueue
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
-	t_servmap server_map = _config->getServerMap();
+	// t_servmap server_map = _config->getServerMap();
 	_n_servers = 0;
 
 	// Going through the config and making a socket and event for all servers in it.
-	std::cout << "\n\nServers loaded from config: " << server_map.size() << "\n" << std::endl;
-	for (t_servmap::iterator iter = server_map.begin(); iter != server_map.end(); iter++)
+	std::cout << "\n\nServers loaded from config: " << _servers.size() << "\n" << std::endl;
+	for (t_servmap::iterator iter = _servers.begin(); iter != _servers.end(); iter++)
 	{
 		std::vector<int> ports = iter->getServerPort();
 		for (std::vector<int>::const_iterator ports_iter = ports.begin(); ports_iter != ports.end(); ports_iter++)
@@ -73,6 +73,11 @@ bool	WebServ::listeningToPort(int port) const
 			return true;
 	}
 	return false;
+}
+
+t_servmap	WebServ::getServers() const
+{
+	return _servers;
 }
 
 //Setters
@@ -150,7 +155,7 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->addr = newaddr;
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
-	new_udat->req = new RequestHandler(_config->getServerMap());
+	new_udat->req = new RequestHandler(_servers);
 	new_udat->total_size = 0;
 	new_udat->req->setSocket(clnt_sckt);
 	new_udat->req->setPort(old_udat->port);
@@ -217,7 +222,7 @@ void	WebServ::sendResponse(t_event &event)
 		evudat->datalen = 0;
 		evudat->total_size = 0;
 		delete evudat->req;
-		evudat->req = new RequestHandler(_config->getServerMap());
+		evudat->req = new RequestHandler(_servers);
 		evudat->req->setPort(evudat->port);
 	}
 }
