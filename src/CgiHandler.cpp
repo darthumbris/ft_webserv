@@ -54,14 +54,13 @@ void	CgiHandler::setEnvValues()
 	_env["REMOTE_USER="] = _req->getHeaderMap()["Authorization"];
 	_env["REQUEST_METHOD="] = _req->getRequestMethod();
 	_env["SCRIPT_NAME="] = _cgi_path;
-	_env["SERVER_NAME="] = "ft_webserv"; // TODO get correct name from _req or from the headermap?
+	_env["SERVER_NAME="] = "ft_webserv";
 	_env["SERVER_PORT="] = std::to_string(_req->getPort());
 	_env["SERVER_PROTOCOL="] = "HTTP/1.1";
 	_env["SERVER_SOFTWARE="] = "test_server";
 	_env["REDIRECT_STATUS="] = "200";
 	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
-	
-	//TO DO fix this
+
 	if (_req->getMatchingLocation().getUploadPath() != "")
 	{
 		_env["UPLOAD_PATH="] = _req->getMatchingLocation().getUploadPath();

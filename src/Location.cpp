@@ -127,9 +127,13 @@ void Location::setUploadPath(const Json& json)
 
 void Location::setReturnUrl(const Json& json)
 {
-	_return_url = json.values.str;
+	_return_code = json.values.str.substr(0, json.values.str.find_first_of(" "));
+	_return_url = json.values.str.substr(json.values.str.find_first_of(" ") + 1, std::string::npos);
 	if (DEBUG_MODE)
-		std::cout << GREEN << "set return url: " << _return_url << " for this location." <<  RESET_COLOR << std::endl;
+	{
+		std::cout << GREEN  << "set the return code to: " << _return_code << " and the return url to: " << _return_url;
+		std::cout << " for this location." <<  RESET_COLOR << std::endl;
+	}
 }
 
 void Location::setRootFolder(const Json& json)
