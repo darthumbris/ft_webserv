@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 10:40:12 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/25 13:52:26 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,11 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
 	if (evudat->flag)
+	{
 		close(event.ident);
+		delete evudat->req;
+		delete evudat;
+	}
 	else
 		evudat->flag = 1;
 }
