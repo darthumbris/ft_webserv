@@ -19,8 +19,14 @@ enum	path
 	IS_OTHER
 };
 
-std::string getCurDir();
-int	        checkPath(std::string path, std::string root);
-std::string	getContentType(std::string file_name);
+std::string 				getCurDir(void);
+int	        				checkPath(const std::string &path);
+std::string					getContentType(const std::string &file_name);
+std::string					HexToStr(const std::string &hex);
+std::vector<std::string>	cpp_split(const std::string &line, char delimiter);
+std::string 				trim(const std::string &s, const std::string &to_trim);
+std::string					stripExesSlashes(const std::string &uri);
+std::size_t					LengthOfMatch(const std::string &str1, const std::string &str2);
+std::string					rtrim(const std::string &s, const std::string &to_trim);
 
 # endif

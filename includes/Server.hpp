@@ -21,8 +21,12 @@ class Server
 		// Destructor
 		~Server();
 
+		// Overloads
+		Server & operator=(const Server &assign);
 		// Getters
 		//	std::vector<int>	getServerSocket() const;
+
+		const std::string		&getDefaultRoot(void) const;
 		const std::string&		getServerIp() const;
 		int						getClientBodySize() const;
 		const std::vector<int>&	getServerPort() const;
@@ -31,7 +35,10 @@ class Server
 		const t_locmap&				getLocationMap() const;
 		Location				*getLocation(int port, std::string url) const;
 
+		const std::string		&getServerRoot(void) const;
+
 		// Setters
+		void	setServerRoot(const Json& json);
 		void	setServerIp(const Json& json);
 		void	addServerListen(const Json& json);
 		void	addServerName(const Json& json);
@@ -60,6 +67,8 @@ class Server
 		t_vecstr			_server_name;
 		t_locmap			_location;
 		std::string			_server_ip;
+		std::string			_root;
+		const std::string	_default_root = "/var/www/html";
 };
 
 #endif

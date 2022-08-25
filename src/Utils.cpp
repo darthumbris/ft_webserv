@@ -1,5 +1,119 @@
 #include "Utils.hpp"
 
+std::size_t	LengthOfMatch(const std::string &str1, const std::string &str2)
+{
+	std::string::const_iterator	iter1;
+	std::string::const_iterator	iter2;
+	std::string::const_iterator	iter_end1;
+	std::string::const_iterator	iter_end2;
+	std::size_t					size;
+
+	iter1 = str1.begin();
+	iter2 = str2.begin();
+	iter_end1 = str1.end();
+	iter_end2 = str2.end();
+	size = 0;
+	while (*iter1 == *iter2 && iter1 != iter_end1 && iter2 != iter_end2)
+	{
+		size++;
+		iter1++;
+		iter2++;
+	}
+	return (size);
+}
+
+std::string	stripExesSlashes(const std::string &uri)
+{
+	std::string::const_iterator	char_iter = uri.begin();
+	std::string					clean_uri;
+	bool						skip;
+
+	skip = false;
+	while (char_iter != uri.end())
+	{
+		if (*char_iter != '/')
+			skip = false;
+		if (!skip)
+			clean_uri += *char_iter;
+		if (*char_iter == '/')
+			skip = true;
+		char_iter++;
+	}
+	return (clean_uri);
+}
+
+//<-- HexToStr
+std::string	HexToStr(const std::string &hex)
+{
+	char 		chr;
+	std::string newString;
+	std::string hexValue;
+	std::string	tmpUri;
+
+	for (std::string::const_iterator uri_char = hex.begin(); uri_char != hex.end(); uri_char++)
+	{
+		if (*uri_char == '%')
+		{
+			uri_char++;
+			if (uri_char == hex.end())
+				return ("");
+			hexValue += *uri_char;
+			uri_char++;
+			if (uri_char == hex.end())
+				return ("");
+			hexValue += *uri_char;
+			chr = (char) (int)strtol(hexValue.c_str(), NULL, 16);
+			if (chr >= 32)
+				tmpUri.push_back(chr);
+			hexValue.clear();
+		}
+		else
+			tmpUri.push_back(*uri_char);
+	}
+	return (tmpUri);
+}
+//<-- HexToStr
+
+//<-- cpp_split
+std::vector<std::string>	cpp_split(const std::string &line, char delimiter)
+{
+	std::size_t 				prev = 0, pos;
+	std::vector<std::string>	wordVector;
+	const std::string WHITESPACE = " \n\r\t\f\v";
+
+	while ((pos = line.find_first_of(delimiter, prev)) != std::string::npos)
+	{
+		if (pos > prev)
+			wordVector.push_back(trim(line.substr(prev, pos - prev), WHITESPACE));
+		prev = pos + 1;
+	}
+	if (prev < line.length())
+		wordVector.push_back(trim(line.substr(prev, std::string::npos), WHITESPACE));
+	return (wordVector);
+}
+//<-- cpp_split
+
+//<-- strtrim
+
+static std::string ltrim(const std::string &s, const std::string &to_trim)
+{
+    size_t start = s.find_first_not_of(to_trim);
+    return (start == std::string::npos) ? "" : s.substr(start);
+}
+ 
+std::string	rtrim(const std::string &s, const std::string &to_trim)
+{
+    size_t end = s.find_last_not_of(to_trim);
+    return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+ 
+std::string trim(const std::string &s, const std::string &to_trim)
+{
+    return rtrim(ltrim(s, to_trim), to_trim);
+}
+//<-- strtrim
+
+
 std::string getCurDir()
 {
 	unsigned int bufferSize = 512;
@@ -15,12 +129,11 @@ std::string getCurDir()
 	return cur_dir;
 }
 
-int	checkPath(std::string path, std::string root)
+int	checkPath(const std::string &path)
 {
 	struct stat s;
 
-	std::string	total_path = getCurDir() + "/" + root + path;
-	if (stat(total_path.c_str(), &s) == 0)
+	if (stat(path.c_str(), &s) == 0)
 	{
 		if (s.st_mode & S_IFDIR)
 		{
@@ -38,7 +151,7 @@ int	checkPath(std::string path, std::string root)
 			return IS_OTHER;
 		}
 	}
-	std::cout << "Error: " << total_path << " is not a file or directory" << std::endl;
+	std::cout << "Error: " << path << " is not a file or directory" << std::endl;
 	return IS_OTHER;
 }
 
@@ -127,7 +240,7 @@ std::map<std::string, std::string>	getTypeMap()
 	return type_map;
 }
 
-std::string	getContentType(std::string file_name)
+std::string	getContentType(const std::string &file_name)
 {
 	if (DEBUG_MODE)
 		std::cout << "Looking for content-type of file: " << file_name << std::endl;
@@ -141,3 +254,4 @@ std::string	getContentType(std::string file_name)
 	}
 	return "application/octet-stream";
 }
+

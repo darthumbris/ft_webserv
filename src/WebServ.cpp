@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   WebServ.cpp                                        :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: alkrusts <marvin@codam.nl>                   +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
+/*   Updated: 2022/08/23 13:56:27 by alkrusts      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "WebServ.hpp"
 
 //TODO check for memory leaks and proper delete etc usage
@@ -14,17 +26,17 @@ WebServ::WebServ(Config *config) : _config(config)
 
 	// Going through the config and making a socket and event for all servers in it.
 	std::cout << "\n\nServers loaded from config: " << server_map.size() << "\n" << std::endl;
-	for (std::size_t it = 0; it < server_map.size(); it++)
+	for (t_servmap::iterator iter = server_map.begin(); iter != server_map.end(); iter++)
 	{
-		std::vector<int> ports = server_map[it].getServerPort();
-		for (std::size_t i = 0; i < ports.size(); i++)
+		std::vector<int> ports = iter->getServerPort();
+		for (std::vector<int>::const_iterator ports_iter = ports.begin(); ports_iter != ports.end(); ports_iter++)
 		{
-			if (!listeningToPort(ports[i]))
+			if (!listeningToPort(*ports_iter))
 			{
-				std::cout << "setting socket for port: " << ports[i] << std::endl;
-				try	{setNewServerSocket(server_map[it], ports[i]);}
+				std::cout << "setting socket for port: " << *ports_iter << std::endl;
+				try	{setNewServerSocket(*iter, *ports_iter);}
 				catch(const std::exception& e) {std::cerr << e.what() << std::endl;}
-				addPortToList(ports[i]);
+				addPortToList(*ports_iter);
 				_n_servers++;
 			}
 		}
@@ -139,6 +151,7 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
 	new_udat->req = new RequestHandler(_config->getServerMap());
+	new_udat->total_size = 0;
 	new_udat->req->setSocket(clnt_sckt);
 	new_udat->req->setPort(old_udat->port);
 	new_udat->req->setClientIp(inet_ntoa(newaddr.sin_addr));

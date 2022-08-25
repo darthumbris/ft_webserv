@@ -18,21 +18,28 @@ CgiHandler::~CgiHandler()
 // Setter
 void	CgiHandler::setCgiPaths()
 {
+	//_folder ->req->getAbsPath of file to open
+	//test/index.html
+	//this would be test
 	_folder = _req->getUrl().path.substr(0, _req->getUrl().path.find_last_of('/') + 1);
+	//this would be the index.html
+	//_file ->get file name to open
 	_file = _req->getUrl().path.substr(_req->getUrl().path.find_last_of('/') + 1, _req->getUrl().path.length());
+	//_file_name = ""/
+	//
 	_root = "/";
-	_cur_dir = getCurDir();
-	if (_req->getLocation(_folder))
-		_root += _req->getLocation(_folder)->getRootPath();
-	if (_req->getLocation(_folder))
-		_cgi_path = _req->getLocation(_folder)->getCgiPath();
-	else
-	{
-		_cgi_path = "";
-		_req->setCgiError();
-		_error = true;
-		return ;
-	}
+	/*
+	*/
+	
+	// std::cout << "root: " << _root << std::endl;
+	// std::cout << "folder: " << _folder << std::endl;
+	// std::cout << "file: " << _file << std::endl;
+	
+//	_cur_dir = getCurDir();
+//		_req->setCgiError();
+//		_error = true;
+//		return ;
+//	}
 	if (_cgi_path == "/usr/bin/python")
 		_cgi_path = _cur_dir + _root + _folder + _file;
 	if (DEBUG_MODE)
@@ -63,11 +70,14 @@ void	CgiHandler::setEnvValues()
 	_env["SERVER_SOFTWARE="] = "test_server";
 	_env["REDIRECT_STATUS="] = "200";
 	_env["REQUEST_URI="] = _req->getUrl().path + _req->getUrl().querry;
+	/*
+	//TO DO fix this
 	if (_req->getLocation(_folder)->getUploadPath() != "")
 	{
 		_env["UPLOAD_PATH="] = _req->getLocation(_folder)->getUploadPath();
 		_env["ROOT_PATH="] = _cur_dir + "/" + _req->getLocation(_folder)->getRootPath();
 	}
+	*/
 
 	if (DEBUG_MODE)
 		for (auto it = _env.begin(); it != _env.end(); it++)

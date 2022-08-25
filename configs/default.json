@@ -4,6 +4,7 @@
       {
         "client_body_size": 1000,
         "listen": [4242, 4343],
+		"root": "var/www/html",
         "server_name": [
           "test.com",
           "test2.com",
@@ -16,6 +17,7 @@
         },
         "location /": {
           "allowed_method": ["GET"],
+          "auto_index": true,
           "index": "index.html",
           "root": "var/www/html"
         },
@@ -35,6 +37,10 @@
           "root": "var/www/html",
           "auto_index": true,
           "allowed_method": ["GET", "POST"],
+          "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi",
+          "upload": "/images/"
+        },
+        "location /test/upload/": {
           "upload": "/images/"
         },
         "location /upload/": {
@@ -86,4 +92,4 @@
         }
       }
     ]
-  }
+}

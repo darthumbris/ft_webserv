@@ -1,10 +1,11 @@
 #include "AutoIndexGenerator.hpp"
 
 // Constructors
-AutoIndexGenerator::AutoIndexGenerator(const std::string root, const std::string path) : _path(path)
+AutoIndexGenerator::AutoIndexGenerator(const std::string &root, const std::string &path) : _path(path)
 {
 	// std::cout << "making autoindex for dir: " << _path << std::endl;
-	DIR	*dir = opendir(_path.c_str());
+	std::cout << root + _path << std::endl;
+	DIR	*dir = opendir((root + _path).c_str());
 
 	//Making the start of directory listing.
 	this->_directoryIndex += "<html>\n <head>\n <title>Index of /";
@@ -27,7 +28,7 @@ AutoIndexGenerator::AutoIndexGenerator(const std::string root, const std::string
 		if (!isCurrentDirectory(currentDirEntry->d_name))
 		{
 			this->_directoryIndex += "<li><a href=\"";
-			this->_directoryIndex += root;
+			//this->_directoryIndex += root;
 			if (root[root.length() - 1] == '/')
 				this->_directoryIndex += "";
 			else

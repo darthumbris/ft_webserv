@@ -56,7 +56,7 @@ class WebServ
 		WebServ &operator=(const WebServ &assign);
 
 		// Getters
-		bool		listeningToPort(int port) const;
+		bool	listeningToPort(int port) const;
 	
 		// Setters
 		void	addPortToList(int port);
@@ -70,7 +70,7 @@ class WebServ
 		void	deleteConnection(t_event event, int16_t	filter);
 		void	receiveRequest(t_event &event);
 		void	sendResponse(t_event &event);
-		void	runServer();
+		void	runServer(void);
 
 		//Exception
 		class WebServerExcpetion: public std::exception {

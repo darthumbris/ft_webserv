@@ -1,26 +1,56 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   RequestHandler.cpp                                 :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: alkrusts <marvin@codam.nl>                   +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
+/*   Updated: 2022/08/25 09:37:56 by alkrusts      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "RequestHandler.hpp"
 #include "CgiHandler.hpp"
 #include "Utils.hpp"
 
+#include <fcntl.h>
+#include <fstream>
+#include <unistd.h>
+
+//A server SHOULD return 414 (Request-URI Too Long) status if a URI is longer than the server can handle (see section 10.4.15).
+
 // Constructors
 RequestHandler::RequestHandler(const t_servmap &srv_map) : 
 		_srv_map(srv_map), _is_request_complete(false), 
-		_has_remaining_request(false), _send_file(false),
-		_cgi_error(false), _fd(0), _file_size(0)
+		_send_file(false), _cgi_error(false), _fd(0), _file_size(0)
 {
+	char	buf[4096];
+
+	_server_start_dir = getcwd(buf, 4096);
+	//here we need to quite the server
+	//or internal server errro
+	_host = "";
+	_status_line = "";
+	_content_type = "";
 }
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
 {
+	char	buf[4096];
+
+	_server_start_dir = getcwd(buf, 4096);
+	//here we need to quite the server
 	(void) copy;
 }
-
 
 // Destructor
 RequestHandler::~RequestHandler()
 {
+	_host = "";
+	_status_line = "";
+	_content_type = "";
 }
-
 
 // Operators
 RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
@@ -29,20 +59,26 @@ RequestHandler & RequestHandler::operator=(const RequestHandler &assign)
 	return *this;
 }
 
-// Getters
-std::string	RequestHandler::getResponse() const
+//Getters
+
+const std::string		&RequestHandler::getRequestBody(void) const
 {
-	return this->_response_header + this->_response_body;
+	return _request_body;
 }
 
-bool	RequestHandler::isRequestComplete() const
+const std::string		&RequestHandler::getRequestMethod(void) const
 {
-	return this->_is_request_complete;
+	return _request_method;
 }
 
-bool	RequestHandler::hasRemainingRequestMsg() const
+const std::string	&RequestHandler::getHost(void) const
 {
-	return this->_has_remaining_request;
+	return _host;
+}
+
+std::string		RequestHandler::getRequestProtocol(void) const
+{
+	return _request_protocol;
 }
 
 int	RequestHandler::getFileDescriptor() const
@@ -55,19 +91,19 @@ std::size_t	RequestHandler::getFileSize() const
 	return this->_file_size;
 }
 
-std::string	RequestHandler::getRequestMethod() const
+std::string	RequestHandler::getResponse() const
 {
-	return this->_request_method;
-}
-
-std::string RequestHandler::getResponseBody() const
-{
-	return this->_response_body;
+	return this->_response_header + this->_response_body;
 }
 
 t_strmap	RequestHandler::getHeaderMap() const
 {
 	return this->_headermap;
+}
+
+std::string	RequestHandler::getUri(void) const
+{
+	return _uri;
 }
 
 t_url	RequestHandler::getUrl() const
@@ -90,51 +126,59 @@ std::string	RequestHandler::getClientIp() const
 	return this->_client_ip;
 }
 
-const std::string&	RequestHandler::getRequestHeader() const
+const Location	&RequestHandler::getMatchingLocation(void) const
 {
-	return this->_request_header;
-}
-
-const std::string&	RequestHandler::getRequestBody() const
-{
-	return this->_request_body;
+	return _matching_location;
 }
 
 // Setters
-void	RequestHandler::setResponse()
+
+void	RequestHandler::setMatchingDir(const std::string &matching_dir)
 {
-	this->_is_request_complete = true;
+	_matching_dir = matching_dir;
 }
 
-
-void	RequestHandler::setSocket(int socket)
+void	RequestHandler::setCompeleteRequest(const std::string &request_msg)
 {
-	this->_client_socket = socket;
+	_complete_request = request_msg;
 }
 
-void	RequestHandler::setPort(int port)
+void	RequestHandler::setMatchingLocation(const Location &location)
 {
-	this->_port = port;
+	_matching_location = location;
 }
 
-void	RequestHandler::setClientIp(std::string ip)
+void	RequestHandler::setServer(const Server &server)
 {
-	this->_client_ip = ip;
+	_server = server;
 }
 
-//TODO fix this so if it can't find the location it starts looking at parent directories until it finds it
-Location	*RequestHandler::getLocation(std::string url) const
+void	RequestHandler::setContentType(const std::string &type)
 {
-	std::cout << "trying to get the location class for the url: " << url << std::endl;
-	for (std::size_t it = 0; it < _srv_map.size(); it++)
-	{
-		if (_srv_map[it].getLocation(_port, url))
-			return (_srv_map[it].getLocation(_port, url));
-	}
-	return NULL;
+	_content_type = type;
 }
 
-void	RequestHandler::setUrlStruct(std::string full_url)
+void	RequestHandler::setFileName(const std::string &name)
+{
+	_file_name = name;
+}
+
+void	RequestHandler::setFdBody(int fd)
+{
+	_fd = fd;
+}
+
+void	RequestHandler::setHost(const std::string &name)
+{
+	_host = name;
+}
+
+void	RequestHandler::setResponseStatus(const std::string &status_line)
+{
+	_status_line = status_line;
+}
+
+void	RequestHandler::setUrlStruct(const std::string &full_url)
 {
 	std::size_t	q_pos = full_url.find('?');
 	if (q_pos == std::string::npos)
@@ -143,35 +187,324 @@ void	RequestHandler::setUrlStruct(std::string full_url)
 	_url.querry = full_url.substr(q_pos, full_url.length());
 }
 
-void	RequestHandler::setCgiError()
+void	RequestHandler::setSocket(int socket)
+{
+	_client_socket = socket;
+}
+
+void	RequestHandler::setPort(int port)
+{
+	_port = port;
+}
+
+void	RequestHandler::setClientIp(const std::string &ip)
+{
+	this->_client_ip = ip;
+}
+
+void	RequestHandler::setCgiError(void)
 {
 	_cgi_error = true;
+}
+
+void	RequestHandler::setResponseCompelete(const bool &status)
+{
+	_is_request_complete = status;
+}
+
+const char	*RequestHandler::getHeader(void) const
+{
+	return (_response_header.c_str());
+}
+
+void	RequestHandler::BuildResponseHeader(void)
+{
+	std::size_t	len = _file_size;
+
+	if (_fd <= 0)
+		len = _response_body.length();
+	_response_header += "HTTP/1.1 " + _status_line + "\r\n";
+	if (stoi(_status_line.substr(0, 3)) >= 300 && stoi(_status_line.substr(0, 3)) <= 310)
+	{
+		if (_is_folder)
+			_response_header += "Location: " + _uri + "/\r\n";
+		else
+			_response_header += "Location: " + _uri + "\r\n";
+	}	
+	_response_header += "Server: " + _host +  "\r\n";
+	_response_header += "Content-Length: " + std::to_string(len) + "\r\n";
+	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
+}
+
+/*
+ *culr localhost:4242/test
+ * root file test
+ *
+ * test
+ *	html
+ * ROOT:
+ * check if auto index
+ * AutoIndexGenerator(root + uri);
+ */
+
+void	RequestHandler::FindTheRightLocationForUri(void)
+{
+	char						buf[4096];
+	t_locmap::const_iterator	loc_iter = _server.getLocationMap().begin();
+	t_locmap::const_iterator	loc_iter_end = _server.getLocationMap().end();
+	std::string					uri_dir = _uri.substr(0, _uri.find_last_of("/"));
+	std::string					server_root = _server.getServerRoot();
+	std::string					requested_loc;
+	std::string					server_loc;
+	std::size_t					best_match;
+	std::string					requested_dir;
+
+	if (server_root.at(0) != '/')
+		server_root = "/" + server_root;
+	_file_to_get = _server_start_dir + server_root + _uri;
+	_requested_dir = trim(uri_dir, "/");
+	requested_loc = getcwd(buf, 4096);//TO DO CHECK FOR ERROR HERE!
+	if (requested_loc.empty())
+		setResponseStatus("500 INTERNAL SERVER ERROR");
+	else
+	{
+		best_match = 0;
+		while (loc_iter != loc_iter_end)
+		{
+			server_loc = trim(loc_iter->first, "/");
+			if (best_match < LengthOfMatch(server_loc, requested_dir) || (server_loc == "" && requested_dir == ""))
+			{
+				best_match = LengthOfMatch(server_loc, requested_dir);
+				setMatchingLocation(*(loc_iter->second));
+				setMatchingDir(loc_iter->first);
+			}
+			loc_iter++;
+		}
+		if (chdir(_server_start_dir.c_str()) == -1)
+			setResponseStatus("500 INTERNAL SERVER ERROR");
+	}
+}
+
+void	RequestHandler::BuildDefaultResponsePage(void)
+{
+	//loop over defalut response pages
+	if (_fd <= 0 && _response_body.empty())
+	{
+		setContentType("text/html");
+		_response_body = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
+		_response_body += "<title>" + _status_line + "</title>\n</head>\n<body bgcolor=\"white\">";
+		_response_body += "<center><h1>" + _status_line + "</h1></center>\n</body>\n</html>";
+	}
+}
+
+void	RequestHandler::FindServer(void)
+{
+	t_servmap::const_iterator serv_iterator = _srv_map.begin();
+
+	while (serv_iterator != _srv_map.end())
+	{
+		const std::vector<int>				&ports = serv_iterator->getServerPort();
+		const t_vecstr						&server_names = serv_iterator->getServerNames();
+		std::vector<int>::const_iterator	port_iter = ports.begin();
+
+		while (port_iter != ports.end())
+		{
+			if (*port_iter == _port)
+			{
+				std::vector<std::string>::const_iterator server_name_iter = server_names.begin();
+				if (getHost() == "")
+				{
+					setHost(*server_name_iter);
+					setServer(*serv_iterator);
+				}
+				while (server_name_iter != server_names.end())
+				{
+					if (_request_host == *server_name_iter)
+					{
+						setHost(*server_name_iter);
+						setServer(*serv_iterator);
+						return ;
+					}
+					server_name_iter++;
+				}
+			}
+				port_iter++;
+		}
+		serv_iterator++;
+	}
+}
+
+/*
+void	RequestHandler::CheckUserDefinedStatusPage(Server server)
+{
+	const t_strmap &custom_error_pages = server.getErrorPage();
+	t_strmap::const_iterator user_defined_page_iter = custom_error_pages.begin();
+
+	for (user_defined_page_iter; user_defined_page_iter != custom_error_pages.end(); user_defined_page_iter++)
+	{
+		if (response_status.substr(0, 3) == user_defined_page_iter->first)
+		{
+			std::ifstream infile((user_defined_page_iter->second).c_str(), std::ios::in);
+
+			if (infile.fail())
+			{
+				BuildDefaultResponseBody(response_status);
+				BuildResponseHeader();
+				infile.close();
+				return ;
+			}
+			infile.seekg(0, std::ios::end);
+			std::size_t length = infile.tellg();
+			infile.seekg(0, std::ios::beg);
+			infile.close();
+			BuildResponseHeader();
+		}
+	}
+}
+*/
+
+void	RequestHandler::ParseRequestLine(void)
+{
+	std::vector<std::string>	wordVector;
+	std::istringstream			iss;
+	std::string					line;
+
+	iss.str(_complete_request);
+	std::getline(iss, line);
+	wordVector = cpp_split(line, ' ');
+	if ((wordVector.size() != 3) || 
+			(wordVector[0] != "GET" && wordVector[0] != "DELETE" && wordVector[0] != "POST") ||
+			(wordVector[1][0] != '/') ||
+			(wordVector[2] != "HTTP/1.1"))
+		setResponseStatus("400 BAD REQUEST");
+	else
+	{
+		_uri = HexToStr(wordVector[1]);
+		if (_uri == "")
+			setResponseStatus("400 BAD REQUEST");
+		else
+		{
+			_request_method = wordVector[0];
+			_request_protocol = wordVector[2];
+		}
+	}
+}
+
+
+
+void	RequestHandler::OpenFile(void)
+{
+	std::string	file_to_open;
+	std::string content_type;
+
+	if (!_matching_location.getRootPath().empty())
+		 file_to_open = _server_start_dir + "/" + _matching_location.getRootPath() + _uri;
+	else
+		 file_to_open = _server_start_dir + "/" + _server.getServerRoot() + _uri;
+	std::cout << "Open this: " << file_to_open << std::endl;
+	if (access(file_to_open.c_str(), F_OK) == -1)
+		setResponseStatus("404 NOT FOUND");
+	else
+	{
+		if (getRequestMethod() == "GET")
+		{
+			if (access(file_to_open.c_str(), R_OK) == -1 || !getMatchingLocation().getMethodGet())
+				setResponseStatus("403 FORBIDEN");
+			else
+			{
+				if (_uri.back() == '/' && _matching_location.getAutoIndex())
+				{
+					//if ()//TO DO check for index
+					_response_body = AutoIndexGenerator("var/www/html", "/" + _requested_dir).getDirectoryIndex();
+					setResponseStatus("200 OK");
+					return ;
+				}
+				else
+				{
+					std::cout << "REquested: " << getRequestMethod() << std::endl;
+					_file_name = file_to_open.substr(file_to_open.find_last_of("/"), file_to_open.length());
+					std::cout << "FILE NAME: " << _file_name << std::endl;
+					if (checkPath(file_to_open) == IS_FILE)
+					{
+						std::ifstream infile(file_to_open.c_str(), std::ios::in);
+						content_type = getContentType(_file_name);
+						std::cout << "content-type: " << content_type << std::endl;
+						infile.seekg(0, std::ios::end);
+						std::size_t length  = infile.tellg();
+						infile.seekg(0, std::ios::beg);
+						_file_size = length;
+						_fd = open(file_to_open.c_str(), O_RDONLY);
+						std::cout << "TEST: "<< _fd << std::endl;
+						setResponseStatus("200 OK");
+					}
+					else if (checkPath(file_to_open) == IS_DIR)
+					{
+						setResponseStatus("301 Moved Permanently");
+						_is_folder = true;
+					}
+					else
+					{
+						std::cout << "Ither stat failed or its a sym link etc. " << std::endl;
+						setResponseStatus("500 INTERNAL SERVER ERROR");
+					}
+				}
+			}
+		}
+		else if (getRequestMethod() == "POST")
+		{
+			if (!getMatchingLocation().getMethodPost())
+				setResponseStatus("403 FORBIDEN");
+			else
+			{
+				CgiHandler cgi(*this);
+				_response_body = cgi.execute();
+			}
+		}
+		else if (getRequestMethod() == "DELETE")
+		{
+			if (!getMatchingLocation().getMethodDel())
+				setResponseStatus("403 FORBIDEN");
+			if (remove(file_to_open.c_str()) == -1)
+				setResponseStatus("500 INTERNAL SERVER ERROR");
+			else
+				setResponseStatus("204 No Content");
+		}
+		else
+			setResponseStatus("405 Method Not Allowed");
+	}
+}
+
+bool	RequestHandler::isRequestComplete() const
+{
+	return _is_request_complete;
 }
 
 // Member functions
 void	RequestHandler::makeHeaderMap()
 {
 	std::vector<std::string>	split;
-	std::size_t	pos;
-	std::size_t	last_pos;
-	std::size_t	len;
+	std::size_t					pos;
+	std::size_t					last_pos;
+	std::size_t					len;
+	std::size_t					first_pos;
+	std::size_t					end_pos;
 
-	//splitting the request on \r\n
-	len = _request_header.length();
+	len = _complete_request.length();
 	last_pos = 0;
 	while (last_pos < len + 1)
 	{
-		pos = _request_header.find_first_of("\r\n", last_pos);
+		pos = _complete_request.find_first_of("\r\n", last_pos);
 		if (pos == std::string::npos)
 			pos = len;
 		if (pos != last_pos)
-			split.push_back(std::string(_request_header.data() + last_pos, pos - last_pos));
+			split.push_back(std::string(_complete_request.data() + last_pos, pos - last_pos));
 		last_pos = pos + 1;
 	}
-	std::size_t	first_pos = _request_header.find_first_of(' ') + 1;
-	std::size_t	end_pos = _request_header.find_first_of(' ', first_pos + 1);
-	setUrlStruct(_request_header.substr(first_pos, end_pos - first_pos));
-	_request_method = _request_header.substr(0, first_pos - 1);
+	first_pos = _complete_request.find_first_of(' ') + 1;
+	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
+	setUrlStruct(_complete_request.substr(first_pos, end_pos - first_pos));
+	_request_method = _complete_request.substr(0, first_pos - 1);
+	//_method_header = _complete_request.substr(0, _complete_request.find_first_of("\r\n"));
 
 	//making a map of all the request headers
 	if (split.size() > 1)
@@ -186,133 +519,64 @@ void	RequestHandler::makeHeaderMap()
 	}
 }
 
-// 2 functions below just for a bit of testing stuff
-static void	setServerError(std::string *body, std::string *header, std::string error)
+void	RequestHandler::ParseHeaderMap(void)
 {
-	std::cout << "Server Error:"<< error << std::endl;
-	*body = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
-	*body += "<title>" + error + "</title>\n</head>\n<body bgcolor=\"white\">";
-	*body += "<center><h1>" + error + "</h1></center>\n</body>\n</html>";
-	*header = "HTTP/1.1 " + error + "\r\nContent-Length: ";
-	*header += std::to_string((*body).length());
-	*header += "\r\nConnection: keep-alive\r\nContent-Type: ";
-	*header += "text/html\r\n\r\n";
-}
-
-void	RequestHandler::testFunction()
-{
-	// std::cout << "request header: " << _request_header << std::endl;
-	// std::cout << "urlpath: " << _url.path << std::endl;
-	std::string	file = "";
-	std::string url = _url.path.substr(0, _url.path.find_last_of('/') + 1);
-	std::string root;
-	std::string path;
-	if (getLocation(url))
-		root = getLocation(url)->getRootPath();
-	else
-		return (setServerError(&_response_body, &_response_header, "404 File not Found"));
-	// root.append("/");
-	if (checkPath(_url.path, root) == IS_FILE)
-		file += _url.path.substr(_url.path.find_last_of('/') + 1, _url.path.length());
-	else
-		url = _url.path;
-	if (url.length() > 1 && checkPath(_url.path, root) == IS_DIR && _url.path.find_last_of('/') != _url.path.length() - 1)
-		url += "/";	
-	std::cout << "root: " << root << std::endl;
-	std::cout << "url: " << url << std::endl;
-	std::cout << "file: " << file << std::endl;
-	if (_complete_request.find("GET /") != std::string::npos || _complete_request.find("POST /") != std::string::npos)
+	for (t_strmap::const_iterator headerMap_iter = _headermap.begin(); headerMap_iter != _headermap.end(); headerMap_iter++)
 	{
-		if (_url.path.find(".php") != std::string::npos || _url.path.find(".py") != std::string::npos)
+		/*
+		 *			HTTP/1.1 206 Partial content
+				   Date: Wed, 15 Nov 1995 06:25:24 GMT
+				   Last-Modified: Wed, 15 Nov 1995 04:58:08 GMT
+				   Content-Range: bytes 21010-47021/47022
+				   Content-Length: 26012
+				   Content-Type: image/gif
+		 */
+		if (headerMap_iter->first == "Host")
 		{
-			CgiHandler	cgi(*this);
-			_response_body = cgi.execute();
-			std::cout << _response_body << std::endl;
-			std::size_t content_type_start_pos = _response_body.find("Content-type:") + 13;
-			std::cout << "start pos: " << content_type_start_pos << std::endl;
-			std::size_t	content_type_end_pos = _response_body.find_first_of("\r\n", content_type_start_pos);
-			std::string content_type = _response_body.substr(content_type_start_pos, content_type_end_pos - content_type_start_pos + 2);
-			std::cout << "content-type:" << content_type << std::endl;
-			_response_body = _response_body.substr(content_type_end_pos + 2, _response_body.length());
-			std::cout << "\nResponse body after substr: " << _response_body << std::endl;
-			_response_header = "HTTP/1.1 200 Ok\r\n";
-			_response_header += "Content-Length: ";
-			_response_header += std::to_string(_response_body.length());
-			_response_header += "\r\nConnection: keep-alive\r\n";
-			_response_header += "Content-type: " + content_type + "\r\n\r\n";
-			_complete_request.clear();
-			_request_header.clear();
-			std::cout << "response header: " << _response_header << std::endl;
-			return;
-		}
-		Location *loc;
-		if (file != "")
-			path = root + url + file;
-		else if ((loc = this->getLocation(url)) && loc->getIndex() == "")
-		{
-			std::cout << "auto indexing" << std::endl;
-			if (!loc->getAutoIndex())
-				return (setServerError(&_response_body, &_response_header, "500 Internal Server Error"));
-			_response_body = AutoIndexGenerator(url, root + url).getDirectoryIndex();
-			_response_header = "HTTP/1.1 200 OK\r\nContent-Length: ";
-			_response_header += std::to_string(_response_body.length());
-			_response_header += "\r\nConnection: keep-alive\r\nContent-Type: text/html\r\n\r\n";
-			return ;
-		}
-		else if (loc)
-			path = root + url + loc->getIndex();
-		else
-			return (setServerError(&_response_body, &_response_header, "500 Internal Server Errorasd"));
-		if (file == "" && loc && loc->getIndex() != "")
-			file = loc->getIndex();
-		std::cout << "\n\n=======Path:" << path << std::endl;
-		std::ifstream infile(path, std::ios::in);
-		if (!infile.is_open())
-		{
-			std::cout << "failed to open file" << std::endl;
-			_response_header = "HTTP/1.1 500 Error\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n";
-		}
-		else
-		{
-			std::string content_type;
-			content_type = getContentType(file);
-			// if (_complete_request.find("/favicon.ico") != std::string::npos)
-			// 	content_type = "image/x-icon";
-			// else if (_complete_request.find("/cheese.png") != std::string::npos)
-			// 	content_type = "image/png";
-			// else
-			// 	content_type = "text/html";
-			std::cout << "content-type: " << content_type << std::endl;
-			infile.seekg(0, std::ios::end);
-			std::size_t length  = infile.tellg();
-			infile.seekg(0, std::ios::beg);
-			_file_size = length;
-			_response_header = ("HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(length) + "\r\nConnection: keep-alive\r\nContent-Type: " + content_type + "\r\n\r\n");
-			if (infile.fail())
-			{
-				std::cout << "failed to get size of file" << std::endl;
-				return (setServerError(&_response_body, &_response_header, "500 Internal Server Error"));
-			}
-			else if (length > 0)
-			{
-				_send_file = true;
-				infile.close();
-				_fd = open(path.c_str(), O_RDONLY);
-			}
+			std::size_t	pos = headerMap_iter->second.find(':');
+			_request_host = headerMap_iter->second.substr(0, pos);
 		}
 	}
 }
 
-void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
+bool	RequestHandler::isResponseDone(void) const
+{
+	if (_status_line == "")
+		return (false);
+	return (true);
+
+}
+
+void	RequestHandler::ParseResponse(void)
+{
+	std::size_t	index;
+	void	(RequestHandler::*fptr[])(void) = {
+		&RequestHandler::ParseHeaderMap,
+		&RequestHandler::ParseRequestLine,
+		&RequestHandler::FindServer,
+		&RequestHandler::FindTheRightLocationForUri,
+		&RequestHandler::OpenFile,
+		NULL
+	}; 
+
+	index = 0;
+	while (fptr[index] != NULL && !isResponseDone())
+	{
+		(this->*fptr[index])();
+		index++;
+	}
+}
+
+void	RequestHandler::BuildResponsePage(void)
+{
+	//UserHasDefinedRespnosePage();
+	BuildDefaultResponsePage();
+}
+
+void	RequestHandler::test(void)
 {
 	size_t	crlf_pos;
 
-	_complete_request.append(msg, bytes_received);
-	if (!isprint(_complete_request[0])) // this is for https and bad requests
-	{
-		_is_request_complete = true;
-		return (setServerError(&_response_body, &_response_header, "400 Bad Request"));
-	}
 	crlf_pos = _complete_request.find("\r\n\r\n");
 	if (crlf_pos != std::string::npos)
 	{
@@ -330,7 +594,27 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 			else if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
 				_is_request_complete = true;
 			if (_is_request_complete)
-				testFunction();
+			{
+				ParseResponse();
+				BuildResponsePage();
+				BuildResponseHeader();
+			}
 		}
 	}
+}
+
+//TO DO check for index file
+void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
+{
+	_complete_request.append(msg, bytes_received);
+	if (!isprint(_complete_request[0])) // this is for https and bad requests
+	{
+		_is_request_complete = true;
+		setResponseStatus("400 BAD REQUEST");
+		BuildDefaultResponsePage();//TO DO  add user response custom
+		BuildResponseHeader();
+		return ;
+	}
+	else
+		test();
 }
