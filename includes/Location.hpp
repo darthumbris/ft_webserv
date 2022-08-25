@@ -91,7 +91,6 @@ class Location
 		std::string					_return_url;
 		std::string					_return_code;
 		std::string					_root;
-		std::vector<std::string>	_index_file;
 		t_methods					_allowed_methods;
 };
 

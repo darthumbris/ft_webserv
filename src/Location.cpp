@@ -14,7 +14,6 @@ Location & Location::operator=(const Location &assign)
 	_upload_path = assign._upload_path;
 	_return_url = assign._return_url;
 	_root = assign._root;
-	_index_file = assign._index_file;
 	_allowed_methods = assign._allowed_methods;
 	return *this;
 }

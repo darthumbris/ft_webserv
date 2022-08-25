@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/10 11:01:06 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/25 12:02:32 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/25 14:16:59 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,6 @@ RequestHandler::RequestHandler(const t_servmap &srv_map) :
 	char	buf[4096];
 
 	_server_start_dir = getcwd(buf, 4096);
-	//here we need to quite the server
-	//or internal server errro
 	_host = "";
 	_status_line = "";
 	_content_type = "";
@@ -344,34 +342,6 @@ void	RequestHandler::FindServer(void)
 	}
 }
 
-/*
-void	RequestHandler::CheckUserDefinedStatusPage(Server server)
-{
-	const t_strmap &custom_error_pages = server.getErrorPage();
-	t_strmap::const_iterator user_defined_page_iter = custom_error_pages.begin();
-
-	for (user_defined_page_iter; user_defined_page_iter != custom_error_pages.end(); user_defined_page_iter++)
-	{
-		if (response_status.substr(0, 3) == user_defined_page_iter->first)
-		{
-			std::ifstream infile((user_defined_page_iter->second).c_str(), std::ios::in);
-
-			if (infile.fail())
-			{
-				BuildDefaultResponseBody(response_status);
-				BuildResponseHeader();
-				infile.close();
-				return ;
-			}
-			infile.seekg(0, std::ios::end);
-			std::size_t length = infile.tellg();
-			infile.seekg(0, std::ios::beg);
-			infile.close();
-			BuildResponseHeader();
-		}
-	}
-}
-*/
 
 void	RequestHandler::ParseRequestLine(void)
 {
@@ -422,18 +392,35 @@ void	RequestHandler::OpenFile(void)
 				setResponseStatus("403 FORBIDEN");
 			else
 			{
-				if (_uri.back() == '/' && _matching_location.getAutoIndex())
+				if (_uri.back() == '/')
 				{
-					//if ()//TO DO check for index
-					_response_body = AutoIndexGenerator("var/www/html", "/" + _requested_dir).getDirectoryIndex();
-					setResponseStatus("200 OK");
+					if (!_matching_location.getIndex().empty())
+					{
+						file_to_open += _matching_location.getIndex();
+						std::ifstream infile(file_to_open.c_str(), std::ios::in);
+						_content_type = getContentType(_matching_location.getIndex());
+						std::cout << "content-type: " << content_type << std::endl;
+						infile.seekg(0, std::ios::end);
+						std::size_t length  = infile.tellg();
+						infile.seekg(0, std::ios::beg);
+						_file_size = length;
+						_fd = open(file_to_open.c_str(), O_RDONLY);
+						setResponseStatus("200 OK");
+					}
+					else if (_matching_location.getAutoIndex())
+					{
+						_response_body = AutoIndexGenerator("var/www/html", "/" + _requested_dir).getDirectoryIndex();
+						setResponseStatus("200 OK");
+					}
+					else
+						setResponseStatus("404 OK");
 					return ;
 				}
 				else
 				{
-					std::cout << "REquested: " << getRequestMethod() << std::endl;
+					//std::cout << "REquested: " << getRequestMethod() << std::endl;
 					_file_name = file_to_open.substr(file_to_open.find_last_of("/"), file_to_open.length());
-					std::cout << "FILE NAME: " << _file_name << std::endl;
+					//std::cout << "FILE NAME: " << _file_name << std::endl;
 					if (checkPath(file_to_open) == IS_FILE)
 					{
 						std::ifstream infile(file_to_open.c_str(), std::ios::in);
@@ -444,7 +431,7 @@ void	RequestHandler::OpenFile(void)
 						infile.seekg(0, std::ios::beg);
 						_file_size = length;
 						_fd = open(file_to_open.c_str(), O_RDONLY);
-						std::cout << "TEST: "<< _fd << std::endl;
+						//std::cout << "TEST: "<< _fd << std::endl;
 						setResponseStatus("200 OK");
 					}
 					else if (checkPath(file_to_open) == IS_DIR)
