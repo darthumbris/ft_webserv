@@ -26,6 +26,11 @@ class Json
 
 		// Constructor
 		Json();
+		Json(jsonList&& list) : values(std::move(list)) {}
+		Json(jsonObject&& object) : values(std::move(object)) {}
+		Json(const std::string& str) : values(std::move(str)) {}
+		Json(int number) : values(number) {}
+		Json(bool boolean) : values(boolean) {}
 
 		// Destructor
 		~Json();
@@ -44,16 +49,22 @@ class Json
 		};
 
 		Token type;
-		struct values
-		{
-			values() {}
-			jsonList	list;
-			jsonObject	object;
-			std::string str;
-			int			number;
-			bool		boolean;
-			~values() {}
-		}		values;
+	union values
+	{
+		values() {}
+		values(jsonList&& list) : list(list) {}
+		values(jsonObject&& object) : object(object) {}
+		values(const std::string& str) : str(str) {}
+		values(int number) : number(number) {}
+		values(bool boolean) : boolean(boolean) {}
+
+		jsonList	list;
+		jsonObject	object;
+		std::string str;
+		int			number;
+		bool		boolean;
+		~values() {}
+	}		values;
 };
 
 std::ostream& operator<<(std::ostream& out, const Json::Token& t);
