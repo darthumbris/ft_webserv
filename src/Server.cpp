@@ -159,19 +159,19 @@ const t_vecstr &Server::getServerNames() const
 	return _server_name;
 }
 
-Location *Server::getLocation(int port, std::string url) const
-{
-	for (std::size_t i = 0; i < _server_listen.size(); i++)
-	{
-		if (_server_listen[i] == port)
-		{
-			// std::cout << "looking at port:" << port << " and url: " << url << std::endl;
-			if (_location.find(url) != _location.end())
-				return (_location.find(url)->second);
-		}
-	}
-	return NULL;
-}
+// Location *Server::getLocation(int port, std::string url) const
+// {
+// 	for (std::size_t i = 0; i < _server_listen.size(); i++)
+// 	{
+// 		if (_server_listen[i] == port)
+// 		{
+// 			// std::cout << "looking at port:" << port << " and url: " << url << std::endl;
+// 			if (_location.find(url) != _location.end())
+// 				return (_location.find(url)->second);
+// 		}
+// 	}
+// 	return NULL;
+// }
 
 
 const std::string		&Server::getServerRoot(void) const

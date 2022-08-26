@@ -76,7 +76,7 @@ void	TEST_ParseRequestLine(void)
 
 		std::string rm = m[rand() % 2];
 		std::string rp = gen_random(100);
-		req->setCompeleteRequest(rm + " /" + rp + " HTTP/1.1\r\n\r\n");
+		req->setCompleteRequest(rm + " /" + rp + " HTTP/1.1\r\n\r\n");
 		req->ParseRequestLine();
 
 		TEST_ASSERT_TRUE(req->getRequestMethod() == rm);
@@ -101,7 +101,7 @@ void	TEST_FindServer_WrongPort(void)
 	while (x == -1)
 	{
 		RequestHandler *req = new RequestHandler(config.getServerMap());
-		req->setCompeleteRequest("GET / HTTP/1.1\r\nHost: " + gen_random(x) +  "\r\n\n\n");
+		req->setCompleteRequest("GET / HTTP/1.1\r\nHost: " + gen_random(x) +  "\r\n\n\n");
 		req->setPort(123);
 		req->makeHeaderMap();
 		req->ParseHeaderMap();
@@ -124,7 +124,7 @@ void	TEST_FindServer_RightPort_NoHost(void)
 	Config config(json);
 
 	RequestHandler *req = new RequestHandler(config.getServerMap());
-	req->setCompeleteRequest("GET / HTTP/1.1\r\n\n\n");
+	req->setCompleteRequest("GET / HTTP/1.1\r\n\n\n");
 	req->setPort(4242);
 	req->makeHeaderMap();
 	req->ParseHeaderMap();
@@ -149,7 +149,7 @@ void	TEST_FindServer_RightPort_Host(void)
 	Config config(json);
 
 	RequestHandler *req = new RequestHandler(config.getServerMap());
-	req->setCompeleteRequest("GET / HTTP/1.1\r\nHost: test2.com\n\n");
+	req->setCompleteRequest("GET / HTTP/1.1\r\nHost: test2.com\n\n");
 	req->setPort(4242);
 	req->makeHeaderMap();
 	req->ParseHeaderMap();
@@ -159,7 +159,7 @@ void	TEST_FindServer_RightPort_Host(void)
 	TEST_ASSERT_TRUE(req->getHost() == "test2.com");
 	delete req;
 	req = new RequestHandler(config.getServerMap());
-	req->setCompeleteRequest("GET / HTTP/1.1\r\nHost: test3.com\n\n");
+	req->setCompleteRequest("GET / HTTP/1.1\r\nHost: test3.com\n\n");
 	req->setPort(4242);
 	req->makeHeaderMap();
 	req->ParseHeaderMap();
@@ -169,7 +169,7 @@ void	TEST_FindServer_RightPort_Host(void)
 	TEST_ASSERT_TRUE(req->getHost() == "test3.com");
 	delete req;
 	req = new RequestHandler(config.getServerMap());
-	req->setCompeleteRequest("GET / HTTP/1.1\r\nHost: other3.com\n\n");
+	req->setCompleteRequest("GET / HTTP/1.1\r\nHost: other3.com\n\n");
 	req->setPort(8080);
 	req->makeHeaderMap();
 	req->ParseHeaderMap();
@@ -191,7 +191,7 @@ void	TEST_FindTheRightLocationForUri(void)
 
 	RequestHandler *req = new RequestHandler(config.getServerMap());
 
-	req->setCompeleteRequest("GET /test/ HTTP/1.1\r\nHost: other3.com\n\n");
+	req->setCompleteRequest("GET /test/ HTTP/1.1\r\nHost: other3.com\n\n");
 	req->setPort(8080);
 	req->makeHeaderMap();
 	req->ParseHeaderMap();
@@ -214,7 +214,7 @@ void	TEST_FindTheRightLocationForUri2(void)
 
 	RequestHandler *req = new RequestHandler(config.getServerMap());
 
-	req->setCompeleteRequest("GET /test/./././../ HTTP/1.1\r\nHost: other3.com\r\n\r\n");
+	req->setCompleteRequest("GET /test/./././../ HTTP/1.1\r\nHost: other3.com\r\n\r\n");
 
 	req->setPort(8080);
 	req->makeHeaderMap();

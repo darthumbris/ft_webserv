@@ -11,7 +11,7 @@
 // Constructors
 RequestHandler::RequestHandler(const t_servmap &srv_map) : 
 		_srv_map(srv_map), _is_request_complete(false), 
-		_cgi_error(false), _fd(0), _file_size(0)
+		_fd(0), _file_size(0)
 {
 	char	buf[4096];
 
@@ -107,16 +107,6 @@ const std::string&	RequestHandler::getFileName() const
 	return _file_name;
 }
 
-const std::string&	RequestHandler::getMatchingDir() const
-{
-	return _matching_dir;
-}
-
-std::string RequestHandler::getCompleteRequest() const
-{
-	return this->_complete_request;
-}
-
 std::string	RequestHandler::getClientIp() const
 {
 	return this->_client_ip;
@@ -128,45 +118,14 @@ const Location	&RequestHandler::getMatchingLocation(void) const
 }
 
 // Setters
-
-void	RequestHandler::setMatchingDir(const std::string &matching_dir)
-{
-	_matching_dir = matching_dir;
-}
-
-void	RequestHandler::setCompeleteRequest(const std::string &request_msg)
+void	RequestHandler::setCompleteRequest(const std::string &request_msg)
 {
 	_complete_request = request_msg;
-}
-
-void	RequestHandler::setMatchingLocation(const Location &location)
-{
-	_matching_location = location;
-}
-
-void	RequestHandler::setServer(const Server &server)
-{
-	_server = server;
 }
 
 void	RequestHandler::setContentType(const std::string &type)
 {
 	_content_type = type;
-}
-
-void	RequestHandler::setFileName(const std::string &name)
-{
-	_file_name = name;
-}
-
-void	RequestHandler::setFdBody(int fd)
-{
-	_fd = fd;
-}
-
-void	RequestHandler::setHost(const std::string &name)
-{
-	_host = name;
 }
 
 void	RequestHandler::setResponseStatus(const std::string &status_line)
@@ -183,12 +142,6 @@ void	RequestHandler::setUrlStruct(const std::string &full_url)
 	_url.querry = full_url.substr(q_pos, full_url.length());
 }
 
-//TO BE REMOVED
-void	RequestHandler::setSocket(int socket)
-{
-	_client_socket = socket;
-}
-
 void	RequestHandler::setPort(int port)
 {
 	_port = port;
@@ -199,21 +152,7 @@ void	RequestHandler::setClientIp(const std::string &ip)
 	this->_client_ip = ip;
 }
 
-void	RequestHandler::setCgiError(void)
-{
-	_cgi_error = true;
-}
-
-void	RequestHandler::setResponseCompelete(const bool &status)
-{
-	_is_request_complete = status;
-}
-
-const char	*RequestHandler::getHeader(void) const
-{
-	return (_response_header.c_str());
-}
-
+//TODO protect the stoi
 void	RequestHandler::BuildResponseHeader(void)
 {
 	std::size_t	len = _file_size;
@@ -257,14 +196,13 @@ void	RequestHandler::BuildResponseHeader(void)
 void	RequestHandler::FindTheRightLocationForUri(void)
 {
 	char						buf[4096];
-	t_locmap::const_iterator	loc_iter = _server.getLocationMap().begin();
-	t_locmap::const_iterator	loc_iter_end = _server.getLocationMap().end();
+	t_locmap::const_iterator	loc_it;
 	std::string					uri_dir = _uri.substr(0, _uri.find_last_of("/"));
 	std::string					server_root = _server.getServerRoot();
 	std::string					requested_loc;
 	std::string					server_loc;
-	std::size_t					best_match;
 	std::string					requested_dir;
+	std::size_t					best_match;
 
 	std::cout << "HALLO" << std::endl;
 	if (server_root.at(0) != '/')
@@ -273,26 +211,24 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 	std::cout << "uri: " << uri_dir << std::endl;
 	_requested_dir = trim(uri_dir, "/");
 	std::cout << "requested dir : " << _requested_dir << std::endl;
-	requested_loc = getcwd(buf, 4096);//TO DO CHECK FOR ERROR HERE!
+	requested_loc = getcwd(buf, 4096);//TODO CHECK FOR ERROR HERE!
 	if (requested_loc.empty())
 		setResponseStatus("500 INTERNAL SERVER ERROR");
 	else
 	{
 		best_match = 0;
-		std::cout << "bagn: " << loc_iter->first << std::endl;
-		while (loc_iter != loc_iter_end)
+		for (loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
 		{
-			server_loc = trim(loc_iter->first, "/");
-			std::cout << "Hallo: " << loc_iter->first << std::endl;
+			server_loc = trim(loc_it->first, "/");
+			std::cout << "Hallo: " << loc_it->first << std::endl;
 			std::cout << "server loc : "<< server_loc << "requested dir: " << _requested_dir << std::endl;
 			if (best_match < LengthOfMatch(server_loc, _requested_dir) || (server_loc == "" && _requested_dir == ""))
 			{
-				std::cout << "BEST MATCH: " << loc_iter->first << std::endl;
+				std::cout << "BEST MATCH: " << loc_it->first << std::endl;
 				best_match = LengthOfMatch(server_loc, _requested_dir);
-				setMatchingLocation(*(loc_iter->second));
-				setMatchingDir(loc_iter->first);
+				_matching_location = (*(loc_it->second));
+				_matching_dir = loc_it->first;
 			}
-			loc_iter++;
 		}
 		if (chdir(_server_start_dir.c_str()) == -1)
 			setResponseStatus("500 INTERNAL SERVER ERROR");
@@ -313,49 +249,46 @@ void	RequestHandler::BuildDefaultResponsePage(void)
 
 void	RequestHandler::FindServer(void)
 {
-	t_servmap::const_iterator serv_iterator = _srv_map.begin();
+	t_servmap::const_iterator serv_it;
 
-	while (serv_iterator != _srv_map.end())
+	for (serv_it = _srv_map.begin(); serv_it != _srv_map.end(); serv_it++)
 	{
-		const std::vector<int>				&ports = serv_iterator->getServerPort();
-		const t_vecstr						&server_names = serv_iterator->getServerNames();
-		std::vector<int>::const_iterator	port_iter = ports.begin();
+		const std::vector<int>				&ports = serv_it->getServerPort();
+		const t_vecstr						&server_names = serv_it->getServerNames();
+		std::vector<int>::const_iterator	port_it = ports.begin();
 
-		while (port_iter != ports.end())
+		for (port_it = ports.begin(); port_it != ports.end(); port_it++)
 		{
-			if (*port_iter == _port)
+			if (*port_it == _port)
 			{
-				std::vector<std::string>::const_iterator server_name_iter = server_names.begin();
 				if (getHost() == "")
 				{
-					setHost(*server_name_iter);
-					setServer(*serv_iterator);
+					_host = (*server_names.begin());
+					_server = (*serv_it);
 				}
-				while (server_name_iter != server_names.end())
+				t_vecstr::const_iterator serv_name_it;
+				for (serv_name_it = server_names.begin(); serv_name_it != server_names.end(); serv_name_it++)
 				{
-					if (_request_host == *server_name_iter)
+					if (_request_host == *serv_name_it)
 					{
-						setHost(*server_name_iter);
-						setServer(*serv_iterator);
+						_host = (*serv_name_it);
+						_server = (*serv_it);
 						if (_server.getClientBodySize() < (int)_request_body.length())
 							setResponseStatus("413 Request Entity Too Large");
 						return ;
 					}
-					server_name_iter++;
 				}
 			}
-				port_iter++;
 		}
-		serv_iterator++;
 	}
 }
 
 
 void	RequestHandler::ParseRequestLine(void)
 {
-	std::vector<std::string>	wordVector;
-	std::istringstream			iss;
-	std::string					line;
+	t_vecstr			wordVector;
+	std::istringstream	iss;
+	std::string			line;
 
 	iss.str(_complete_request);
 	std::getline(iss, line);
@@ -378,12 +311,83 @@ void	RequestHandler::ParseRequestLine(void)
 	}
 }
 
+void	RequestHandler::handleGetMethod(std::string &file_to_open)
+{
+	setResponseStatus("200 OK");
+	if (access(file_to_open.c_str(), R_OK) == -1 || !getMatchingLocation().getMethodGet())
+		return setResponseStatus("403 FORBIDEN");
+	if (_uri.back() == '/')
+	{
+		if (!_matching_location.getIndex().empty())
+		{
+			file_to_open += _matching_location.getIndex();
+			std::ifstream infile(file_to_open.c_str(), std::ios::in);
+			_content_type = getContentType(_matching_location.getIndex());
+			std::cout << "content-type: " << _content_type << std::endl;
+			infile.seekg(0, std::ios::end);
+			std::size_t length  = infile.tellg();
+			infile.seekg(0, std::ios::beg);
+			_file_size = length;
+			_fd = open(file_to_open.c_str(), O_RDONLY);
+		}
+		else if (_matching_location.getAutoIndex())
+			_response_body = AutoIndexGenerator(_matching_location.getRootPath(), "/" + _requested_dir).getDirectoryIndex();
+		else
+			setResponseStatus("404 Not Found");
+	}
+	else
+	{
+		//std::cout << "REquested: " << getRequestMethod() << std::endl;
+		_file_name = file_to_open.substr(file_to_open.find_last_of("/"), file_to_open.length());
+		//std::cout << "FILE NAME: " << _file_name << std::endl;
+		if (checkPath(file_to_open) == IS_FILE)
+		{
+			std::ifstream infile(file_to_open.c_str(), std::ios::in);
+			_content_type = getContentType(_file_name);
+			std::cout << "content-type: " << _content_type << std::endl;
+			infile.seekg(0, std::ios::end);
+			std::size_t length  = infile.tellg();
+			infile.seekg(0, std::ios::beg);
+			_file_size = length;
+			_fd = open(file_to_open.c_str(), O_RDONLY);
+		}
+		else if (checkPath(file_to_open) == IS_DIR)
+		{
+			setResponseStatus("301 Moved Permanently");
+			_is_folder = true;
+		}
+		else
+		{
+			std::cout << "Ither stat failed or its a sym link etc. " << std::endl;
+			setResponseStatus("500 INTERNAL SERVER ERROR");
+		}
+	}
+}
 
+void	RequestHandler::handlePostMethod()
+{
+	if (!getMatchingLocation().getMethodPost())
+		setResponseStatus("403 FORBIDEN");
+	else
+	{
+		CgiHandler cgi(*this);
+		_response_body = cgi.execute();
+	}
+}
+
+void	RequestHandler::handleDeleteMethod(std::string &file_to_open)
+{
+	if (!getMatchingLocation().getMethodDel())
+		setResponseStatus("403 FORBIDEN");
+	if (remove(file_to_open.c_str()) == -1)
+		setResponseStatus("500 INTERNAL SERVER ERROR");
+	else
+		setResponseStatus("204 No Content");
+}
 
 void	RequestHandler::OpenFile(void)
 {
 	std::string	file_to_open;
-	std::string content_type;
 
 	if (!_matching_location.getRootPath().empty())
 		 file_to_open = _server_start_dir + "/" + _matching_location.getRootPath() + _uri;
@@ -395,86 +399,12 @@ void	RequestHandler::OpenFile(void)
 		setResponseStatus("404 NOT FOUND");
 	else
 	{
-		if (getRequestMethod() == "GET")
-		{
-			if (access(file_to_open.c_str(), R_OK) == -1 || !getMatchingLocation().getMethodGet())
-				setResponseStatus("403 FORBIDEN");
-			else
-			{
-				if (_uri.back() == '/')
-				{
-					if (!_matching_location.getIndex().empty())
-					{
-						file_to_open += _matching_location.getIndex();
-						std::ifstream infile(file_to_open.c_str(), std::ios::in);
-						_content_type = getContentType(_matching_location.getIndex());
-						std::cout << "content-type: " << content_type << std::endl;
-						infile.seekg(0, std::ios::end);
-						std::size_t length  = infile.tellg();
-						infile.seekg(0, std::ios::beg);
-						_file_size = length;
-						_fd = open(file_to_open.c_str(), O_RDONLY);
-						setResponseStatus("200 OK");
-					}
-					else if (_matching_location.getAutoIndex())
-					{
-						_response_body = AutoIndexGenerator("var/www/html", "/" + _requested_dir).getDirectoryIndex();
-						setResponseStatus("200 OK");
-					}
-					else
-						setResponseStatus("404 OK");
-					return ;
-				}
-				else
-				{
-					//std::cout << "REquested: " << getRequestMethod() << std::endl;
-					_file_name = file_to_open.substr(file_to_open.find_last_of("/"), file_to_open.length());
-					//std::cout << "FILE NAME: " << _file_name << std::endl;
-					if (checkPath(file_to_open) == IS_FILE)
-					{
-						std::ifstream infile(file_to_open.c_str(), std::ios::in);
-						_content_type = getContentType(_file_name);
-						std::cout << "content-type: " << content_type << std::endl;
-						infile.seekg(0, std::ios::end);
-						std::size_t length  = infile.tellg();
-						infile.seekg(0, std::ios::beg);
-						_file_size = length;
-						_fd = open(file_to_open.c_str(), O_RDONLY);
-						//std::cout << "TEST: "<< _fd << std::endl;
-						setResponseStatus("200 OK");
-					}
-					else if (checkPath(file_to_open) == IS_DIR)
-					{
-						setResponseStatus("301 Moved Permanently");
-						_is_folder = true;
-					}
-					else
-					{
-						std::cout << "Ither stat failed or its a sym link etc. " << std::endl;
-						setResponseStatus("500 INTERNAL SERVER ERROR");
-					}
-				}
-			}
-		}
-		else if (getRequestMethod() == "POST")
-		{
-			if (!getMatchingLocation().getMethodPost())
-				setResponseStatus("403 FORBIDEN");
-			else
-			{
-				CgiHandler cgi(*this);
-				_response_body = cgi.execute();
-			}
-		}
-		else if (getRequestMethod() == "DELETE")
-		{
-			if (!getMatchingLocation().getMethodDel())
-				setResponseStatus("403 FORBIDEN");
-			if (remove(file_to_open.c_str()) == -1)
-				setResponseStatus("500 INTERNAL SERVER ERROR");
-			else
-				setResponseStatus("204 No Content");
-		}
+		if (_request_method == "GET")
+			handleGetMethod(file_to_open);
+		else if (_request_method == "POST")
+			handlePostMethod();
+		else if (_request_method == "DELETE")
+			handleDeleteMethod(file_to_open);
 		else
 			setResponseStatus("405 Method Not Allowed");
 	}
@@ -488,9 +418,9 @@ bool	RequestHandler::isRequestComplete() const
 // Member functions
 void	RequestHandler::makeHeaderMap()
 {
-	std::vector<std::string>	split = splitOnString(_request_header, "\r\n");
-	std::size_t					first_pos;
-	std::size_t					end_pos;
+	t_vecstr		split = splitOnString(_request_header, "\r\n");
+	std::size_t		first_pos;
+	std::size_t		end_pos;
 
 	first_pos = _complete_request.find_first_of(' ') + 1;
 	end_pos = _complete_request.find_first_of(' ', first_pos + 1);
@@ -561,16 +491,13 @@ void	RequestHandler::ParseResponse(void)
 
 void	RequestHandler::BuildResponsePage(void)
 {
-	t_strmap	error_pages;
-	t_strmap::const_iterator iter_begin;
-	t_strmap::const_iterator iter_end;
-	bool		hit;
+	t_strmap					error_pages;
+	t_strmap::const_iterator	iter_begin;
+	bool						hit;
 
 	hit = false;
 	error_pages = _server.getErrorPage();
-	iter_begin = error_pages.begin();
-	iter_end = error_pages.end();
-	while (iter_begin != iter_end)
+	for (iter_begin = error_pages.begin(); iter_begin != error_pages.end(); iter_begin++)
 	{
 		//std::cout << "f: " << iter_begin->first << "s: " << iter_begin->second << std::endl;
 		if (_status_line.substr(0, 3) == iter_begin->first)
@@ -588,7 +515,6 @@ void	RequestHandler::BuildResponsePage(void)
 				hit = true;
 			}
 		}
-		iter_begin++;
 	}
 	if (!hit)
 		BuildDefaultResponsePage();
@@ -596,8 +522,8 @@ void	RequestHandler::BuildResponsePage(void)
 
 void	RequestHandler::deChunkRequestBody(void)
 {
-	std::vector<std::string> lines = splitOnString(_request_body, "\r\n");
-	std::string de_chunked_body;
+	t_vecstr	lines = splitOnString(_request_body, "\r\n");
+	std::string	de_chunked_body;
 
 	for (size_t i = 0; i < lines.size(); i++)
 		if (i % 2 != 0)
@@ -662,3 +588,53 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	}
 	checkRequestComplete();
 }
+
+// const std::string&	RequestHandler::getMatchingDir() const
+// {
+// 	return _matching_dir;
+// }
+
+// std::string RequestHandler::getCompleteRequest() const
+// {
+// 	return this->_complete_request;
+// }
+
+// void	RequestHandler::setResponseCompelete(const bool &status)
+// {
+// 	_is_request_complete = status;
+// }
+
+// const char	*RequestHandler::getHeader(void) const
+// {
+// 	return (_response_header.c_str());
+// }
+
+// void	RequestHandler::setFileName(const std::string &name)
+// {
+// 	_file_name = name;
+// }
+
+// void	RequestHandler::setFdBody(int fd)
+// {
+// 	_fd = fd;
+// }
+
+// void	RequestHandler::setHost(const std::string &name)
+// {
+// 	_host = name;
+// }
+
+// void	RequestHandler::setMatchingLocation(const Location &location)
+// {
+// 	_matching_location = location;
+// }
+
+// void	RequestHandler::setServer(const Server &server)
+// {
+// 	_server = server;
+// }
+
+// void	RequestHandler::setMatchingDir(const std::string &matching_dir)
+// {
+// 	_matching_dir = matching_dir;
+// }
