@@ -32,10 +32,9 @@ class Server
 		const t_strmap&		getErrorPage() const;
 		const t_vecstr&		getServerNames() const;
 		const t_locmap&		getLocationMap() const;
-		// Location				*getLocation(int port, std::string url) const;
-		//	t_vecint	getServerSocket() const;
-
-		const std::string		&getServerRoot(void) const;
+		const std::string	&getServerRoot(void) const;
+		bool				hasPort(int port) const;
+		bool				hasMatchingHost(std::string& host) const;
 
 		// Setters
 		void	setServerRoot(const Json& json);

@@ -105,6 +105,22 @@ void	Server::setServerSocket(int server_socket)
 
 
 // Getters
+bool	Server::hasPort(int port) const
+{
+	for (t_vecint::const_iterator it = _server_listen.begin(); it != _server_listen.end(); it++)
+		if (*it == port)
+			return true;
+	return false;
+}
+
+bool	Server::hasMatchingHost(std::string& host) const
+{
+	for (t_vecstr::const_iterator it = _server_name.begin(); it != _server_name.end(); it++)
+		if (*it == host)
+			return true;
+	return false;
+}
+
 int Server::getClientBodySize() const
 {
 	return _client_body_size;

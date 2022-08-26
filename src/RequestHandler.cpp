@@ -176,17 +176,6 @@ void	RequestHandler::buildResponseHeader(void)
 	std::cout << "response_header: " << _response_header << std::endl;
 }
 
-/*
- *culr localhost:4242/test
- * root file test
- *
- * test
- *	html
- * ROOT:
- * check if auto index
- * AutoIndexGenerator(root + uri);
- */
-
 void	RequestHandler::findLocationForUri(void)
 {
 	char		buf[4096];
@@ -237,32 +226,25 @@ void	RequestHandler::findServer(void)
 {
 	for (t_servmap::const_iterator serv_it = _srv_map.begin(); serv_it != _srv_map.end(); serv_it++)
 	{
-		const t_vecint	&ports = serv_it->getServerPort();
 		const t_vecstr	&serv_names = serv_it->getServerNames();
 
-		for (t_vecint::const_iterator port_it = ports.begin(); port_it != ports.end(); port_it++)
+		if (serv_it->hasPort(_port))
 		{
-			if (*port_it == _port)
+			if (_host == "")
 			{
-				if (_host == "")
-				{
-					_host = (*serv_names.begin());
-					_server = (*serv_it);
-				}
-				for (t_vecstr::const_iterator serv_name_it = serv_names.begin(); serv_name_it != serv_names.end(); serv_name_it++)
-				{
-					if (_request_host == *serv_name_it)
-					{
-						_host = (*serv_name_it);
-						_server = (*serv_it);
-						if (_server.getClientBodySize() < (int)_request_body.length())
-							setResponseStatus("413 Request Entity Too Large");
-						return ;
-					}
-				}
+				_host = *serv_names.begin();
+				_server = *serv_it;
+				
+			}
+			if (serv_it->hasMatchingHost(_request_host))
+			{
+				_host = _request_host;
+				_server = *serv_it;
 			}
 		}
 	}
+	if (_server.getClientBodySize() < (int)_request_body.length())
+		setResponseStatus("413 Request Entity Too Large");
 }
 
 
