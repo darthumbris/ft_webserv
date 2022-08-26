@@ -154,48 +154,17 @@ const std::string		&Server::getDefaultRoot(void) const
 	return _default_root;
 }
 
-/*
-const std::string&		Server::getServerIp() const
-{
-	for (std::size_t i = 0; i < _server_listen.size(); i++)
-	{
-		if (_server_listen[i] == port)
-		{
-			// std::cout << "looking at port:" << port << " and url: " << url << std::endl;
-			if (_location.find(url) != _location.end())
-				return (_location.find(url)->second);
-		}
-	}
-	return NULL;
-}
-*/
-
 const t_vecstr &Server::getServerNames() const
 {
 	return _server_name;
 }
-
-// Location *Server::getLocation(int port, std::string url) const
-// {
-// 	for (std::size_t i = 0; i < _server_listen.size(); i++)
-// 	{
-// 		if (_server_listen[i] == port)
-// 		{
-// 			// std::cout << "looking at port:" << port << " and url: " << url << std::endl;
-// 			if (_location.find(url) != _location.end())
-// 				return (_location.find(url)->second);
-// 		}
-// 	}
-// 	return NULL;
-// }
-
 
 const std::string		&Server::getServerRoot(void) const
 {
 	return _root == "" ? _default_root : _root;
 }
 
-// Member Function
+
 void	Server::addLocationToServer(std::string location_dir, Location *loc)
 {
 	this->_location.insert(std::make_pair(location_dir, loc));

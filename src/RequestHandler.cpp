@@ -510,7 +510,7 @@ void	RequestHandler::checkRequestComplete(void)
 	}
 }
 
-//TODO why sometimes hangs when resending a form (refresh a page where it was POST)
+//TODO why sometimes hangs when resending a form (refresh a page where it was POST) (request gets weird?)
 void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 {
 	_complete_request.append(msg, bytes_received);
