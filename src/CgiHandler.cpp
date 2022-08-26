@@ -21,6 +21,7 @@ void	CgiHandler::setCgiPaths()
 
 	_file = _req->getFileName();
 	_cgi_path = loc.getCgiPath();
+	_cur_dir = getCurDir();
 	if (_cgi_path == "/usr/bin/python")
 		_cgi_path = _file;
 	if (DEBUG_MODE)
