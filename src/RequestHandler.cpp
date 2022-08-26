@@ -299,7 +299,10 @@ void	RequestHandler::handleGetMethod(std::string &file_to_open)
 	if (_uri.back() == '/')
 	{
 		if (!_matching_location.getIndex().empty())
+		{
+			file_to_open += _matching_location.getIndex();
 			openFile(file_to_open);
+		}
 		else if (_matching_location.getAutoIndex())
 			_response_body = AutoIndexGenerator(_matching_location.getRootPath(), "/" + _requested_dir).getDirectoryIndex();
 		else
@@ -464,18 +467,11 @@ void	RequestHandler::buildResponsePage(void)
 	{
 		if (_status_line.substr(0, 3) == iter_begin->first)
 		{
-			_fd = open(("/" + _server_start_dir + "/" + _server.getServerRoot() + "/" + iter_begin->second).c_str(), O_RDONLY);
+			std::string file = "/" + _server_start_dir + "/" + _server.getServerRoot() + "/" + iter_begin->second;
+			if (checkPath(file) != IS_OTHER)
+				openFile(file);
 			if (_fd > 0)
-			{
-				std::ifstream infile("/" + _server_start_dir + "/" + _server.getServerRoot() + "/" + iter_begin->second, std::ios::in);
-				_content_type = getContentType(iter_begin->second);
-				std::cout << "content-type: " << _content_type << std::endl;
-				infile.seekg(0, std::ios::end);
-				std::size_t length  = infile.tellg();
-				infile.seekg(0, std::ios::beg);
-				_file_size = length;
 				hit = true;
-			}
 		}
 	}
 	if (!hit)
@@ -494,46 +490,42 @@ void	RequestHandler::deChunkRequestBody(void)
 	_request_body = de_chunked_body;
 }
 
-//TODO check if it still happens that sometimes post request data doesn;t get through?
+void	RequestHandler::checkRequestBodyConditions()
+{
+	if (_complete_request.find("Transfer-Encoding: chunked") != std::string::npos)
+		_is_chunked = true;
+	if (_request_header.find("Content-Length:") == std::string::npos)
+		_request_body_length = 0;
+	else
+		_request_body_length = std::stoul(_headermap["Content-Length"]);
+	std::cout << "content_length: " << _request_body_length << std::endl;
+}
+
 void	RequestHandler::checkRequestComplete(void)
 {
-	size_t	crlf_pos;
+	std::size_t	crlf_pos = _complete_request.find("\r\n\r\n");
 
-	crlf_pos = _complete_request.find("\r\n\r\n");
-	if (crlf_pos != std::string::npos)
+	if (crlf_pos == std::string::npos)
+		return;
+	if (!_is_request_header_done)
 	{
-		if (_is_request_header_done == false)
-		{
-			_request_header = _complete_request.substr(0, crlf_pos);
-			makeHeaderMap();
-			_is_request_header_done = true;
-		}
-		if (_is_request_header_done)
-		{
-			_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
-			if (_complete_request.find("Transfer-Encoding: chunked") != std::string::npos)
-			{
-				_is_chunked = true;
-				if (_complete_request.find("\0\r\n\r\n") != std::string::npos)
-					_is_request_complete = true;
-			}
-			if (_headermap.find("Content-Length")  != _headermap.end() && !_is_chunked)
-			{
-				if (_request_body.length() >= std::stoul(_headermap["Content-Length"]))
-					_is_request_complete = true;
-			}
-			else
-				_is_request_complete = true;
-			if (_is_request_complete)
-			{
-				if (_is_chunked)
-					deChunkRequestBody();
-				parseResponse();
-				buildResponsePage();
-				buildResponseHeader();
-				//return 301 adsfadsf ladhs
-			}
-		}
+		_request_header = _complete_request.substr(0, crlf_pos);
+		makeHeaderMap();
+		_is_request_header_done = true;
+		checkRequestBodyConditions();
+	}
+	if (_is_request_header_done && !_is_chunked && (_complete_request.length() - crlf_pos + 2) >= _request_body_length)
+		_is_request_complete = true;
+	if (_is_request_header_done && _is_chunked && _complete_request.find("0\r\n\r\n") != std::string::npos)
+		_is_request_complete = true;
+	if (_is_request_complete)
+	{
+		_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
+		if (_is_chunked)
+			deChunkRequestBody();
+		parseResponse();
+		buildResponsePage();
+		buildResponseHeader();
 	}
 }
 
@@ -550,58 +542,3 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	}
 	checkRequestComplete();
 }
-
-// const std::string&	RequestHandler::getMatchingDir() const
-// {
-// 	return _matching_dir;
-// }
-
-// std::string RequestHandler::getCompleteRequest() const
-// {
-// 	return this->_complete_request;
-// }
-
-// void	RequestHandler::setResponseCompelete(const bool &status)
-// {
-// 	_is_request_complete = status;
-// }
-
-// const char	*RequestHandler::getHeader(void) const
-// {
-// 	return (_response_header.c_str());
-// }
-
-// void	RequestHandler::setFileName(const std::string &name)
-// {
-// 	_file_name = name;
-// }
-
-// void	RequestHandler::setFdBody(int fd)
-// {
-// 	_fd = fd;
-// }
-
-// void	RequestHandler::setHost(const std::string &name)
-// {
-// 	_host = name;
-// }
-
-// void	RequestHandler::setMatchingLocation(const Location &location)
-// {
-// 	_matching_location = location;
-// }
-
-// void	RequestHandler::setServer(const Server &server)
-// {
-// 	_server = server;
-// }
-
-// void	RequestHandler::setMatchingDir(const std::string &matching_dir)
-// {
-// 	_matching_dir = matching_dir;
-// }
-
-// const std::string	&RequestHandler::getHost(void) const
-// {
-// 	return _host;
-// }

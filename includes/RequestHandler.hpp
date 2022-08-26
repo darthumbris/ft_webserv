@@ -77,6 +77,7 @@ class RequestHandler
 		void	handleGetMethod(std::string &file_to_open);
 		void	handlePostMethod();
 		void	handleDeleteMethod(std::string &file_to_open);
+		void	checkRequestBodyConditions();
 
 		// const std::string		&getHost(void) const;
 		// void	BuildDefaultResponseBody(void);
@@ -125,6 +126,7 @@ class RequestHandler
 
 		t_strmap			_headermap;
 		std::string			_request_body;
+		std::size_t			_request_body_length;
 		std::string 		_request_method;
 
 		t_url				_url;

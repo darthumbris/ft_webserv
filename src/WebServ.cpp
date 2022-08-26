@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/26 13:07:15 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/26 13:40:14 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,7 +206,7 @@ void	WebServ::sendResponse(t_event &event)
 	}
 	if (fd > 0)
 	{
-		std::cout << "file descriptor open" << std::endl;
+		// std::cout << "file descriptor open" << std::endl;
 		int bytes = sendfile(fd, event.ident, evudat->total_size, &evudat->datalen, NULL, 0);
 		evudat->total_size += evudat->datalen;
 		if (bytes == -1 || evudat->total_size < evudat->req->getFileSize())
