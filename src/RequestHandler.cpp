@@ -57,11 +57,6 @@ const std::string		&RequestHandler::getRequestMethod(void) const
 	return _request_method;
 }
 
-const std::string	&RequestHandler::getHost(void) const
-{
-	return _host;
-}
-
 std::string		RequestHandler::getRequestProtocol(void) const
 {
 	return _request_protocol;
@@ -153,7 +148,7 @@ void	RequestHandler::setClientIp(const std::string &ip)
 }
 
 //TODO protect the stoi
-void	RequestHandler::BuildResponseHeader(void)
+void	RequestHandler::buildResponseHeader(void)
 {
 	std::size_t	len = _file_size;
 
@@ -161,7 +156,6 @@ void	RequestHandler::BuildResponseHeader(void)
 		len = _response_body.length();
 	if (_status_line.length() >= 3)
 	{
-		std::cout << "I am status: " << _status_line << std::endl;
 		if (std::stoi(_status_line.substr(0, 3)) >= 300 && std::stoi(_status_line.substr(0, 3)) <= 310)
 		{
 			if (_is_folder)
@@ -193,18 +187,15 @@ void	RequestHandler::BuildResponseHeader(void)
  * AutoIndexGenerator(root + uri);
  */
 
-void	RequestHandler::FindTheRightLocationForUri(void)
+void	RequestHandler::findLocationForUri(void)
 {
 	char						buf[4096];
 	t_locmap::const_iterator	loc_it;
 	std::string					uri_dir = _uri.substr(0, _uri.find_last_of("/"));
 	std::string					server_root = _server.getServerRoot();
 	std::string					requested_loc;
-	std::string					server_loc;
-	std::string					requested_dir;
-	std::size_t					best_match;
+	std::size_t					best_match = 0;
 
-	std::cout << "HALLO" << std::endl;
 	if (server_root.at(0) != '/')
 		server_root = "/" + server_root;
 	_file_to_get = _server_start_dir + server_root + _uri;
@@ -213,29 +204,25 @@ void	RequestHandler::FindTheRightLocationForUri(void)
 	std::cout << "requested dir : " << _requested_dir << std::endl;
 	requested_loc = getcwd(buf, 4096);//TODO CHECK FOR ERROR HERE!
 	if (requested_loc.empty())
-		setResponseStatus("500 INTERNAL SERVER ERROR");
-	else
+		return setResponseStatus("500 INTERNAL SERVER ERROR");
+	for (loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
 	{
-		best_match = 0;
-		for (loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
+		std::string server_loc = trim(loc_it->first, "/");
+		std::cout << "Hallo: " << loc_it->first << std::endl;
+		std::cout << "server loc : "<< server_loc << "requested dir: " << _requested_dir << std::endl;
+		if (best_match < lengthOfMatch(server_loc, _requested_dir) || (server_loc == "" && _requested_dir == ""))
 		{
-			server_loc = trim(loc_it->first, "/");
-			std::cout << "Hallo: " << loc_it->first << std::endl;
-			std::cout << "server loc : "<< server_loc << "requested dir: " << _requested_dir << std::endl;
-			if (best_match < LengthOfMatch(server_loc, _requested_dir) || (server_loc == "" && _requested_dir == ""))
-			{
-				std::cout << "BEST MATCH: " << loc_it->first << std::endl;
-				best_match = LengthOfMatch(server_loc, _requested_dir);
-				_matching_location = (*(loc_it->second));
-				_matching_dir = loc_it->first;
-			}
+			std::cout << "BEST MATCH: " << loc_it->first << std::endl;
+			best_match = lengthOfMatch(server_loc, _requested_dir);
+			_matching_location = *(loc_it->second);
+			_matching_dir = loc_it->first;
 		}
-		if (chdir(_server_start_dir.c_str()) == -1)
-			setResponseStatus("500 INTERNAL SERVER ERROR");
 	}
+	if (chdir(_server_start_dir.c_str()) == -1)
+		setResponseStatus("500 INTERNAL SERVER ERROR");
 }
 
-void	RequestHandler::BuildDefaultResponsePage(void)
+void	RequestHandler::buildDefaultResponsePage(void)
 {
 	//loop over defalut response pages
 	if (_fd <= 0 && _response_body.empty())
@@ -247,27 +234,23 @@ void	RequestHandler::BuildDefaultResponsePage(void)
 	}
 }
 
-void	RequestHandler::FindServer(void)
+void	RequestHandler::findServer(void)
 {
-	t_servmap::const_iterator serv_it;
-
-	for (serv_it = _srv_map.begin(); serv_it != _srv_map.end(); serv_it++)
+	for (t_servmap::const_iterator serv_it = _srv_map.begin(); serv_it != _srv_map.end(); serv_it++)
 	{
-		const std::vector<int>				&ports = serv_it->getServerPort();
-		const t_vecstr						&server_names = serv_it->getServerNames();
-		std::vector<int>::const_iterator	port_it = ports.begin();
+		const t_vecint	&ports = serv_it->getServerPort();
+		const t_vecstr	&serv_names = serv_it->getServerNames();
 
-		for (port_it = ports.begin(); port_it != ports.end(); port_it++)
+		for (t_vecint::const_iterator port_it = ports.begin(); port_it != ports.end(); port_it++)
 		{
 			if (*port_it == _port)
 			{
-				if (getHost() == "")
+				if (_host == "")
 				{
-					_host = (*server_names.begin());
+					_host = (*serv_names.begin());
 					_server = (*serv_it);
 				}
-				t_vecstr::const_iterator serv_name_it;
-				for (serv_name_it = server_names.begin(); serv_name_it != server_names.end(); serv_name_it++)
+				for (t_vecstr::const_iterator serv_name_it = serv_names.begin(); serv_name_it != serv_names.end(); serv_name_it++)
 				{
 					if (_request_host == *serv_name_it)
 					{
@@ -284,30 +267,27 @@ void	RequestHandler::FindServer(void)
 }
 
 
-void	RequestHandler::ParseRequestLine(void)
+void	RequestHandler::parseRequestLine(void)
 {
-	t_vecstr			wordVector;
+	t_vecstr			word_vector;
 	std::istringstream	iss;
 	std::string			line;
 
 	iss.str(_complete_request);
 	std::getline(iss, line);
-	wordVector = cpp_split(line, ' ');
-	if ((wordVector.size() != 3) || 
-			(wordVector[0] != "GET" && wordVector[0] != "DELETE" && wordVector[0] != "POST") ||
-			(wordVector[1][0] != '/') ||
-			(wordVector[2] != "HTTP/1.1"))
+	word_vector = cpp_split(line, ' ');
+	if ((word_vector.size() != 3) || 
+			(word_vector[0] != "GET" && word_vector[0] != "DELETE" && word_vector[0] != "POST") ||
+			(word_vector[1][0] != '/') ||
+			(word_vector[2] != "HTTP/1.1"))
+		return setResponseStatus("400 BAD REQUEST");
+	_uri = hexToStr(word_vector[1]);
+	if (_uri == "")
 		setResponseStatus("400 BAD REQUEST");
 	else
 	{
-		_uri = HexToStr(wordVector[1]);
-		if (_uri == "")
-			setResponseStatus("400 BAD REQUEST");
-		else
-		{
-			_request_method = wordVector[0];
-			_request_protocol = wordVector[2];
-		}
+		_request_method = word_vector[0];
+		_request_protocol = word_vector[2];
 	}
 }
 
@@ -319,17 +299,7 @@ void	RequestHandler::handleGetMethod(std::string &file_to_open)
 	if (_uri.back() == '/')
 	{
 		if (!_matching_location.getIndex().empty())
-		{
-			file_to_open += _matching_location.getIndex();
-			std::ifstream infile(file_to_open.c_str(), std::ios::in);
-			_content_type = getContentType(_matching_location.getIndex());
-			std::cout << "content-type: " << _content_type << std::endl;
-			infile.seekg(0, std::ios::end);
-			std::size_t length  = infile.tellg();
-			infile.seekg(0, std::ios::beg);
-			_file_size = length;
-			_fd = open(file_to_open.c_str(), O_RDONLY);
-		}
+			openFile(file_to_open);
 		else if (_matching_location.getAutoIndex())
 			_response_body = AutoIndexGenerator(_matching_location.getRootPath(), "/" + _requested_dir).getDirectoryIndex();
 		else
@@ -337,20 +307,9 @@ void	RequestHandler::handleGetMethod(std::string &file_to_open)
 	}
 	else
 	{
-		//std::cout << "REquested: " << getRequestMethod() << std::endl;
 		_file_name = file_to_open.substr(file_to_open.find_last_of("/"), file_to_open.length());
-		//std::cout << "FILE NAME: " << _file_name << std::endl;
 		if (checkPath(file_to_open) == IS_FILE)
-		{
-			std::ifstream infile(file_to_open.c_str(), std::ios::in);
-			_content_type = getContentType(_file_name);
-			std::cout << "content-type: " << _content_type << std::endl;
-			infile.seekg(0, std::ios::end);
-			std::size_t length  = infile.tellg();
-			infile.seekg(0, std::ios::beg);
-			_file_size = length;
-			_fd = open(file_to_open.c_str(), O_RDONLY);
-		}
+			openFile(file_to_open);
 		else if (checkPath(file_to_open) == IS_DIR)
 		{
 			setResponseStatus("301 Moved Permanently");
@@ -358,7 +317,7 @@ void	RequestHandler::handleGetMethod(std::string &file_to_open)
 		}
 		else
 		{
-			std::cout << "Ither stat failed or its a sym link etc. " << std::endl;
+			std::cerr << "Ither stat failed or its a sym link etc. " << std::endl;
 			setResponseStatus("500 INTERNAL SERVER ERROR");
 		}
 	}
@@ -385,7 +344,19 @@ void	RequestHandler::handleDeleteMethod(std::string &file_to_open)
 		setResponseStatus("204 No Content");
 }
 
-void	RequestHandler::OpenFile(void)
+void	RequestHandler::openFile(std::string& file_to_open)
+{
+	std::ifstream infile(file_to_open.c_str(), std::ios::in);
+	_content_type = getContentType(file_to_open);
+	std::cout << "content-type: " << _content_type << std::endl;
+	infile.seekg(0, std::ios::end);
+	std::size_t length  = infile.tellg();
+	infile.seekg(0, std::ios::beg);
+	_file_size = length;
+	_fd = open(file_to_open.c_str(), O_RDONLY);
+}
+
+void	RequestHandler::handleRequest(void)
 {
 	std::string	file_to_open;
 
@@ -440,18 +411,10 @@ void	RequestHandler::makeHeaderMap()
 	}
 }
 
-void	RequestHandler::ParseHeaderMap(void)
+void	RequestHandler::parseHeaderMap(void)
 {
 	for (t_strmap::const_iterator headerMap_iter = _headermap.begin(); headerMap_iter != _headermap.end(); headerMap_iter++)
 	{
-		/*
-		 *			HTTP/1.1 206 Partial content
-				   Date: Wed, 15 Nov 1995 06:25:24 GMT
-				   Last-Modified: Wed, 15 Nov 1995 04:58:08 GMT
-				   Content-Range: bytes 21010-47021/47022
-				   Content-Length: 26012
-				   Content-Type: image/gif
-		 */
 		if (headerMap_iter->first == "Host")
 		{
 			std::size_t	pos = headerMap_iter->second.find(':');
@@ -468,16 +431,16 @@ bool	RequestHandler::isResponseDone(void) const
 
 }
 
-void	RequestHandler::ParseResponse(void)
+void	RequestHandler::parseResponse(void)
 {
 	std::size_t	index;
 
 	void	(RequestHandler::*fptr[])(void) = {
-		&RequestHandler::ParseHeaderMap,
-		&RequestHandler::ParseRequestLine,
-		&RequestHandler::FindServer,
-		&RequestHandler::FindTheRightLocationForUri,
-		&RequestHandler::OpenFile,
+		&RequestHandler::parseHeaderMap,
+		&RequestHandler::parseRequestLine,
+		&RequestHandler::findServer,
+		&RequestHandler::findLocationForUri,
+		&RequestHandler::handleRequest,
 		NULL
 	}; 
 
@@ -489,7 +452,7 @@ void	RequestHandler::ParseResponse(void)
 	}
 }
 
-void	RequestHandler::BuildResponsePage(void)
+void	RequestHandler::buildResponsePage(void)
 {
 	t_strmap					error_pages;
 	t_strmap::const_iterator	iter_begin;
@@ -499,7 +462,6 @@ void	RequestHandler::BuildResponsePage(void)
 	error_pages = _server.getErrorPage();
 	for (iter_begin = error_pages.begin(); iter_begin != error_pages.end(); iter_begin++)
 	{
-		//std::cout << "f: " << iter_begin->first << "s: " << iter_begin->second << std::endl;
 		if (_status_line.substr(0, 3) == iter_begin->first)
 		{
 			_fd = open(("/" + _server_start_dir + "/" + _server.getServerRoot() + "/" + iter_begin->second).c_str(), O_RDONLY);
@@ -517,7 +479,7 @@ void	RequestHandler::BuildResponsePage(void)
 		}
 	}
 	if (!hit)
-		BuildDefaultResponsePage();
+		buildDefaultResponsePage();
 }
 
 void	RequestHandler::deChunkRequestBody(void)
@@ -566,9 +528,9 @@ void	RequestHandler::checkRequestComplete(void)
 			{
 				if (_is_chunked)
 					deChunkRequestBody();
-				ParseResponse();
-				BuildResponsePage();
-				BuildResponseHeader();
+				parseResponse();
+				buildResponsePage();
+				buildResponseHeader();
 				//return 301 adsfadsf ladhs
 			}
 		}
@@ -582,8 +544,8 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	{
 		_is_request_complete = true;
 		setResponseStatus("400 BAD REQUEST");
-		BuildResponsePage();
-		BuildResponseHeader();
+		buildResponsePage();
+		buildResponseHeader();
 		return ;
 	}
 	checkRequestComplete();
@@ -637,4 +599,9 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 // void	RequestHandler::setMatchingDir(const std::string &matching_dir)
 // {
 // 	_matching_dir = matching_dir;
+// }
+
+// const std::string	&RequestHandler::getHost(void) const
+// {
+// 	return _host;
 // }

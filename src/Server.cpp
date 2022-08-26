@@ -115,7 +115,7 @@ const std::string&		Server::getServerIp() const
 	return this->_server_ip;
 }
 
-const std::vector<int> &Server::getServerPort() const
+const t_vecint &Server::getServerPort() const
 {
 	return _server_listen;
 }

@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/26 11:30:01 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/26 13:07:15 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,8 @@ WebServ::WebServ(t_servmap& servers) : _servers(servers)
 	std::cout << "\n\nServers loaded from config: " << _servers.size() << "\n" << std::endl;
 	for (t_servmap::iterator iter = _servers.begin(); iter != _servers.end(); iter++)
 	{
-		std::vector<int> ports = iter->getServerPort();
-		for (std::vector<int>::const_iterator ports_iter = ports.begin(); ports_iter != ports.end(); ports_iter++)
+		t_vecint ports = iter->getServerPort();
+		for (t_vecint::const_iterator ports_iter = ports.begin(); ports_iter != ports.end(); ports_iter++)
 		{
 			if (!listeningToPort(*ports_iter))
 			{

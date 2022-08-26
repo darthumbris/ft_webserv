@@ -1,6 +1,6 @@
 #include "Utils.hpp"
 
-std::size_t	LengthOfMatch(const std::string &str1, const std::string &str2)
+std::size_t	lengthOfMatch(const std::string &str1, const std::string &str2)
 {
 	std::string::const_iterator	iter1;
 	std::string::const_iterator	iter2;
@@ -43,7 +43,7 @@ std::string	stripExesSlashes(const std::string &uri)
 }
 
 //<-- HexToStr
-std::string	HexToStr(const std::string &hex)
+std::string	hexToStr(const std::string &hex)
 {
 	char 		chr;
 	std::string newString;

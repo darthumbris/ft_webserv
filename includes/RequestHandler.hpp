@@ -46,7 +46,6 @@ class RequestHandler
 		t_url					getUrl(void) const;
 		int						getPort(void) const;
 		std::string				getUri(void) const;
-		const std::string		&getHost(void) const;
 		std::string				getRequestProtocol(void) const;
 		std::string				getClientIp(void) const;
 		const std::string&		getFileName() const;
@@ -62,22 +61,24 @@ class RequestHandler
 		// Member Functions
 		void	addToRequestMsg(char *msg, int bytes_received);
 		void	checkRequestComplete(void);
-		void	BuildResponsePage(void);
-		void	BuildDefaultResponsePage(void);
-		void	ParseRequestLine(void);
-		void	ParseHeaderMap(void);
-		void	OpenFile(void);
+		void	buildResponsePage(void);
+		void	buildDefaultResponsePage(void);
+		void	parseRequestLine(void);
+		void	parseHeaderMap(void);
+		void	handleRequest(void);
+		void	openFile(std::string& file_to_open);
 		bool	isResponseDone(void) const;
-		void	FindTheRightLocationForUri(void);
-		void	FindServer(void);
-		void	BuildResponseHeader(void);
+		void	findLocationForUri(void);
+		void	findServer(void);
+		void	buildResponseHeader(void);
 		void	makeHeaderMap(void);
-		void	ParseResponse(void);
+		void	parseResponse(void);
 		void	deChunkRequestBody(void);
 		void	handleGetMethod(std::string &file_to_open);
 		void	handlePostMethod();
 		void	handleDeleteMethod(std::string &file_to_open);
 
+		// const std::string		&getHost(void) const;
 		// void	BuildDefaultResponseBody(void);
 		// void	FindAllAccessibleLocations(void);
 		// int		CheckUserDefinedStatusPage(Server server);

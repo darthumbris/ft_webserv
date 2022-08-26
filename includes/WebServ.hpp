@@ -86,11 +86,11 @@ class WebServ
 		
 	private:
 		
-		int					_kqueue;
-		int					_n_servers;
-		std::vector<int>	_ports;
-		t_servmap			_servers;
-		t_ev_lst 			_change_ev;
+		int			_kqueue;
+		int			_n_servers;
+		t_vecint	_ports;
+		t_servmap	_servers;
+		t_ev_lst 	_change_ev;
 };
 
 #endif
