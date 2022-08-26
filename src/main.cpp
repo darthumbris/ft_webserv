@@ -6,7 +6,7 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/08/26 16:08:29 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/26 16:10:39 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 
 //TODO make multiple configs (one with mutliple servers etc)
 //TODO make a better sample website for the eval 
+//TODO cleanup the var/www/html files
 
 int	main(int argc, char *argv[])
 {
