@@ -78,34 +78,6 @@ class RequestHandler
 		void	handlePostMethod();
 		void	handleDeleteMethod(std::string &file_to_open);
 		void	checkRequestBodyConditions();
-
-		// const std::string		&getHost(void) const;
-		// void	BuildDefaultResponseBody(void);
-		// void	FindAllAccessibleLocations(void);
-		// int		CheckUserDefinedStatusPage(Server server);
-		// void	ParseRequestMsg(void);
-		// bool	fileExists(const std::string &path);
-		// bool	parseFirstLine(const std::string &method);
-		// bool	UserHasDefinedRespnosePage(void);
-		// void	setServer(const Server &server);
-		// void	setLocations(const t_locmap &locations);
-		// void	setFdBody(int fd);
-		// void	setFileName(const std::string &name);
-		// void	setDefaultHost(const std::string &name);
-		// void	setDefaultServer(const Server *server);
-		// void	setHost(const std::string &name);
-		// void	setResponseCompelete(const bool &status);
-		// void	setMatchingDir(const std::string &matching_dir);
-		// void	setMatchingLocation(const Location &location);
-		// void	setRequestMsg(const std::string &msg);
-		// std::string				getCompleteRequest(void) const;
-		// std::string				getRemainingRequestMsg(void) const;
-		// int						getBody(void) const;
-		// const char				*getHeader(void) const;
-		// int						getResponseBody(void) const;
-		// const std::string		&getStatusLine(void) const;
-		// const Server			&getServer(void) const;
-		// const std::string		&getMatchingDir(void) const;
 		
 	private:
 

@@ -189,12 +189,11 @@ void	RequestHandler::buildResponseHeader(void)
 
 void	RequestHandler::findLocationForUri(void)
 {
-	char						buf[4096];
-	t_locmap::const_iterator	loc_it;
-	std::string					uri_dir = _uri.substr(0, _uri.find_last_of("/"));
-	std::string					server_root = _server.getServerRoot();
-	std::string					requested_loc;
-	std::size_t					best_match = 0;
+	char		buf[4096];
+	std::string	uri_dir = _uri.substr(0, _uri.find_last_of("/"));
+	std::string	server_root = _server.getServerRoot();
+	std::string	requested_loc;
+	std::size_t	best_match = 0;
 
 	if (server_root.at(0) != '/')
 		server_root = "/" + server_root;
@@ -205,7 +204,7 @@ void	RequestHandler::findLocationForUri(void)
 	requested_loc = getcwd(buf, 4096);//TODO CHECK FOR ERROR HERE!
 	if (requested_loc.empty())
 		return setResponseStatus("500 INTERNAL SERVER ERROR");
-	for (loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
+	for (t_locmap::const_iterator loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
 	{
 		std::string server_loc = trim(loc_it->first, "/");
 		std::cout << "Hallo: " << loc_it->first << std::endl;
