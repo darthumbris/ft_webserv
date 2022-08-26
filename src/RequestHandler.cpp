@@ -479,13 +479,13 @@ void	RequestHandler::checkRequestBodyConditions()
 		_request_body_length = 0;
 	else
 		_request_body_length = std::stoul(_headermap["Content-Length"]);
-	std::cout << "content_length: " << _request_body_length << std::endl;
 }
 
 void	RequestHandler::checkRequestComplete(void)
 {
 	std::size_t	crlf_pos = _complete_request.find("\r\n\r\n");
 
+	
 	if (crlf_pos == std::string::npos)
 		return;
 	if (!_is_request_header_done)

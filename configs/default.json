@@ -2,7 +2,7 @@
     "server":
     [
       {
-        "client_body_size": 1,
+        "client_body_size": 10000000,
         "listen": [4242, 4343],
 	    	"root": "var/www/html",
         "server_name": [
@@ -25,13 +25,15 @@
           "allowed_method": ["GET", "POST"],
           "root": "var/www/html",
           "CGI": ".php /Users/shoogenb/.brew/bin/php-cgi",
-          "upload": "/upload/"
+          "upload": "/upload/",
+          "return": "301 http://localhost:4242/upload/"
         },
         "location /cgi_bin/python/": {
           "allowed_method": ["GET", "POST"],
           "root": "var/www/html",
           "CGI": ".py /usr/bin/python",
-          "upload": "/upload/"
+          "upload": "/upload/",
+          "return": "301 http://localhost:4242/upload/"
         },
         "location /test/": {
           "root": "var/www/html",

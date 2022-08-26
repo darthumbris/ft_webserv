@@ -33,7 +33,6 @@ void	CgiHandler::setCgiPaths()
 	}
 }
 
-//TODO have the redirect status be assigned in the script itself
 void	CgiHandler::setEnvValues()
 {
 	setCgiPaths();
@@ -74,12 +73,10 @@ char**	CgiHandler::makeEnvArray()
 {
 	char **envp;
 	int	i = 0;
-	
-	//maybe a try catch for this?
+
 	envp = new char* [_env.size() + 1];
 
-	t_strmap::iterator it = _env.begin();
-	for (; it != _env.end(); it++, i++)
+	for (t_strmap::iterator it = _env.begin(); it != _env.end(); it++, i++)
 	{
 		envp[i] = new char[it->first.size() + it->second.size() + 1];
 		strcpy(envp[i], (it->first + it->second).c_str());
@@ -163,7 +160,6 @@ std::string	CgiHandler::execute()
 
 	setEnvValues();
 	setFileDescriptors();
-
 	if (_error)
 		return setResponseHeaders("Status: 500 Internal Server Error\r\n");
 	envp = makeEnvArray();

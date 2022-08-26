@@ -20,7 +20,7 @@ class Config
 		// Setters
 		void addServer(const Json* json);
 		void setServers(const Json* json);
-		void setServerName(const std::string name, const Json &json);
+		void checkValidServer(const Json &json);
 
 		// Getters
 		t_servmap	getServerMap() const;

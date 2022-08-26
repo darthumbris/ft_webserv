@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/26 13:40:14 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/26 14:48:04 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ WebServ::WebServ(t_servmap& servers) : _servers(servers)
 	// Starting the kqueue
 	if ((_kqueue = kqueue()) == -1)
 		std::cout << "Error: kqueue failed" << std::endl;
-	// t_servmap server_map = _config->getServerMap();
 	_n_servers = 0;
 
 	// Going through the config and making a socket and event for all servers in it.
@@ -206,7 +205,6 @@ void	WebServ::sendResponse(t_event &event)
 	}
 	if (fd > 0)
 	{
-		// std::cout << "file descriptor open" << std::endl;
 		int bytes = sendfile(fd, event.ident, evudat->total_size, &evudat->datalen, NULL, 0);
 		evudat->total_size += evudat->datalen;
 		if (bytes == -1 || evudat->total_size < evudat->req->getFileSize())

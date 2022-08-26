@@ -6,7 +6,7 @@
 /*   By: shoogenb <shoogenb@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/06/30 11:15:49 by shoogenb      #+#    #+#                 */
-/*   Updated: 2022/08/25 11:00:24 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/26 15:03:45 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ int	main(int argc, char *argv[])
 {
 	if (argc > 2)
 	{
-		std::cout << "error, only 0 or 1 argument accepted." << std::endl;
+		std::cerr << "error, only 0 or 1 argument accepted." << std::endl;
 		return 1;
 	}
 	try
@@ -29,14 +29,17 @@ int	main(int argc, char *argv[])
 		else
 			path = argv[1];
 		std::ifstream file(path);
-		Parse parse;
-		Json* json = parse.parse(file);
+		if (file.fail())
+		{
+			std::cerr << "Error: could not open file." << std::endl;
+			exit(1);
+		}
+		Json* json = Parse().parse(file);
 		file.close();
 		Config config(json);
 		delete json;
 		t_servmap	servers = config.getServerMap();
 		WebServ	webserver(servers);
-		
 		webserver.runServer();
 	} 
 	catch (std::exception const &e)

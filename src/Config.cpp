@@ -17,15 +17,13 @@ Config::~Config()
 void Config::setServers(const Json *json)
 {
 	for (const auto &x: json->values.object)
-		setServerName(x.first, *x.second);
+		checkValidServer(*x.second);
 }
 
-void Config::setServerName(const std::string name, const Json &json)
+void Config::checkValidServer(const Json &json)
 {
-	(void)name;
-	Location	loc;
 	if (json.type != Json::ARRAY)
-		throw wrongKey("expected an <" + loc.getEnumValue(Json::ARRAY) + "> and got " + loc.getEnumValue(json.type));
+		throw wrongKey("expected an <ARRAY> and got " + Location().getEnumValue(json.type));
 	for (const Json *x: json.values.list)
 		addServer(x);
 }
