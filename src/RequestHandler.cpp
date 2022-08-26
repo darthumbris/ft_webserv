@@ -220,7 +220,6 @@ void	RequestHandler::BuildResponseHeader(void)
 
 	if (_fd <= 0)
 		len = _response_body.length();
-	std::cout << "len: " << len << std::endl;
 	if (_status_line.length() >= 3)
 	{
 		std::cout << "I am status: " << _status_line << std::endl;
@@ -241,6 +240,7 @@ void	RequestHandler::BuildResponseHeader(void)
 	_response_header += "Server: " + _host +  "\r\n";
 	_response_header += "Content-Length: " + std::to_string(len) + "\r\n";
 	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
+	std::cout << "response_header: " << _response_header << std::endl;
 }
 
 /*

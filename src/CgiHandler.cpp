@@ -93,9 +93,9 @@ void	CgiHandler::executeScript(char **envp)
 	dup2(_in_file_fd, STDIN_FILENO);
 	dup2(_out_file_fd, STDOUT_FILENO);
 	execve(_cgi_path.c_str(), NULL, envp);
-	_req->setCgiError();
-	std::cout << "failed to execute: " << _cgi_path << std::endl;
-	write(STDOUT_FILENO, "502 Bad Gateway\r\n\r\n", 15);
+	_error = true;
+	write(STDOUT_FILENO, "Status: 500 Internal Server Error\r\n", 35);
+	exit(1);
 }
 
 void	CgiHandler::readScriptOutput(pid_t pid)
@@ -136,10 +136,9 @@ void	CgiHandler::closeFileDescriptors()
 
 std::string	CgiHandler::setResponseHeaders(std::string body)
 {
-	//TO DO
 	std::size_t	status = body.find("Status: ");
 	if (status != std::string::npos)
-		_req->setResponseStatus(body.substr(status, body.find("\r\n", status)));
+		_req->setResponseStatus(body.substr(status + 8, body.find("\r\n", status + 8) - (status + 8)));
 	else
 		_req->setResponseStatus("200 Ok");
 	std::size_t	content = body.find("Content-type:");
@@ -152,6 +151,8 @@ std::string	CgiHandler::setResponseHeaders(std::string body)
 		sub = std::min<std::size_t>(content, status);
 	if (sub != std::string::npos)
 		body = body.substr(body.find("\r\n", sub) + 2);
+	if (body == "Status: 500 Internal Server Error\r\n")
+		body = "";
 	return body;
 }
 
@@ -164,7 +165,7 @@ std::string	CgiHandler::execute()
 	setFileDescriptors();
 
 	if (_error)
-		return setResponseHeaders("500 Internal Server Error\r\n\r\n");
+		return setResponseHeaders("Status: 500 Internal Server Error\r\n");
 	envp = makeEnvArray();
 	
 	//reading in the input body to temp file
@@ -175,10 +176,7 @@ std::string	CgiHandler::execute()
 	//forking for executing script
 	pid = fork();
 	if (pid == -1)
-	{
-		_req->setCgiError();
-		return setResponseHeaders("500 Internal Server Error\r\n\r\n");
-	}
+		return setResponseHeaders("Status: 500 Internal Server Error\r\n");
 	else if (pid == 0)
 		executeScript(envp);
 	else
@@ -191,8 +189,6 @@ std::string	CgiHandler::execute()
 		delete[] envp[i];
 	delete envp;
 
-	if (pid == 0)
-		setResponseHeaders("502 Bad Gateway\r\n\r\n");
 	if (DEBUG_MODE)
 		std::cout << "finished executing " << std::endl;
 	return setResponseHeaders(_output_body);
