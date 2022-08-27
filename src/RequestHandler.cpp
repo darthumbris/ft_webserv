@@ -192,7 +192,7 @@ void	RequestHandler::findLocationForUri(void)
 	std::cout << "requested dir : " << _requested_dir << std::endl;
 	requested_loc = getcwd(buf, 4096);//TODO CHECK FOR ERROR HERE!
 	if (requested_loc.empty())
-		return setResponseStatus("500 INTERNAL SERVER ERROR");
+		return setResponseStatus("500 Internal Server Error");
 	for (t_locmap::const_iterator loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
 	{
 		std::string server_loc = trim(loc_it->first, "/");
@@ -207,7 +207,7 @@ void	RequestHandler::findLocationForUri(void)
 		}
 	}
 	if (chdir(_server_start_dir.c_str()) == -1)
-		setResponseStatus("500 INTERNAL SERVER ERROR");
+		setResponseStatus("500 Internal Server Error");
 }
 
 void	RequestHandler::buildDefaultResponsePage(void)
@@ -261,10 +261,10 @@ void	RequestHandler::parseRequestLine(void)
 			(word_vector[0] != "GET" && word_vector[0] != "DELETE" && word_vector[0] != "POST") ||
 			(word_vector[1][0] != '/') ||
 			(word_vector[2] != "HTTP/1.1"))
-		return setResponseStatus("400 BAD REQUEST");
+		return setResponseStatus("400 Bad Request");
 	_uri = hexToStr(word_vector[1]);
 	if (_uri == "")
-		setResponseStatus("400 BAD REQUEST");
+		setResponseStatus("400 Bad Request");
 	else
 	{
 		_request_method = word_vector[0];
@@ -276,7 +276,7 @@ void	RequestHandler::handleGetMethod(std::string &file_to_open)
 {
 	setResponseStatus("200 OK");
 	if (access(file_to_open.c_str(), R_OK) == -1 || !getMatchingLocation().getMethodGet())
-		return setResponseStatus("403 FORBIDEN");
+		return setResponseStatus("403 Forbiden");
 	if (_uri.back() == '/')
 	{
 		if (!_matching_location.getIndex().empty())
@@ -302,7 +302,7 @@ void	RequestHandler::handleGetMethod(std::string &file_to_open)
 		else
 		{
 			std::cerr << "Ither stat failed or its a sym link etc. " << std::endl;
-			setResponseStatus("500 INTERNAL SERVER ERROR");
+			setResponseStatus("500 Internal Server Error");
 		}
 	}
 }
@@ -310,7 +310,7 @@ void	RequestHandler::handleGetMethod(std::string &file_to_open)
 void	RequestHandler::handlePostMethod()
 {
 	if (!getMatchingLocation().getMethodPost())
-		setResponseStatus("403 FORBIDEN");
+		setResponseStatus("403 Forbiden");
 	else
 	{
 		CgiHandler cgi(*this);
@@ -321,9 +321,9 @@ void	RequestHandler::handlePostMethod()
 void	RequestHandler::handleDeleteMethod(std::string &file_to_open)
 {
 	if (!getMatchingLocation().getMethodDel())
-		setResponseStatus("403 FORBIDEN");
+		setResponseStatus("403 Forbiden");
 	if (remove(file_to_open.c_str()) == -1)
-		setResponseStatus("500 INTERNAL SERVER ERROR");
+		setResponseStatus("500 Internal Server Error");
 	else
 		setResponseStatus("204 No Content");
 }
@@ -412,7 +412,6 @@ bool	RequestHandler::isResponseDone(void) const
 	if (_status_line == "")
 		return (false);
 	return (true);
-
 }
 
 void	RequestHandler::parseResponse(void)
