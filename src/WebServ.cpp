@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/31 13:50:01 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/31 13:51:18 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@ WebServ::WebServ(t_servmap& servers) : _servers(servers)
 
 	// Going through the config and making a socket and event for all servers in it.
 	std::cout << "\n\nServers loaded from config: " << _servers.size() << "\n" << std::endl;
+	if (_servers.size() < 1)
+		throw WebServerExcpetion{"Error: no servers configured."};
 	for (t_servmap::iterator iter = _servers.begin(); iter != _servers.end(); iter++)
 	{
 		t_vecint ports = iter->getServerPort();
