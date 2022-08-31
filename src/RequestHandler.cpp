@@ -252,8 +252,6 @@ void	RequestHandler::findServer(void)
 			}
 		}
 	}
-	if (_server.getClientBodySize() < (int)_request_body.length())
-		setResponseStatus("413 Request Entity Too Large");
 }
 
 
@@ -321,6 +319,8 @@ void	RequestHandler::handlePostMethod()
 {
 	if (!getMatchingLocation().getMethodPost())
 		setResponseStatus("403 Forbiden");
+	else if (_server.getClientBodySize() < (int)_request_body.length())
+		setResponseStatus("413 Request Entity Too Large");
 	else
 	{
 		CgiHandler cgi(*this);
