@@ -3,8 +3,6 @@
 // Constructors
 AutoIndexGenerator::AutoIndexGenerator(const std::string &root, const std::string &path) : _path(path)
 {
-	// std::cout << "making autoindex for dir: " << _path << std::endl;
-	std::cout << root + _path << std::endl;
 	DIR	*dir = opendir((root + _path).c_str());
 
 	//Making the start of directory listing.
@@ -18,7 +16,7 @@ AutoIndexGenerator::AutoIndexGenerator(const std::string &root, const std::strin
 
 	if (!dir)
 	{
-		std::cout << "Error opening directory" << std::endl;
+		std::cerr << "Error opening directory" << std::endl;
 		return ;
 	}
 	//Going through all files in the directory to
@@ -28,8 +26,6 @@ AutoIndexGenerator::AutoIndexGenerator(const std::string &root, const std::strin
 		if (!isCurrentDirectory(currentDirEntry->d_name))
 		{
 			this->_directoryIndex += "<li><a href=\"";
-			// std::cout << "path: " << path << std::endl;
-			// std::cout << "root: " << root << std::endl;
 			this->_directoryIndex += path;
 			if (path[path.length() - 1] == '/')
 				this->_directoryIndex += "";

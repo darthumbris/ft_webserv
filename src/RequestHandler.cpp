@@ -190,7 +190,6 @@ void	RequestHandler::findLocationForUri(void)
 	if (server_root.at(0) != '/')
 		server_root = "/" + server_root;
 	_file_to_get = _server_start_dir + server_root + _uri;
-	std::cout << "uri: " << uri_dir << std::endl;
 	_requested_dir = trim(uri_dir, "/");
 	requested_loc = getcwd(buf, 4096);//TODO CHECK FOR ERROR HERE!
 	if (requested_loc.empty())
@@ -198,11 +197,8 @@ void	RequestHandler::findLocationForUri(void)
 	for (t_locmap::const_iterator loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
 	{
 		std::string server_loc = trim(loc_it->first, "/");
-		std::cout << "Hallo: " << loc_it->first << std::endl;
-		std::cout << "server loc : "<< server_loc << "requested dir: " << _requested_dir << std::endl;
 		if (best_match < lengthOfMatch(server_loc, _requested_dir) || (server_loc == "" && _requested_dir == ""))
 		{
-			std::cout << "BEST MATCH: " << loc_it->first << std::endl;
 			best_match = lengthOfMatch(server_loc, _requested_dir);
 			_matching_location = *(loc_it->second);
 			_matching_dir = loc_it->first;
@@ -226,7 +222,6 @@ void	RequestHandler::buildDefaultResponsePage(void)
 
 void	RequestHandler::findServer(void)
 {
-	std::cout << "FIND SERER " << std::endl;
 	for (t_servmap::const_iterator serv_it = _srv_map.begin(); serv_it != _srv_map.end(); serv_it++)
 	{
 		const t_vecstr	&serv_names = serv_it->getServerNames();
@@ -251,7 +246,6 @@ void	RequestHandler::findServer(void)
 
 void	RequestHandler::parseRequestLine(void)
 {
-	std::cout << "Parse request " << std::endl;
 	t_vecstr			word_vector;
 	std::istringstream	iss;
 	std::string			line;
@@ -340,7 +334,6 @@ void	RequestHandler::openFile(std::string& file_to_open)
 {
 	std::ifstream infile(file_to_open.c_str(), std::ios::in);
 	_content_type = getContentType(file_to_open);
-	std::cout << "content-type: " << _content_type << std::endl;
 	infile.seekg(0, std::ios::end);
 	std::size_t length  = infile.tellg();
 	infile.seekg(0, std::ios::beg);
@@ -350,7 +343,6 @@ void	RequestHandler::openFile(std::string& file_to_open)
 
 void	RequestHandler::handleRequest(void)
 {
-	std::cout << "handel request " << std::endl;
 	std::string	file_to_open;
 
 	if (!_matching_location.getRootPath().empty())
@@ -358,7 +350,6 @@ void	RequestHandler::handleRequest(void)
 	else
 		 file_to_open = _server_start_dir + "/" + _server.getServerRoot() + _uri;
 	_file_name = file_to_open;
-	std::cout << "Open this: " << file_to_open << std::endl;
 	if (access(file_to_open.c_str(), F_OK) == -1)
 		setResponseStatus("404 NOT FOUND");
 	else
@@ -408,7 +399,6 @@ void	RequestHandler::makeHeaderMap()
 
 void	RequestHandler::parseHeaderMap(void)
 {
-	std::cout << "Parse Header Map " << std::endl;
 	for (t_strmap::const_iterator headerMap_iter = _headermap.begin(); headerMap_iter != _headermap.end(); headerMap_iter++)
 	{
 		if (headerMap_iter->first == "Host")
@@ -484,7 +474,6 @@ void	RequestHandler::deChunkRequestBody(void)
 
 void	RequestHandler::checkRequestBodyConditions()
 {
-	std::cout <<"complete req: "<< _complete_request << std::endl;
 	if (_complete_request.find("Transfer-Encoding: chunked") != std::string::npos)
 		_is_chunked = true;
 	if (_request_header.find("Content-Length:") == std::string::npos)
@@ -495,15 +484,10 @@ void	RequestHandler::checkRequestBodyConditions()
 
 void	RequestHandler::checkRequestComplete(void)
 {
-	std::cout << "check Request Complete " << std::endl;
 	std::size_t	crlf_pos = _complete_request.find("\r\n\r\n");
 
-	std::cout << "ERROR IN OUR FACES! request status: " << _is_request_complete << std::endl;
 	if (crlf_pos == std::string::npos)
-	{
-		std::cout << "ERROR IN OUR FACES!" << std::endl;
 		return;
-	}
 	if (!_is_request_header_done)
 	{
 		_request_header = _complete_request.substr(0, crlf_pos);
@@ -512,18 +496,11 @@ void	RequestHandler::checkRequestComplete(void)
 		checkRequestBodyConditions();
 	}
 	if (_is_request_header_done && !_is_chunked && (_complete_request.length() - crlf_pos + 2) >= _request_body_length)
-	{
-		std::cout << "ERROR IN OUR FACES 3!" << std::endl;
 		_is_request_complete = true;
-	}
 	if (_is_request_header_done && _is_chunked && _complete_request.find("0\r\n\r\n") != std::string::npos)
-	{
-		std::cout << "ERROR IN OUR FACES 2!" << std::endl;
 		_is_request_complete = true;
-	}
 	if (_is_request_complete)
 	{
-		std::cout << "Request is compelte " << std::endl;
 		_request_body = _complete_request.substr(crlf_pos + 4, std::string::npos);
 		if (_is_chunked)
 			deChunkRequestBody();
@@ -536,11 +513,9 @@ void	RequestHandler::checkRequestComplete(void)
 //TODO why sometimes hangs when resending a form (refresh a page where it was POST) (request gets weird?)
 void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 {
-	std::cout << "Add to msg" << std::endl;
 	_complete_request.append(msg, bytes_received);
 	if (!isprint(_complete_request[0])) // this is for https and bad requests
 	{
-		std::cout << "Add to msg is print" << std::endl;
 		_is_request_complete = true;
 		setResponseStatus("400 Bad Request");
 		buildResponsePage();

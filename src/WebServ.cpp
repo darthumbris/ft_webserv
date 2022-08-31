@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/31 07:22:11 by alkrusts      ########   odam.nl         */
+/*   Updated: 2022/08/31 13:39:22 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ WebServ::WebServ(t_servmap& servers) : _servers(servers)
 {
 	// Starting the kqueue
 	if ((_kqueue = kqueue()) == -1)
-		std::cout << "Error: kqueue failed" << std::endl;
+		std::cerr << "Error: kqueue failed" << std::endl;
 	_n_servers = 0;
 
 	// Going through the config and making a socket and event for all servers in it.
@@ -31,7 +31,8 @@ WebServ::WebServ(t_servmap& servers) : _servers(servers)
 		{
 			if (!listeningToPort(*ports_iter))
 			{
-				std::cout << "setting socket for port: " << *ports_iter << std::endl;
+				if (DEBUG_MODE)
+					std::cout << "setting socket for port: " << *ports_iter << std::endl;
 				try	{setNewServerSocket(*iter, *ports_iter);}
 				catch(const std::exception& e) {std::cerr << e.what() << std::endl;}
 				addPortToList(*ports_iter);
@@ -126,7 +127,8 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
-	std::cout << "going to delete a connection/event" << std::endl;
+	if (DEBUG_MODE)
+		std::cout << "going to delete a connection/event" << std::endl;
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
 	if (evudat->flag)
@@ -157,7 +159,6 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
 	new_udat->req = new RequestHandler(_servers);
-	std::cout << " new _ OW NOOOO::::::" << new_udat->req->isRequestChunked() << std::endl;
 	new_udat->total_size = 0;
 	new_udat->req->setPort(old_udat->port);
 	new_udat->req->setClientIp(inet_ntoa(newaddr.sin_addr));
@@ -168,8 +169,8 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	EV_SET(&new_event[1], clnt_sckt, EVFILT_WRITE, EV_ADD, 0, 0, new_udat);
 	kevent(_kqueue, new_event, 2, NULL, 0, NULL);
 
-	//Debug message
-	std::cout << "New client connected to server with port: " << old_udat->port << std::endl;
+	if (DEBUG_MODE)
+		std::cout << "New client connected to server with port: " << old_udat->port << std::endl;
 }
 
 void	WebServ::receiveRequest(t_event &event)
@@ -182,7 +183,7 @@ void	WebServ::receiveRequest(t_event &event)
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	total_bytes += bytes_read;
 	if (bytes_read < 0)
-		std::cout << "recv error" << std::endl;
+		std::cerr << "recv error" << std::endl;
 	else if (bytes_read == 0 && evudat->flag != 2)
 		evudat->flag = 1;
 	else
@@ -223,7 +224,6 @@ void	WebServ::sendResponse(t_event &event)
 		evudat->total_size = 0;
 		delete evudat->req;
 		evudat->req = new RequestHandler(_servers);
-		std::cout << " OW NOOOO::::::" << evudat->req->isRequestChunked() << std::endl;
 		evudat->req->setPort(evudat->port);
 	}
 }
@@ -273,7 +273,7 @@ void	WebServ::runServer()
 			for (int i = 0; i < new_evnt; i++)
 			{
 				if (events[i].flags & EV_ERROR)
-					std::cout << "Error: Socket got deleted" << std::endl;
+					std::cerr << "Error: Socket got deleted" << std::endl;
 				if (isListenSocket(events[i].ident))
 					addConnection(events[i], (t_evudat *)(events[i].udata));
 				else if (events[i].filter == EVFILT_READ)
