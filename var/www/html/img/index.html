@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script>
+      function deleteFile(name) {
+
+        return fetch('http://localhost:4242/img/' + name, {
+            method: 'DELETE',
+        }).then(response => response.json()).catch()
+      }
+    </script>
+    <style>
+      div.center {
+        text-align: center;
+      }
+    </style>
+
+    <title>Test ft_webserv</title>
+  </head>
+  <body>
+    <div class="jumbotron">
+      <h1>Test ft_webserv</h1>
+      <p>On this url u can use GET DELETE.</p>
+    </div>
+    <div class="center">
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_19-9-8.png"></img>
+      <button onclick="deleteFile('/dallemini_2022-8-31_19-9-8.png')" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_17-52-10.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_19-3-14.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_19-1-15.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_19-6-17.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_19-10-27.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_18-58-36.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_18-52-38.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_19-7-40.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_19-13-43.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_18-54-44.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_18-56-52.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+      <img width="800" height="800" src="/img/dallemini_2022-8-31_18-56-52.png"></img>
+      <button onclick="deleteFile()" type="button" class="btn btn-danger">Delete</button>
+      <br>
+    </div>
+  </body>
+</html>
