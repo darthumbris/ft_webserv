@@ -230,7 +230,10 @@ void	RequestHandler::findServer(void)
 		{
 			if (_host == "")
 			{
-				_host = *serv_names.begin();
+				if (!serv_names.empty())
+					_host = *serv_names.begin();
+				else
+					_host = "ft_webserv";
 				_server = *serv_it;
 				
 			}

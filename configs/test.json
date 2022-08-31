@@ -1,5 +1,11 @@
 {
     "server":
     [
+		{
+			"listen": [4242],
+			"location /": {
+				"allowed_method": ["GET"]
+			}
+		}
     ]
 }
