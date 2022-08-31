@@ -323,7 +323,7 @@ void	RequestHandler::handlePostMethod()
 void	RequestHandler::handleDeleteMethod(std::string &file_to_open)
 {
 	if (!getMatchingLocation().getMethodDel())
-		setResponseStatus("403 Forbiden");
+		return setResponseStatus("403 Forbiden");
 	if (remove(file_to_open.c_str()) == -1)
 		setResponseStatus("500 Internal Server Error");
 	else
