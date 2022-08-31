@@ -3,7 +3,7 @@
     [
       {
         "client_body_size": 1000000,
-        "listen": [42, 4343],
+        "listen": [4242, 4343],
 		"root": "var/www/html",
         "server_name": [
           "test.com",

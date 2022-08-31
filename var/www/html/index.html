@@ -1,12 +1,47 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>My Page Title</title>
-	</head>
-	<body>
-		
-	<h1>This is a Heading</h1>
-	<p>This is a paragraph.</p>
-	
-	</body>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <title>Test ft_webserv</title>
+  </head>
+  <body>
+    <div class="jumbotron">
+      <h1>Test ft_webserv</h1>
+      <p>On this url u can use GET.</p>
+    </div>
+    <br>
+    <div class="panel panel-success">
+      <div class="panel-heading">Test Files on Server</div>
+      <div class="panel-body">
+        <a href="/upload/" class="list-group-item list-group-item-success">See uploaded files</a>
+        <a href="/upload/" class="list-group-item list-group-item-success">See images</a>
+        <a href="/video/index.html" class="list-group-item list-group-item-success">See videos</a>
+      </div>
+    </div>
+    <br>
+    <div class="panel panel-danger">
+      <div class="panel-heading">Test Error Pages</div>
+      <div class="panel-body">
+        <a href="/no found/" class="list-group-item list-group-item-danger">404 Not Found(User defined error page, if this does not exist create it).</a>
+        <a href="/test/not_public.html" class="list-group-item list-group-item-danger">403 Frobiden(Defualt if this file does not exists create a file and chmod 000).</a>
+      </div>
+    </div>
+    <br>
+    <div class="panel panel-info">
+      <div class="panel-heading">Test Cgi</div>
+      <div class="panel-body">
+        <a href="/test/upload.html" class="list-group-item list-group-item-info">php</a>
+        <a href="/test/python_test.html" class="list-group-item list-group-item-info">python</a>
+      </div>
+    </div>
+  </body>
 </html>
