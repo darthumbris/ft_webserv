@@ -374,6 +374,8 @@ void	RequestHandler::handleRequest(void)
 		else
 			setResponseStatus("405 Method Not Allowed");
 	}
+	if (!_matching_location.getReturnCode().empty())
+		setResponseStatus(_matching_location.getReturnCode() + " Method Not Allowed");
 }
 
 bool	RequestHandler::isRequestComplete() const
@@ -511,8 +513,6 @@ void	RequestHandler::checkRequestComplete(void)
 		_is_request_header_done = true;
 		checkRequestBodyConditions();
 	}
-	std::cout << " is request header done " << _is_request_header_done <<  "is chunked" << !_is_chunked << "length - crlf pos "<<(_complete_request.length() - (crlf_pos + 2)) << "request body length >= "<< _request_body_length << std::endl;
-	std::cout << " is request header done " << _is_request_header_done <<  "is chunked" << !_is_chunked << "length - crlf pos "<<(_complete_request.length() - crlf_pos + 2) << "request body length >= "<< _request_body_length << std::endl;
 	if (_is_request_header_done && !_is_chunked && (_complete_request.length() - crlf_pos + 2) >= _request_body_length)
 	{
 		std::cout << "ERROR IN OUR FACES 3!" << std::endl;

@@ -2,9 +2,9 @@
     "server":
     [
       {
-        "client_body_size": 10,
+        "client_body_size": 1000000,
         "listen": [4242, 4343],
-	    	"root": "var/www/html",
+		"root": "var/www/html",
         "server_name": [
           "test.com",
           "test2.com",
@@ -18,8 +18,8 @@
         "location /": {
           "allowed_method": ["GET"],
           "auto_index": true,
-          "index": "index.html",
-          "root": "var/www/html"
+          "root": "var/www/html",
+          "return": "301 https://google.com"
         },
         "location /cgi_bin/php/": {
           "allowed_method": ["GET", "POST"],
@@ -50,7 +50,7 @@
           "auto_index": true,
           "allowed_method": ["GET", "DELETE"]
         },
-        "location /old": {
+        "location /old/": {
           "allowed_method": ["GET"],
           "root": "var/www/html",
           "return": "301 http://localhost:4242/"
