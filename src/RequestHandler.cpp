@@ -165,27 +165,22 @@ void	RequestHandler::buildResponseHeader(void)
 	{
 		if (std::stoi(_status_line.substr(0, 3)) >= 300 && std::stoi(_status_line.substr(0, 3)) <= 310)
 		{
-			if (_is_folder)
+			if (!_matching_location.getReturnUrl().empty())
+				_response_header += "Location: " + _matching_location.getReturnUrl() + "/\r\n";
+			else if (_is_folder)
 				_response_header += "Location: " + _uri + "/\r\n";
 			else
 				_response_header += "Location: " + _uri + "\r\n";
 		}	
-		else if (std::stoi(_status_line.substr(0, 3)) < 300 && !_matching_location.getReturnCode().empty())
-		{
-				_response_header += "Location: " + _matching_location.getReturnCode() + "\r\n";
-				_status_line = _matching_location.getReturnCode() + "Moved";
-		}
 	}
 	_response_header = "HTTP/1.1 " + _status_line + "\r\n" + _response_header;
 	_response_header += "Server: " + _host +  "\r\n";
 	_response_header += "Content-Length: " + std::to_string(len) + "\r\n";
 	_response_header += "Content-Type: " + _content_type + "\r\n\r\n";
-	std::cout << "response_header: " << _response_header << std::endl;
 }
 
 void	RequestHandler::findLocationForUri(void)
 {
-	std::cout << "find location for uri " << std::endl;
 	char		buf[4096];
 	std::string	uri_dir = _uri.substr(0, _uri.find_last_of("/"));
 	std::string	server_root = _server.getServerRoot();
@@ -197,7 +192,6 @@ void	RequestHandler::findLocationForUri(void)
 	_file_to_get = _server_start_dir + server_root + _uri;
 	std::cout << "uri: " << uri_dir << std::endl;
 	_requested_dir = trim(uri_dir, "/");
-	std::cout << "requested dir : " << _requested_dir << std::endl;
 	requested_loc = getcwd(buf, 4096);//TODO CHECK FOR ERROR HERE!
 	if (requested_loc.empty())
 		return setResponseStatus("500 Internal Server Error");
@@ -282,7 +276,8 @@ void	RequestHandler::parseRequestLine(void)
 
 void	RequestHandler::handleGetMethod(std::string &file_to_open)
 {
-	setResponseStatus("200 OK");
+	if (_status_line.empty())
+		setResponseStatus("200 OK");
 	if (access(file_to_open.c_str(), R_OK) == -1 || !getMatchingLocation().getMethodGet())
 		return setResponseStatus("403 Forbiden");
 	if (_uri.back() == '/')
@@ -293,7 +288,10 @@ void	RequestHandler::handleGetMethod(std::string &file_to_open)
 			openFile(file_to_open);
 		}
 		else if (_matching_location.getAutoIndex())
+		{
 			_response_body = AutoIndexGenerator(_matching_location.getRootPath(), "/" + _requested_dir).getDirectoryIndex();
+			_content_type = "text/html";
+		}
 		else
 			setResponseStatus("404 Not Found");
 	}
@@ -375,7 +373,7 @@ void	RequestHandler::handleRequest(void)
 			setResponseStatus("405 Method Not Allowed");
 	}
 	if (!_matching_location.getReturnCode().empty())
-		setResponseStatus(_matching_location.getReturnCode() + " Method Not Allowed");
+		setResponseStatus(_matching_location.getReturnCode() + " Moved");
 }
 
 bool	RequestHandler::isRequestComplete() const

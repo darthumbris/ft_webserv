@@ -15,6 +15,7 @@ Location & Location::operator=(const Location &assign)
 	_return_url = assign._return_url;
 	_root = assign._root;
 	_allowed_methods = assign._allowed_methods;
+	_return_code = assign._return_code;
 	return *this;
 }
 
