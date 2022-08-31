@@ -40,6 +40,7 @@ class RequestHandler
 		const std::string		&getRequestMethod(void) const;
 		std::string				getResponse(void) const;
 		bool					isRequestComplete(void) const;
+		bool					isRequestChunked(void) const;
 		int						getFileDescriptor(void) const;
 		std::size_t				getFileSize(void) const;
 		t_strmap				getHeaderMap(void) const;
@@ -81,7 +82,7 @@ class RequestHandler
 		
 	private:
 
-		t_servmap			_srv_map; //needed for finding right server
+		t_servmap			_srv_map;
 		bool				_is_request_complete;
 		int					_fd;
 		std::size_t			_file_size;

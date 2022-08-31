@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/26 14:48:04 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/31 07:22:11 by alkrusts      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,12 +151,13 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	setsockopt(clnt_sckt, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(opt_value));
 
 	//setting initial values for the new_udat
-	t_evudat	*new_udat = new t_evudat;
+	t_evudat	*new_udat = new t_evudat;//will these leek?
 	memset(new_udat, 0, sizeof(t_evudat));
 	new_udat->addr = newaddr;
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
 	new_udat->req = new RequestHandler(_servers);
+	std::cout << " new _ OW NOOOO::::::" << new_udat->req->isRequestChunked() << std::endl;
 	new_udat->total_size = 0;
 	new_udat->req->setPort(old_udat->port);
 	new_udat->req->setClientIp(inet_ntoa(newaddr.sin_addr));
@@ -222,6 +223,7 @@ void	WebServ::sendResponse(t_event &event)
 		evudat->total_size = 0;
 		delete evudat->req;
 		evudat->req = new RequestHandler(_servers);
+		std::cout << " OW NOOOO::::::" << evudat->req->isRequestChunked() << std::endl;
 		evudat->req->setPort(evudat->port);
 	}
 }
