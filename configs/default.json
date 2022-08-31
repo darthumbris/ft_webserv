@@ -21,6 +21,12 @@
           "index": "index.html",
           "root": "var/www/html"
         },
+        "location /img/": {
+          "allowed_method": ["GET", "DELETE"],
+          "auto_index": true,
+          "index": "index.html",
+          "root": "var/www/html"
+        },
         "location /v/": {
           "allowed_method": ["GET"],
           "auto_index": true,
