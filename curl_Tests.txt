@@ -1,3 +1,0 @@
-
-To test the server name use the following
-curl --request GET --resolve server_name1.test:4242:127.0.0.1 'http://server_name1.test:4242/' --header 'Host:server_name1.test'
