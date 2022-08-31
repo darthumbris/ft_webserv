@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/31 13:47:49 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/31 13:50:01 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,19 +27,14 @@ WebServ::WebServ(t_servmap& servers) : _servers(servers)
 	for (t_servmap::iterator iter = _servers.begin(); iter != _servers.end(); iter++)
 	{
 		t_vecint ports = iter->getServerPort();
-		if (ports.size() < 1)
-		{
-			 std::cerr << "No listen ports set" << std::endl;
-			 exit(1);
-		}
+			throw WebServerExcpetion{"Error: no listen ports set."};
 		for (t_vecint::const_iterator ports_iter = ports.begin(); ports_iter != ports.end(); ports_iter++)
 		{
 			if (!listeningToPort(*ports_iter))
 			{
 				if (DEBUG_MODE)
 					std::cout << "setting socket for port: " << *ports_iter << std::endl;
-				try	{setNewServerSocket(*iter, *ports_iter);}
-				catch(const std::exception& e) {std::cerr << e.what() << std::endl;}
+				setNewServerSocket(*iter, *ports_iter);
 				addPortToList(*ports_iter);
 				_n_servers++;
 			}
