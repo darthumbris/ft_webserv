@@ -21,6 +21,12 @@
           "index": "index.html",
           "root": "var/www/html"
         },
+        "location /v/": {
+          "allowed_method": ["GET"],
+          "auto_index": true,
+          "index": "index.html",
+          "root": "var/www/html"
+        },
         "location /cgi_bin/php/": {
           "allowed_method": ["GET", "POST"],
           "root": "var/www/html",

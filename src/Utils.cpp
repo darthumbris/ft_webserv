@@ -7,19 +7,23 @@ std::size_t	lengthOfMatch(const std::string &str1, const std::string &str2)
 	std::string::const_iterator	iter_end1;
 	std::string::const_iterator	iter_end2;
 	std::size_t					size;
+	std::size_t					match_size;
 
 	iter1 = str1.begin();
 	iter2 = str2.begin();
 	iter_end1 = str1.end();
 	iter_end2 = str2.end();
 	size = 0;
+	match_size = 0;
 	while (*iter1 == *iter2 && iter1 != iter_end1 && iter2 != iter_end2)
 	{
+		if (*iter1 == '/' && *iter2 == '/')
+			match_size += size + 1;
 		size++;
 		iter1++;
 		iter2++;
 	}
-	return (size);
+	return (match_size);
 }
 
 std::string	stripExesSlashes(const std::string &uri)

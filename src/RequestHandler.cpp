@@ -190,15 +190,27 @@ void	RequestHandler::findLocationForUri(void)
 	if (server_root.at(0) != '/')
 		server_root = "/" + server_root;
 	_file_to_get = _server_start_dir + server_root + _uri;
-	_requested_dir = trim(uri_dir, "/");
-	requested_loc = getcwd(buf, 4096);//TODO CHECK FOR ERROR HERE!
+	_requested_dir = trim(uri_dir, "/") + "/";
+	requested_loc = getcwd(buf, 4096);
 	if (requested_loc.empty())
 		return setResponseStatus("500 Internal Server Error");
 	for (t_locmap::const_iterator loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
 	{
-		std::string server_loc = trim(loc_it->first, "/");
-		if (best_match < lengthOfMatch(server_loc, _requested_dir) || (server_loc == "" && _requested_dir == ""))
+		std::string server_loc = trim(loc_it->first, "/") + "/";
+		std::cerr << "server: " << server_loc << std::endl;
+		std::cerr << "reques: " <<  _requested_dir << std::endl;
+		if (server_loc == "/")
 		{
+			std::cerr << "picked server: " << server_loc << std::endl;
+			std::cerr << "picked reques: " <<  _requested_dir << std::endl;
+			best_match = lengthOfMatch(server_loc, _requested_dir);
+			_matching_location = *(loc_it->second);
+			_matching_dir = loc_it->first;
+		}
+		else if (best_match < lengthOfMatch(server_loc, _requested_dir) || (server_loc == "" && _requested_dir == ""))
+		{
+			std::cerr << "picked server: " << server_loc << std::endl;
+			std::cerr << "picked reques: " <<  _requested_dir << std::endl;
 			best_match = lengthOfMatch(server_loc, _requested_dir);
 			_matching_location = *(loc_it->second);
 			_matching_dir = loc_it->first;
