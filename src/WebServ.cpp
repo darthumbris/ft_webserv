@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/31 13:53:57 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/08/31 13:56:54 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,8 @@ WebServ::WebServ(t_servmap& servers) : _servers(servers)
 		throw WebServerExcpetion{"Error: no servers configured."};
 	for (t_servmap::iterator iter = _servers.begin(); iter != _servers.end(); iter++)
 	{
+		if (iter->getLocationMap().size() < 1)
+			throw WebServerExcpetion{"Error: no location configured."};
 		t_vecint ports = iter->getServerPort();
 		if (ports.size() < 1)
 			throw WebServerExcpetion{"Error: no listen ports set."};
