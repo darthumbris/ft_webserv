@@ -154,7 +154,6 @@ void	RequestHandler::setClientIp(const std::string &ip)
 	this->_client_ip = ip;
 }
 
-//TODO protect the stoi
 void	RequestHandler::buildResponseHeader(void)
 {
 	std::size_t	len = _file_size;
@@ -163,7 +162,7 @@ void	RequestHandler::buildResponseHeader(void)
 		len = _response_body.length();
 	if (_status_line.length() >= 3)
 	{
-		if (std::stoi(_status_line.substr(0, 3)) >= 300 && std::stoi(_status_line.substr(0, 3)) <= 310)
+		if (_status_line[0] == '3' && std::stoi(_status_line.substr(0, 3)) >= 300 && std::stoi(_status_line.substr(0, 3)) <= 310)
 		{
 			if (!_matching_location.getReturnUrl().empty())
 				_response_header += "Location: " + _matching_location.getReturnUrl() + "/\r\n";
@@ -525,7 +524,6 @@ void	RequestHandler::checkRequestComplete(void)
 	}
 }
 
-//TODO why sometimes hangs when resending a form (refresh a page where it was POST) (request gets weird?)
 void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 {
 	_complete_request.append(msg, bytes_received);

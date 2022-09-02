@@ -6,6 +6,12 @@
 			"location /": {
 				"allowed_method": ["GET"]
 			}
+		},
+		{
+			"listen": [8080],
+			"location /": {
+				"allowed_method": ["GET"]
+			}
 		}
     ]
 }

@@ -6,13 +6,11 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/08/31 13:56:54 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/09/02 13:33:23 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "WebServ.hpp"
-
-//TODO make a index.html that shows all stuff we need to handle (file uploading redirect etc)
 
 // Constructors
 WebServ::WebServ(t_servmap& servers) : _servers(servers)
