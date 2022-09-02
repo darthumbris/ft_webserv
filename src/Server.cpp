@@ -63,6 +63,10 @@ void Server::setServerErrorPage(const Json &json)
 			throw Config::wrongKey("Expected STRING type");
 		if (_error_page.find(x.first) != _error_page.end())
 			throw Config::wrongKey("error_code duplicate");
+		if (!std::isdigit(x.first[0]) || std::stoi(x.first) < 100 || std::stoi(x.first) > 599 || x.first.length() != 3)
+			throw Config::wrongKey("error_code not in range 100-599 got: " + x.first + ".");
+		if (x.second->values.str.length() == 0)
+			throw Config::wrongKey("error_page is empty string.");
 		if (DEBUG_MODE)
 			std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
 		_error_page.emplace(x.first, x.second->values.str);

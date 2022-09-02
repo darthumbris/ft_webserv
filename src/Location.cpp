@@ -132,7 +132,13 @@ void Location::setUploadPath(const Json& json)
 
 void Location::setReturnUrl(const Json& json)
 {
+	if (json.values.str.find(' ') == std::string::npos)
+		throw wrongType("expected: return_code return_url but no space found.");
+	else if (json.values.str.find_first_of(" ") == json.values.str.length() - 1)
+		throw wrongType("expected: return_code return_url but no return_url found.");
 	_return_code = json.values.str.substr(0, json.values.str.find_first_of(" "));
+	if (_return_code[0] != '3' || std::stoi(_return_code) < 300 || std::stoi(_return_code) > 308 || _return_code.length() != 3)
+		throw wrongType("expected: return_code in range 300-308 but got: " + _return_code + ".");
 	_return_url = json.values.str.substr(json.values.str.find_first_of(" ") + 1, std::string::npos);
 	if (DEBUG_MODE)
 	{
@@ -219,6 +225,12 @@ void Location::setLocation(const Json& json)
 
 void	Location::setCgi(const Json& json)
 {
+	if (json.values.str[0] != '.')
+		throw wrongType("expected: .filetype cgi_path but filetype did not start with a dot.");
+	if (json.values.str.find(' ') == std::string::npos)
+		throw wrongType("expected: .filetype cgi_path but no space found.");
+	else if (json.values.str.find_first_of(" ") == json.values.str.length() - 1)
+		throw wrongType("expected: .filetype cgi_path but no cgi_path found.");
 	_cgi_file_type = json.values.str.substr(0, json.values.str.find_first_of(" "));
 	_cgi_path = json.values.str.substr(json.values.str.find_first_of(" ") + 1, std::string::npos);
 	if (DEBUG_MODE)
