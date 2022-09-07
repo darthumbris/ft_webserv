@@ -63,7 +63,7 @@ void	CgiHandler::setEnvValues()
 		_env["ROOT_PATH="] = _cur_dir + "/" + _req->getMatchingLocation().getRootPath();
 	}
 
-	if (DEBUG_MODE)
+	// if (DEBUG_MODE)
 		for (auto it = _env.begin(); it != _env.end(); it++)
 			std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
 }

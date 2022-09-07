@@ -34,6 +34,8 @@ if (move_uploaded_file($tmp_name, $uploadfile))
 else
 {
 	echo "Couldn't upload the file.<br>";
+	echo "<br>kaas" . $tmp_name . "kaas<br>";
+	echo "<br>" . $uploadfile . "<br>";
 }
 
 echo "</body>";

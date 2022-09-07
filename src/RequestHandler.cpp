@@ -21,6 +21,8 @@ RequestHandler::RequestHandler(const t_servmap &srv_map) :
 	_content_type = "";
 	_is_chunked = false;
 	_request_body_length = 0;
+	_is_request_complete = false;
+	_is_request_header_done = false;
 }
 
 RequestHandler::RequestHandler(const RequestHandler &copy)
@@ -500,6 +502,7 @@ void	RequestHandler::checkRequestComplete(void)
 {
 	std::size_t	crlf_pos = _complete_request.find("\r\n\r\n");
 
+	// std::cout << "crlf_pos: " << crlf_pos << std::endl;
 	if (crlf_pos == std::string::npos)
 		return;
 	if (!_is_request_header_done)
@@ -529,11 +532,21 @@ void	RequestHandler::addToRequestMsg(char *msg, int bytes_received)
 	_complete_request.append(msg, bytes_received);
 	if (!isprint(_complete_request[0])) // this is for https and bad requests
 	{
+		std::cerr << "bad request" << std::endl;
 		_is_request_complete = true;
 		setResponseStatus("400 Bad Request");
 		buildResponsePage();
 		buildResponseHeader();
 		return ;
 	}
-	checkRequestComplete();
+	try
+	{
+		checkRequestComplete();
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
+	
 }
