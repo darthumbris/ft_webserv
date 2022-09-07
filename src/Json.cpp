@@ -13,16 +13,16 @@ Json::~Json()
 			values.str.~basic_string();
 			break;
 		case ARRAY:
-			for (const Json *x: values.list)
+			for (jsonList::iterator x = values.list.begin(); x != values.list.end(); x++)
 			{
-				delete x;
+				delete *x;
 			}
 			values.list.~vector();
 			break;
 		case OBJECT:
-			for (const auto &x: values.object)
+			for (jsonObject::iterator x = values.object.begin(); x != values.object.end(); x++)
 			{
-				delete x.second;
+				delete x->second;
 			}
 			values.object.~map();
 			break;
