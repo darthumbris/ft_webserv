@@ -64,7 +64,7 @@ void	CgiHandler::setEnvValues()
 	}
 
 	// if (DEBUG_MODE)
-		for (auto it = _env.begin(); it != _env.end(); it++)
+		for (t_strmap::iterator it = _env.begin(); it != _env.end(); it++)
 			std::cout << it->first << it->second << " len: " << it->second.length() << std::endl;
 }
 

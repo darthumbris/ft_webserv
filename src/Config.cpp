@@ -16,8 +16,8 @@ Config::~Config()
 // Setters
 void Config::setServers(const Json *json)
 {
-	for (const auto &x: json->values.object)
-		checkValidServer(*x.second);
+	for (jsonObject::const_iterator x = json->values.object.begin(); x != json->values.object.end(); x++)
+		checkValidServer(*x->second);
 }
 
 void Config::checkValidServer(const Json &json)
@@ -27,8 +27,8 @@ void Config::checkValidServer(const Json &json)
 		std::string	error = "expected an <ARRAY> and got " + Location().getEnumValue(json.type);
 		throw wrongKey(error.c_str());
 	}
-	for (const Json *x: json.values.list)
-		addServer(x);
+	for (jsonList::const_iterator x = json.values.list.begin(); x != json.values.list.end(); x++)
+		addServer(*x);
 }
 
 void Config::addServer(const Json *json)
@@ -37,19 +37,19 @@ void Config::addServer(const Json *json)
 
 	if (DEBUG_MODE)
 		std::cout << BLUE << "\nAdded a new server." << std::endl;
-	for (const auto &x: json->values.object)
+	for (jsonObject::const_iterator x = json->values.object.begin(); x != json->values.object.end(); x++)
 	{
-		if(x.first.find("location") != std::string::npos)
+		if(x->first.find("location") != std::string::npos)
 		{
 			Location	*loc = new Location();
 
-			loc->ParseLocation(x.first, *x.second);
-			server.addLocationToServer(loc->getPath(x.first), loc);
+			loc->ParseLocation(x->first, *x->second);
+			server.addLocationToServer(loc->getPath(x->first), loc);
 		}
 		else
 		{
-			Server::Func f = server.setValues(x.first, *x.second);
-			(server.*f)(*x.second);
+			Server::Func f = server.setValues(x->first, *x->second);
+			(server.*f)(*x->second);
 		}
 	}
 	_servers.push_back(server);

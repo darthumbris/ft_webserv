@@ -160,21 +160,21 @@ int	checkPath(const std::string &path)
 	{
 		if (s.st_mode & S_IFDIR)
 		{
-			std::cout << "is a directory" << std::endl;
+			// std::cout << "is a directory" << std::endl;
 			return IS_DIR;
 		}
 		else if (s.st_mode & S_IFREG)
 		{
-			std::cout << "is a file" << std::endl;
+			// std::cout << "is a file" << std::endl;
 			return IS_FILE;
 		}
 		else
 		{
-			std::cout << "is something else" << std::endl;
+			// std::cout << "is something else" << std::endl;
 			return IS_OTHER;
 		}
 	}
-	std::cout << "Error: " << path << " is not a file or directory" << std::endl;
+	std::cerr << "Error: " << path << " is not a file or directory" << std::endl;
 	return IS_OTHER;
 }
 

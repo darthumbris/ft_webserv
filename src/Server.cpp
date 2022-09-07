@@ -26,25 +26,25 @@ Server::~Server() {}
 
 void Server::addServerListen(const Json &json)
 {
-	for (const Json *x: json.values.list)
+	for (jsonList::const_iterator x = json.values.list.begin(); x != json.values.list.end(); x++)
 	{
-		if (x->type != Json::NUMBER)
+		if ((*x)->type != Json::NUMBER)
 			throw Config::wrongKey("expected <NUMBER>");
 		if (DEBUG_MODE)
-			std::cout << BLUE << "Added port: " << x->values.number << " to the server." << RESET_COLOR << std::endl;
-		_server_listen.push_back(x->values.number);
+			std::cout << BLUE << "Added port: " << (*x)->values.number << " to the server." << RESET_COLOR << std::endl;
+		_server_listen.push_back((*x)->values.number);
 	}
 }
 
 void Server::addServerName(const Json &json)
 {
-	for (const auto *x : json.values.list)
+	for (jsonList::const_iterator x = json.values.list.begin(); x != json.values.list.end(); x++)
 	{
-		if (x->type != Json::STRING)
+		if ((*x)->type != Json::STRING)
 			throw Config::wrongKey("expected <STRING>");
 		if (DEBUG_MODE)
-			std::cout << BLUE << "Added server_name: " << x->values.str << " to the server." << RESET_COLOR << std::endl;
-		_server_name.push_back(x->values.str);
+			std::cout << BLUE << "Added server_name: " << (*x)->values.str << " to the server." << RESET_COLOR << std::endl;
+		_server_name.push_back((*x)->values.str);
 	}
 }
 
@@ -57,19 +57,20 @@ void Server::setServerClientBodySize(const Json &json)
 
 void Server::setServerErrorPage(const Json &json)
 {
-	for (const auto &x : json.values.object)
+	for (jsonObject::const_iterator x = json.values.object.begin(); x != json.values.object.end(); x++)
 	{
-		if (x.second->type != Json::STRING)
+		if (x->second->type != Json::STRING)
 			throw Config::wrongKey("Expected STRING type");
-		if (_error_page.find(x.first) != _error_page.end())
+		if (_error_page.find(x->first) != _error_page.end())
 			throw Config::wrongKey("error_code duplicate");
-		if (!std::isdigit(x.first[0]) || std::stoi(x.first) < 100 || std::stoi(x.first) > 599 || x.first.length() != 3)
-			throw Config::wrongKey(("error_code not in range 100-599 got: " + x.first + ".").c_str());
-		if (x.second->values.str.length() == 0)
+		if (!std::isdigit(x->first[0]) || std::stoi(x->first) < 100 || std::stoi(x->first) > 599 || x->first.length() != 3)
+			throw Config::wrongKey(("error_code not in range 100-599 got: " + x->first + ".").c_str());
+		if (x->second->values.str.length() == 0)
 			throw Config::wrongKey("error_page is empty string.");
 		if (DEBUG_MODE)
-			std::cout << BLUE << "For error code: " << x.first << " set the file to: " << x.second->values.str << RESET_COLOR << std::endl; 
-		_error_page.emplace(x.first, x.second->values.str);
+			std::cout << BLUE << "For error code: " << x->first << " set the file to: " << x->second->values.str << RESET_COLOR << std::endl; 
+		_error_page.insert(std::make_pair(x->first, x->second->values.str));
+		// _error_page.emplace(x->first, x->second->values.str);
 	}
 }
 
@@ -82,7 +83,7 @@ void Server::setServerRoot(const Json& json)
 
 Server::Func Server::setValues(const std::string name, const Json& json)
 {
-	t_table	map[] =
+	t_table	map[5] =
 	{
 			{"listen", Json::ARRAY, &Server::addServerListen},
 			{"error_page", Json::OBJECT, &Server::setServerErrorPage},
@@ -91,12 +92,12 @@ Server::Func Server::setValues(const std::string name, const Json& json)
 			{"root", Json::STRING, &Server::setServerRoot}
 	};
 
-	for (const t_table& entry : map)
+	for (size_t i = 0; i < 5; i++)
 	{
-		if (entry.type == json.type)
+		if (map[i].type == json.type)
 		{
-			if (entry.key == name)
-				return (entry.map_values);
+			if (map[i].key == name)
+				return (map[i].map_values);
 		}
 	}
 	throw Config::wrongKey(("invalid name or key for <" + name).c_str());

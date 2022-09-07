@@ -198,20 +198,20 @@ void	RequestHandler::findLocationForUri(void)
 	for (t_locmap::const_iterator loc_it = _server.getLocationMap().begin(); loc_it != _server.getLocationMap().end(); loc_it++)
 	{
 		std::string server_loc = trim(loc_it->first, "/") + "/";
-		std::cerr << "server: " << server_loc << std::endl;
-		std::cerr << "reques: " <<  _requested_dir << std::endl;
+		// std::cerr << "server: " << server_loc << std::endl;
+		// std::cerr << "reques: " <<  _requested_dir << std::endl;
 		if (server_loc == "/")
 		{
-			std::cerr << "picked server: " << server_loc << std::endl;
-			std::cerr << "picked reques: " <<  _requested_dir << std::endl;
+			// std::cerr << "picked server: " << server_loc << std::endl;
+			// std::cerr << "picked reques: " <<  _requested_dir << std::endl;
 			best_match = lengthOfMatch(server_loc, _requested_dir);
 			_matching_location = *(loc_it->second);
 			_matching_dir = loc_it->first;
 		}
 		else if (best_match < lengthOfMatch(server_loc, _requested_dir) || (server_loc == "" && _requested_dir == ""))
 		{
-			std::cerr << "picked server: " << server_loc << std::endl;
-			std::cerr << "picked reques: " <<  _requested_dir << std::endl;
+			// std::cerr << "picked server: " << server_loc << std::endl;
+			// std::cerr << "picked reques: " <<  _requested_dir << std::endl;
 			best_match = lengthOfMatch(server_loc, _requested_dir);
 			_matching_location = *(loc_it->second);
 			_matching_dir = loc_it->first;

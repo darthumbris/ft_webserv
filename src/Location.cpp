@@ -194,32 +194,32 @@ void Location::setAllowedMethod(const Json& json)
 			{"DELETE", Json::STRING, &Location::setDeleteMethod}
 	};
 
-	for (const Json *x: json.values.list)
+	for (jsonList::const_iterator x = json.values.list.begin(); x != json.values.list.end(); x++)
 	{
 		int i = 0;
-		for (const t_table& entry : map)
+		for (size_t j = 0; j < 3; j++)
 		{
-			if (entry.type == x->type)
+			if (map[j].type == (*x)->type)
 			{
-				if (entry.key == x->values.str)
+				if (map[j].key == (*x)->values.str)
 				{
-					(this->*entry.map_values)(*x);
+					(this->*map[j].map_values)(*(*x));
 					break;
 				}
 			}
 			i++;
 			if (i == 3)
-				throw wrongType(("expected <" + getEnumValue(x->type) + "> but got " + getEnumValue(entry.type)).c_str());
+				throw wrongType(("expected <" + getEnumValue((*x)->type) + "> but got " + getEnumValue(map[j].type)).c_str());
 		}
 	}
 }
 
 void Location::setLocation(const Json& json)
 {
-	for (const auto &x: json.values.object)
+	for (jsonObject::const_iterator x = json.values.object.begin(); x != json.values.object.end(); x++)
 	{
-		Location::Func f = which(x.first, *x.second);
-		(*this.*f)(*x.second);
+		Location::Func f = which(x->first, *x->second);
+		(*this.*f)(*x->second);
 	}
 }
 
@@ -255,12 +255,12 @@ Location::Func	Location::which(const std::string& name, const Json &json)
 			{"upload", Json::STRING,&Location::setUploadPath},
 	};
 
-	for (const t_table& entry : map)
+	for (size_t i = 0; i < 7; i++)
 	{
-		if (entry.type == json.type)
+		if (map[i].type == json.type)
 		{
-			if (entry.key == name)
-				return (entry.map_values);
+			if (map[i].key == name)
+				return (map[i].map_values);
 		}
 	}
 	throw wrongType("expected <testing>");
