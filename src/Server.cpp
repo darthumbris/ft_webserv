@@ -64,7 +64,7 @@ void Server::setServerErrorPage(const Json &json)
 		if (_error_page.find(x.first) != _error_page.end())
 			throw Config::wrongKey("error_code duplicate");
 		if (!std::isdigit(x.first[0]) || std::stoi(x.first) < 100 || std::stoi(x.first) > 599 || x.first.length() != 3)
-			throw Config::wrongKey("error_code not in range 100-599 got: " + x.first + ".");
+			throw Config::wrongKey(("error_code not in range 100-599 got: " + x.first + ".").c_str());
 		if (x.second->values.str.length() == 0)
 			throw Config::wrongKey("error_page is empty string.");
 		if (DEBUG_MODE)
@@ -99,7 +99,7 @@ Server::Func Server::setValues(const std::string name, const Json& json)
 				return (entry.map_values);
 		}
 	}
-	throw Config::wrongKey("invalid name or key for <" + name);
+	throw Config::wrongKey(("invalid name or key for <" + name).c_str());
 }
 
 void	Server::setServerSocket(int server_socket)

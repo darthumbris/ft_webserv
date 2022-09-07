@@ -30,11 +30,11 @@ class Config
 		class wrongKey: public std::exception
 		{
 			private:
-				std::string _msg;
+				const char* _msg;
 			public:
-				wrongKey(const std::string& msg) : _msg(msg) {}
+				wrongKey(const char* msg) : _msg(msg) {}
 				virtual const char* what() const throw() {
-					return _msg.c_str();
+					return _msg;
 				}
 		};
 

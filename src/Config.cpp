@@ -23,7 +23,10 @@ void Config::setServers(const Json *json)
 void Config::checkValidServer(const Json &json)
 {
 	if (json.type != Json::ARRAY)
-		throw wrongKey("expected an <ARRAY> and got " + Location().getEnumValue(json.type));
+	{
+		std::string	error = "expected an <ARRAY> and got " + Location().getEnumValue(json.type);
+		throw wrongKey(error.c_str());
+	}
 	for (const Json *x: json.values.list)
 		addServer(x);
 }

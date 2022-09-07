@@ -75,11 +75,11 @@ class Location
 		class wrongType: public std::exception 
 		{
 			private:
-				std::string _msg;
+				const char* _msg;
 			public:
-				wrongType(const std::string& msg) : _msg(msg) {}
+				wrongType(const char* msg) : _msg(msg) {}
 				virtual const char* what() const throw() {
-					return _msg.c_str();
+					return _msg;
 				}
 		};
 

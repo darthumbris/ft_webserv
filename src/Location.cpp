@@ -138,7 +138,7 @@ void Location::setReturnUrl(const Json& json)
 		throw wrongType("expected: return_code return_url but no return_url found.");
 	_return_code = json.values.str.substr(0, json.values.str.find_first_of(" "));
 	if (_return_code[0] != '3' || std::stoi(_return_code) < 300 || std::stoi(_return_code) > 308 || _return_code.length() != 3)
-		throw wrongType("expected: return_code in range 300-308 but got: " + _return_code + ".");
+		throw wrongType(("expected: return_code in range 300-308 but got: " + _return_code + ".").c_str());
 	_return_url = json.values.str.substr(json.values.str.find_first_of(" ") + 1, std::string::npos);
 	if (DEBUG_MODE)
 	{
@@ -209,7 +209,7 @@ void Location::setAllowedMethod(const Json& json)
 			}
 			i++;
 			if (i == 3)
-				throw wrongType("expected <" + getEnumValue(x->type) + "> but got " + getEnumValue(entry.type));
+				throw wrongType(("expected <" + getEnumValue(x->type) + "> but got " + getEnumValue(entry.type)).c_str());
 		}
 	}
 }
@@ -269,7 +269,7 @@ Location::Func	Location::which(const std::string& name, const Json &json)
 void Location::ParseLocation(const std::string& name, const Json& json)
 {
 	if (json.type != Json::OBJECT)
-		throw wrongType("expected <" + getEnumValue(Json::OBJECT) + "> after a location");
+		throw wrongType(("expected <" + getEnumValue(Json::OBJECT) + "> after a location").c_str());
 	std::string path = getPath(name);
 	if (path.empty())
 		wrongType("path cannot be empty");

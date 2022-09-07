@@ -46,11 +46,11 @@ class Parse
 		// Exception
 		class wrongToken: public std::exception {
 		private:
-			std::string _msg;
+			const char* _msg;
 		public:
-			wrongToken(const std::string& msg) : _msg(msg) {}
+			wrongToken(const char* msg) : _msg(msg) {}
 			virtual const char* what() const throw() {
-				return _msg.c_str();
+				return _msg;
 			}
 		};
 		
