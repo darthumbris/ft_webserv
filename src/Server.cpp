@@ -70,7 +70,6 @@ void Server::setServerErrorPage(const Json &json)
 		if (DEBUG_MODE)
 			std::cout << BLUE << "For error code: " << x->first << " set the file to: " << x->second->values.str << RESET_COLOR << std::endl; 
 		_error_page.insert(std::make_pair(x->first, x->second->values.str));
-		// _error_page.emplace(x->first, x->second->values.str);
 	}
 }
 

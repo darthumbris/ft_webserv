@@ -66,10 +66,10 @@ Json *Parse::parseObject(std::istream& file)
 				file.get();
 				return node;
 			}
-			_state.emplace(c);
+			_state.push(c);
 			name = parseName(file);
 			Json* next = parseOne(file);
-			node->values.object.emplace(name, next);
+			node->values.object.insert(std::make_pair(name, next));
 		} 
 		else if (_state.top() == '{' && c == '}') 
 		{
@@ -80,7 +80,7 @@ Json *Parse::parseObject(std::istream& file)
 		{
 			name = parseName(file);
 			Json* next = parseOne(file);
-			node->values.object.emplace(name, next);
+			node->values.object.insert(std::make_pair(name, next));
 		}
 		else
 			throw wrongToken("syntax error");
@@ -106,7 +106,7 @@ Json *Parse::parseArray(std::istream& file)
 				file.get();
 				return node;
 			}
-			_state.emplace(c);
+			_state.push(c);
 			node->values.list.push_back(parseOne(file));
 		}
 		else if (_state.top() == '[' && c == ']')

@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/09/02 13:33:23 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/09/07 15:33:21 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,11 +130,18 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
+	if (evudat->flag == 2) //in case connection gets closed before send response is done
+	{
+		if (evudat->req->getFileDescriptor() > 2)
+			close(evudat->req->getFileDescriptor());
+		evudat->flag = 1;
+		return ;
+	}
 	if (DEBUG_MODE)
 		std::cout << "going to delete a connection/event" << std::endl;
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
-	if (evudat->flag)
+	if (evudat->flag == 1)
 	{
 		close(event.ident);
 		delete evudat->req;
@@ -156,8 +163,11 @@ void	WebServ::addConnection(t_event event, t_evudat *old_udat)
 	setsockopt(clnt_sckt, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof(opt_value));
 
 	//setting initial values for the new_udat
-	t_evudat	*new_udat = new t_evudat;//will these leek?
+	t_evudat	*new_udat = new t_evudat;
+	if (new_udat == NULL)
+		exit(1);
 	memset(new_udat, 0, sizeof(t_evudat));
+	new_udat->flag = 0;
 	new_udat->addr = newaddr;
 	new_udat->ip = old_udat->ip;
 	new_udat->port = old_udat->port;
