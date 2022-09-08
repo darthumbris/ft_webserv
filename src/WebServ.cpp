@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/09/08 15:36:25 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/09/08 15:37:42 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,7 +195,6 @@ void	WebServ::receiveRequest(t_event &event)
 
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	total_bytes += bytes_read;
-	bytes_read = -1;
 	if (bytes_read < 0)
 	{
 		std::cerr << "recv error" << std::endl;
