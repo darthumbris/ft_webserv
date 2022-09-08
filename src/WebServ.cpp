@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/09/07 15:33:21 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/09/08 14:14:07 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,6 +132,7 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 
 	if (evudat->flag == 2) //in case connection gets closed before send response is done
 	{
+		std::cout << "flag is 2" << std::endl;
 		if (evudat->req->getFileDescriptor() > 2)
 			close(evudat->req->getFileDescriptor());
 		evudat->flag = 1;
@@ -196,7 +197,10 @@ void	WebServ::receiveRequest(t_event &event)
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	total_bytes += bytes_read;
 	if (bytes_read < 0)
+	{
 		std::cerr << "recv error" << std::endl;
+		deleteConnection(event, EVFILT_READ);
+	}
 	else if (bytes_read == 0 && evudat->flag != 2)
 		evudat->flag = 1;
 	else
@@ -216,7 +220,13 @@ void	WebServ::sendResponse(t_event &event)
 	if (evudat->flag != 2)
 	{		
 		response = evudat->req->getResponse();
-		send(event.ident, response.c_str(), response.size(), 0);
+		if (send(event.ident, response.c_str(), response.size(), 0) < 0)
+		{
+			std::cerr << "send error" << std::endl;
+			evudat->flag = 2;
+			deleteConnection(event, EVFILT_WRITE);
+			return ;
+		}
 	}
 	if (fd > 0)
 	{
