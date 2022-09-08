@@ -11,7 +11,7 @@
 # include "RequestHandler.hpp"
 # include "AutoIndexGenerator.hpp"
 
-# define BACKLOG 		10 //not sure yet what a proper value is (most systems do 20?)
+# define BACKLOG 		20 //not sure yet what a proper value is (most systems do 20?)
 # define MAX_EVENTS 	1024
 # define NUM_CLIENTS 	1024
 # define MAX_MSG_SIZE 	256
