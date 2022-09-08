@@ -6,7 +6,7 @@
 /*   By: alkrusts <marvin@codam.nl>                   +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/18 13:26:10 by alkrusts      #+#    #+#                 */
-/*   Updated: 2022/09/08 14:14:07 by shoogenb      ########   odam.nl         */
+/*   Updated: 2022/09/08 15:36:25 by shoogenb      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,20 +130,19 @@ void	WebServ::deleteConnection(t_event event, int16_t	filter)
 {
 	t_evudat	*evudat = (t_evudat *)event.udata;
 
-	if (evudat->flag == 2) //in case connection gets closed before send response is done
+	// std::cout << "delete flag: " << evudat->flag << std::endl;
+	// std::cout << "delete filter: " << filter << std::endl;
+	if (evudat->flag > 1) //in case connection gets closed before send response is done
 	{
-		std::cout << "flag is 2" << std::endl;
 		if (evudat->req->getFileDescriptor() > 2)
 			close(evudat->req->getFileDescriptor());
-		evudat->flag = 1;
-		return ;
 	}
-	if (DEBUG_MODE)
-		std::cout << "going to delete a connection/event" << std::endl;
 	EV_SET(&event, event.ident, filter, EV_DELETE, 0, 0, evudat);
 	kevent(_kqueue, &event, 1, NULL, 0, NULL);
 	if (evudat->flag == 1)
 	{
+		if (DEBUG_MODE)
+			std::cout << "going to delete a connection/event" << std::endl;
 		close(event.ident);
 		delete evudat->req;
 		delete evudat;
@@ -196,6 +195,7 @@ void	WebServ::receiveRequest(t_event &event)
 
 	bytes_read = recv(event.ident, buf, sizeof(buf) - 1, 0);
 	total_bytes += bytes_read;
+	bytes_read = -1;
 	if (bytes_read < 0)
 	{
 		std::cerr << "recv error" << std::endl;
@@ -216,6 +216,7 @@ void	WebServ::sendResponse(t_event &event)
 	std::string	response;
 	int			fd;
 
+	// std::cout << "write flag: " << evudat->flag << std::endl;
 	fd = evudat->req->getFileDescriptor();
 	if (evudat->flag != 2)
 	{		
@@ -223,8 +224,9 @@ void	WebServ::sendResponse(t_event &event)
 		if (send(event.ident, response.c_str(), response.size(), 0) < 0)
 		{
 			std::cerr << "send error" << std::endl;
-			evudat->flag = 2;
+			evudat->flag = 3;
 			deleteConnection(event, EVFILT_WRITE);
+			deleteConnection(event, EVFILT_READ);
 			return ;
 		}
 	}
@@ -232,6 +234,14 @@ void	WebServ::sendResponse(t_event &event)
 	{
 		int bytes = sendfile(fd, event.ident, evudat->total_size, &evudat->datalen, NULL, 0);
 		evudat->total_size += evudat->datalen;
+		if (bytes == -1 && evudat->datalen == 0 && evudat->total_size <= evudat->req->getFileSize())
+		{
+			std::cerr << "sendfile error" << std::endl;
+			evudat->flag = 3;
+			deleteConnection(event, EVFILT_WRITE);
+			deleteConnection(event, EVFILT_READ);
+			return ;
+		}
 		if (bytes == -1 || evudat->total_size < evudat->req->getFileSize())
 		{
 			evudat->flag = 2;
