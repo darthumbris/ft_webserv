@@ -373,7 +373,7 @@ void	RequestHandler::handleRequest(void)
 		else
 			setResponseStatus("405 Method Not Allowed");
 	}
-	if (!_matching_location.getReturnCode().empty())
+	if (!_matching_location.getReturnCode().empty() && std::isdigit(_status_line[0]) && std::stoi(_status_line.substr(0, 3)) < 400)
 		setResponseStatus(_matching_location.getReturnCode() + " Moved");
 }
 
