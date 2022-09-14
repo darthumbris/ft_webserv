@@ -65,6 +65,7 @@ void Json::print() const
 			std::cout << " }";
 			break;
 		case NULL_TYPE:
+		case ERROR:
 			std::cout << "null";
 			break;
 	}
@@ -91,6 +92,7 @@ std::ostream& operator<<(std::ostream& out, const Json::Token& t)
 			out << "OBJECT";
 			break;
 		case Json::NULL_TYPE:
+		case Json::ERROR:
 			out << "NULL_TYPE";
 			break;
 	}

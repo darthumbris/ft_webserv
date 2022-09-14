@@ -23,6 +23,7 @@ int	main(int argc, char *argv[])
 		std::cerr << "error, only 0 or 1 argument accepted." << std::endl;
 		return 1;
 	}
+	Json *json;
 	try
 	{
 		std::string path;
@@ -36,16 +37,29 @@ int	main(int argc, char *argv[])
 			std::cerr << "Error: could not open file." << std::endl;
 			exit(1);
 		}
-		Json* json = Parse().parse(file);
+		json = Parse().parse(file);
 		file.close();
+
+	} 
+	catch (std::exception const &e)
+	{
+		system("leaks webserv");
+		std::cerr << e.what() << std::endl;
+		std::cout << "Exiting webserv." << std::endl;
+		return 1;
+	}
+	try
+	{
 		Config config(json);
 		delete json;
 		t_servmap	servers = config.getServerMap();
 		WebServ	webserver(servers);
 		webserver.runServer();
-	} 
+	}
 	catch (std::exception const &e)
 	{
+		delete json;
+		system("leaks webserv");
 		std::cerr << e.what() << std::endl;
 		std::cout << "Exiting webserv." << std::endl;
 		return 1;

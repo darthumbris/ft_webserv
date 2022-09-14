@@ -45,7 +45,8 @@ class Json
 			BOOLEAN,
 			ARRAY,
 			OBJECT,
-			NULL_TYPE
+			NULL_TYPE,
+			ERROR
 		};
 
 		Token type;

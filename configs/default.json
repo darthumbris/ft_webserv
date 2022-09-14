@@ -65,7 +65,7 @@
         "location /old": {
           "allowed_method": ["GET"],
           "root": "var/www/html",
-          "return": "301 http://localhost:4242/"
+          "return": "301http://localhost:4242/"
         }
       }
     ]
